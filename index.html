@@ -10,7 +10,7 @@
   <meta name="application-name" content="CholScore" />
   <title>CholScore</title>
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="styles.css?v=116" />
+  <link rel="stylesheet" href="styles.css?v=117" />
 </head>
 <body>
   <div id="app">
@@ -236,6 +236,11 @@
           <div class="stat-card"><span>🏆</span><strong id="bestStat">0</strong><small>personal best</small></div>
         </div>
 
+        <div class="pr-section">
+          <div class="pr-section-head"><h3>Personal Records</h3></div>
+          <div id="prList" class="pr-list"></div>
+        </div>
+
         <div class="reward-tabs" id="rewardCategoryTabs"></div>
         <div id="achievementCategorySummary" class="achievement-category-summary"></div>
         <div id="achievementCollection" class="achievement-collection"></div>
@@ -314,6 +319,7 @@
         <div class="acm-medal">🥇</div>
         <div class="acm-type-badge" id="acmTypeBadge">🚶</div>
       </div>
+      <div id="acmPrBadges" class="pr-badges"></div>
       <p class="eyebrow" id="acmEyebrow">WALK COMPLETE</p>
       <h2 id="acmTitle">Great work!</h2>
       <p id="acmMessage"></p>
@@ -376,6 +382,7 @@
     <div class="ecm-scene" aria-hidden="true"><div class="ecm-stars" id="ecmStars"></div></div>
     <div class="ecm-content">
       <div class="ecm-icon-badge" id="ecmIconBadge"><span id="ecmIcon">💪</span></div>
+      <div id="ecmPrBadges" class="pr-badges"></div>
       <p class="eyebrow" id="exerciseCompleteEyebrow">EXERCISE COMPLETE</p>
       <h2 id="exerciseCompleteTitle">Brilliant work!</h2>
       <p id="exerciseCompleteMessage"></p>
@@ -392,7 +399,7 @@
     <p id="finishWorkoutSummary" class="workout-celebration-message premium-subtitle"></p>
 
     <div class="premium-athlete premium-athlete-image" aria-hidden="true">
-      <img src="workout-victory-silhouette.png?v=116" alt="" />
+      <img src="workout-victory-silhouette.png?v=117" alt="" />
     </div>
 
     <div class="workout-result-grid premium-result-grid">
@@ -691,7 +698,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=116"></script>
+  <script src="app.js?v=117"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

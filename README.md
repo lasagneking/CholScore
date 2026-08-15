@@ -1,4 +1,4 @@
-CholScore v1.5.1 - Export now offers real off-device destinations
+CholScore v1.6.0 - Personal Records
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,33 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.6.0 Personal Records
+- New PR tracking across strength, timed, and cardio (walk/run, as scoped) —
+  heaviest weight and longest hold per exercise name, fastest pace and longest
+  distance per activity type.
+- **New PR badges** now appear on the exercise-complete card and the walk/run medal
+  card the moment a record is actually broken — gold pill, "🏆 New PR — heaviest
+  Bench Press: 20.0 kg", reusing the same gold/glow language already established for
+  medals and the final-exercise variant. Both distance and pace can trigger together
+  on the same walk/run if it's both farther and faster than before.
+- **New Personal Records section on the Rewards tab**, above the achievement
+  browser — one row per record, sorted by best-first, each showing the value and the
+  date it was set. Shows a plain-language empty state until the first record exists.
+- PRs are computed fresh from `state.days` every time rather than cached, so they
+  can never drift out of sync with actual history — same principle as the Day Report.
+  A brand-new exercise's first-ever completion counts as a PR (it genuinely is your
+  best so far) — flagging this in case you'd rather that stayed quiet until a second
+  attempt beats it.
+- Pace comparisons happen in unit-agnostic minutes-per-km internally, so a PR
+  recognised while using miles stays correctly recognised if the distance unit
+  setting is ever changed later — only the display formatting is unit-aware.
+- Tested PR detection (heavier beats lighter, lighter doesn't trigger, first-ever
+  counts, combined distance+pace PRs, no-PR case) and the Rewards list rendering
+  (populated and empty states) against real sample data before shipping.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v117`.
+- service-worker cache version bumped to `cholscore-v117`.
 
 ## v1.5.1 export now targets real off-device destinations
 - Correction to v1.5.0: as first shipped, "Export backup" only ever saved the file

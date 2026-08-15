@@ -495,7 +495,34 @@ function achievementDisplay(def){
   return {title,desc};
 }
 
+function renderPersonalRecords(){
+  const recs=computePersonalRecords();
+  const unit=distanceUnit();
+  const fmtDate=k=>new Date(k+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"});
+  const rows=[];
+
+  Object.entries(recs.strength).sort((a,b)=>b[1].weight-a[1].weight).forEach(([name,r])=>{
+    rows.push(`<div class="pr-row"><span class="pr-row-icon">🏋️</span><div class="pr-row-main"><strong>${esc(name)}</strong><small>Heaviest lift</small></div><div class="pr-row-value"><b>${fmt(r.weight)} kg</b><small>${fmtDate(r.date)}</small></div></div>`);
+  });
+  Object.entries(recs.timed).sort((a,b)=>b[1].seconds-a[1].seconds).forEach(([name,r])=>{
+    rows.push(`<div class="pr-row"><span class="pr-row-icon">⏱️</span><div class="pr-row-main"><strong>${esc(name)}</strong><small>Longest hold</small></div><div class="pr-row-value"><b>${formatExerciseSeconds(r.seconds)}</b><small>${fmtDate(r.date)}</small></div></div>`);
+  });
+  [["walk","🚶","Walk"],["run","🏃","Run"]].forEach(([type,icon,label])=>{
+    const bucket=recs.cardio[type];
+    if(bucket.longestKm>0){
+      rows.push(`<div class="pr-row"><span class="pr-row-icon">${icon}</span><div class="pr-row-main"><strong>${label}</strong><small>Longest distance</small></div><div class="pr-row-value"><b>${kmToDisplay(bucket.longestKm).toFixed(1)} ${unit}</b><small>${fmtDate(bucket.dateForDistance)}</small></div></div>`);
+    }
+    if(bucket.bestPaceMinPerKm!=null){
+      const reconstructedMinutes=bucket.bestPaceMinPerKm*bucket.paceDistanceKm;
+      const paceDisplay=formatPace(reconstructedMinutes,kmToDisplay(bucket.paceDistanceKm));
+      if(paceDisplay)rows.push(`<div class="pr-row"><span class="pr-row-icon">${icon}</span><div class="pr-row-main"><strong>${label}</strong><small>Fastest pace</small></div><div class="pr-row-value"><b>${paceDisplay}/${unit}</b><small>${fmtDate(bucket.dateForPace)}</small></div></div>`);
+    }
+  });
+
+  $("prList").innerHTML=rows.length?rows.join(""):`<p class="pr-empty">Complete a weighted or timed exercise, or log a walk/run, to start setting personal records.</p>`;
+}
 function renderRewards(){
+  renderPersonalRecords();
   const metrics=achievementMetrics();
   const unlocked=achievementDefs.filter(a=>Number(metrics[a.metric]||0)>=a.goal);
   const pct=achievementDefs.length?unlocked.length/achievementDefs.length*100:0;
@@ -1422,6 +1449,80 @@ function stopTimedSet(ei,si){
   set.timedSeconds=seconds;set.actual=String(seconds);set.timerStartedAt=null;set.completed=true;saveState();
   renderLiveExercises();
 }
+/* v1.6.0 Personal Records — heaviest weight and longest hold per exercise
+   name, plus fastest pace and longest distance per activity type (walk/run).
+   Computed fresh from state.days every time rather than cached, so it can
+   never drift out of sync with the actual history. Scanning state.days
+   never includes the exercise/activity currently being completed (workout
+   exercises only land in state.days once the whole workout is saved; a
+   walk/run is checked before it's pushed), so "is this a new PR" is a
+   simple direct comparison — no self-exclusion needed. */
+function computePersonalRecords(){
+  const strength={},timed={};
+  const cardio={
+    walk:{bestPaceMinPerKm:null,paceDistanceKm:0,longestKm:0,dateForPace:null,dateForDistance:null},
+    run:{bestPaceMinPerKm:null,paceDistanceKm:0,longestKm:0,dateForPace:null,dateForDistance:null}
+  };
+  for(const [dayKey,day] of Object.entries(state.days||{})){
+    for(const act of day.activities||[]){
+      if(act.type==="workout"){
+        for(const ex of act.exercises||[]){
+          const name=String(ex.name||"").trim();if(!name)continue;
+          if(ex.timed){
+            const best=(ex.sets||[]).reduce((m,s)=>Math.max(m,Number(s.timedSeconds||s.actual||0)),0);
+            if(best>0&&(!timed[name]||best>timed[name].seconds))timed[name]={seconds:best,date:dayKey};
+          }else{
+            const weight=Number(ex.weight||0);
+            if(weight>0&&(!strength[name]||weight>strength[name].weight))strength[name]={weight,date:dayKey};
+          }
+        }
+      }else if(act.type==="walk"||act.type==="run"){
+        const bucket=cardio[act.type];
+        const distanceKm=Number(act.distance||0),minutes=Number(act.minutes||0);
+        if(distanceKm>bucket.longestKm){bucket.longestKm=distanceKm;bucket.dateForDistance=dayKey;}
+        if(distanceKm>0&&minutes>0){
+          const pace=minutes/distanceKm; // minutes per km — unit-agnostic, always comparable regardless of the display unit setting
+          if(bucket.bestPaceMinPerKm==null||pace<bucket.bestPaceMinPerKm){bucket.bestPaceMinPerKm=pace;bucket.paceDistanceKm=distanceKm;bucket.dateForPace=dayKey;}
+        }
+      }
+    }
+  }
+  return {strength,timed,cardio};
+}
+function checkExercisePR(ex){
+  const name=String(ex?.name||"").trim();if(!name)return[];
+  const prior=computePersonalRecords();
+  if(ex.timed){
+    const best=(ex.sets||[]).reduce((m,s)=>Math.max(m,Number(s.timedSeconds||s.actual||0)),0);
+    const prevBest=prior.timed[name]?.seconds||0;
+    if(best>0&&best>prevBest)return[`New PR — longest ${esc(name)} hold: ${formatExerciseSeconds(best)}`];
+  }else{
+    const weight=Number(ex.weight||0);
+    const prevWeight=prior.strength[name]?.weight||0;
+    if(weight>0&&weight>prevWeight)return[`New PR — heaviest ${esc(name)}: ${fmt(weight)} kg`];
+  }
+  return[];
+}
+function checkCardioPR(type,minutes,distanceKm){
+  if(type!=="walk"&&type!=="run")return[];
+  const prior=computePersonalRecords().cardio[type];
+  const unit=distanceUnit(),badges=[],label=type==="run"?"run":"walk";
+  const displayDist=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
+  if(distanceKm>0&&distanceKm>(prior.longestKm||0))badges.push(`New PR — longest ${label}: ${displayDist} ${unit}`);
+  if(distanceKm>0&&minutes>0){
+    const paceMinPerKm=minutes/distanceKm;
+    if(prior.bestPaceMinPerKm==null||paceMinPerKm<prior.bestPaceMinPerKm){
+      const paceDisplay=formatPace(minutes,displayDist);
+      if(paceDisplay)badges.push(`New PR — fastest ${label} pace: ${paceDisplay}/${unit}`);
+    }
+  }
+  return badges;
+}
+function renderPrBadges(elId,badges){
+  const el=$(elId);if(!el)return;
+  el.innerHTML=badges.length?badges.map(b=>`<div class="pr-badge">🏆 ${b}</div>`).join(""):"";
+}
+
 const ecmIcons={standard:"💪",timed:"⏱️",final:"🏆"};
 function animateExerciseCountUps(container){
   container.querySelectorAll("[data-count-target]").forEach(el=>{
@@ -1452,6 +1553,7 @@ function completeCurrentExercise(){
   dialog.classList.remove("variant-standard","variant-timed","variant-final");
   dialog.classList.add(`variant-${variant}`);
   $("ecmIcon").textContent=ecmIcons[variant];
+  renderPrBadges("ecmPrBadges",checkExercisePR(e));
 
   $("exerciseCompleteTitle").textContent=`${randomFrom(exerciseCheers)}, ${state.profile.name}!`;
   $("exerciseCompleteMessage").textContent=e.timed
@@ -1592,13 +1694,14 @@ function formatPace(minutes,displayDistance){
   return `${m}:${String(s).padStart(2,"0")}`;
 }
 const activityFeelWord={1:"rough",2:"a bit tough",3:"steady",4:"good",5:"great"};
-function showActivityCompleteCard(type,minutes,distanceKm,feel){
+function showActivityCompleteCard(type,minutes,distanceKm,feel,prBadges=[]){
   const isWalk=type==="walk",unit=distanceUnit();
   const displayDistance=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
   const pace=formatPace(minutes,displayDistance);
   $("acmTypeBadge").textContent=isWalk?"🚶":"🏃";
   $("acmEyebrow").textContent=isWalk?"WALK COMPLETE":"RUN COMPLETE";
   $("acmTitle").textContent=`Great work, ${state.profile.name}!`;
+  renderPrBadges("acmPrBadges",prBadges);
   const verb=isWalk?"walked":"ran";
   $("acmMessage").innerHTML=displayDistance>0
     ? `You ${verb} <strong>${displayDistance} ${unit}</strong> in <strong>${formatActivityDuration(minutes)}</strong>${pace?` — averaging a <strong>${pace}/${unit}</strong> pace`:""}. Feeling ${activityFeelWord[feel]||"steady"} ${feelEmoji(feel)}`
@@ -1620,10 +1723,11 @@ $("exerciseForm").addEventListener("submit",e=>{
   const name=$("activityName").value.trim(),start=$("startTime").value,finish=$("finishTime").value,type=$("activityType").value;
   if(!name||!start||!finish)return;
   const minutes=minutesBetween(start,finish),distance=displayToKm(Number($("distance").value||0)),feel=selectedFeeling;
+  const prBadges=checkCardioPR(type,minutes,distance); // must run before the push below, while state.days still only reflects prior history
   ensureDay().activities.push({id:id(),name,start,finish,type,minutes,distance,feel,created:Date.now()});
   state.achievements.firstMove=true;saveState();$("exerciseDialog").close();e.target.reset();selectedFeeling=3;
   qsa("#quickFeelingRow button").forEach(x=>x.classList.toggle("selected",x.dataset.feel==="3"));renderAll();
-  if(type==="walk"||type==="run") setTimeout(()=>showActivityCompleteCard(type,minutes,distance,feel),70);
+  if(type==="walk"||type==="run") setTimeout(()=>showActivityCompleteCard(type,minutes,distance,feel,prBadges),70);
   else setTimeout(()=>alert(`Great work, ${state.profile.name}! ${minutes} minutes completed. ${feelEmoji(feel)}`),70);
 });
 
