@@ -601,26 +601,33 @@ function showHistoryDay(key,btn){
    whole day, built from the exact same data functions used everywhere
    else (totals/scoreDay/exerciseVolume/formatActivityDuration/formatPace),
    so it's guaranteed to agree with the rest of the app. */
-function repTrainingSectionHTML(workouts){
+function repTrainingSectionHTML(workouts,dayKey,records){
   if(!workouts.length)return `<div class="rep-section reveal"><div class="rep-section-head"><div class="rep-section-bar"></div><h2>Strength Session</h2></div><p class="rep-empty">No training logged this day.</p></div>`;
   return workouts.map(w=>{
     const rows=(w.exercises||[]).map((ex,i)=>{
-      let meta,value,unit;
+      const name=String(ex.name||"").trim();
+      let meta,value,unit,isPR=false;
       if(ex.timed){
         const totalSec=(ex.sets||[]).reduce((sum,s)=>sum+Number(s.timedSeconds||s.actual||0),0);
+        const bestSetSeconds=(ex.sets||[]).reduce((m,s)=>Math.max(m,Number(s.timedSeconds||s.actual||0)),0);
         meta=`${ex.sets.length} timed ${ex.sets.length===1?"set":"sets"}`;
         value=formatExerciseSeconds(totalSec);unit="held";
+        const rec=records?.timed?.[name];
+        isPR=!!(rec&&rec.date===dayKey&&bestSetSeconds>0&&rec.seconds===bestSetSeconds);
       }else{
         const vol=exerciseVolume(ex);
+        const weight=Number(ex.weight||0);
         meta=`${(ex.sets||[]).length} sets${ex.targetReps?` × ${ex.targetReps} reps`:""}`;
         value=Number(vol)>0?fmt(vol):"—";unit="kg volume";
+        const rec=records?.strength?.[name];
+        isPR=!!(rec&&rec.date===dayKey&&weight>0&&rec.weight===weight);
       }
-      return `<div class="rep-exercise-row"><div class="rep-exercise-num">${i+1}</div><div><div class="rep-exercise-name">${esc(ex.name)}</div><div class="rep-exercise-meta">${esc(meta)}</div></div><div class="rep-exercise-value">${value}<small>${unit}</small></div></div>`;
+      return `<div class="rep-exercise-row${isPR?" is-pr":""}"><div class="rep-exercise-num">${i+1}</div><div><div class="rep-exercise-name">${esc(ex.name)}${isPR?'<span class="rep-pr-chip">🏆 PR</span>':""}</div><div class="rep-exercise-meta">${esc(meta)}</div></div><div class="rep-exercise-value">${value}<small>${unit}</small></div></div>`;
     }).join("");
     return `<div class="rep-section reveal"><div class="rep-section-head"><div class="rep-section-bar"></div><h2>Strength Session · ${esc(w.name||"Workout")}</h2></div>${rows}</div>`;
   }).join("");
 }
-function repCardioSectionHTML(cardio){
+function repCardioSectionHTML(cardio,dayKey,records){
   if(!cardio.length)return `<div class="rep-section reveal"><div class="rep-section-head"><div class="rep-section-bar"></div><h2>Cardio</h2></div><p class="rep-empty">No cardio logged this day.</p></div>`;
   const unit=distanceUnit();
   const rows=cardio.map(a=>{
@@ -628,12 +635,18 @@ function repCardioSectionHTML(cardio){
     const displayDist=a.distance>0?Number(kmToDisplay(a.distance).toFixed(1)):0;
     const pace=displayDist>0?formatPace(a.minutes,displayDist):null;
     const label=a.name||(a.type==="run"?"Run":a.type==="walk"?"Walk":"Activity");
-    return `<div class="rep-cardio-row">
+    const bucket=records?.cardio?.[a.type];
+    const distanceKm=Number(a.distance||0);
+    const isDistPR=!!(bucket&&bucket.dateForDistance===dayKey&&distanceKm>0&&bucket.longestKm===distanceKm);
+    const paceMinPerKm=distanceKm>0&&a.minutes>0?a.minutes/distanceKm:null;
+    const isPacePR=!!(bucket&&bucket.dateForPace===dayKey&&paceMinPerKm!=null&&bucket.bestPaceMinPerKm===paceMinPerKm);
+    const isPR=isDistPR||isPacePR;
+    return `<div class="rep-cardio-row${isPR?" is-pr":""}">
       <div class="rep-cardio-icon">${icon}</div>
-      <div class="rep-cardio-name">${esc(label)}</div>
+      <div class="rep-cardio-name">${esc(label)}${isPR?'<span class="rep-pr-chip">🏆 PR</span>':""}</div>
       <div class="rep-cardio-col"><strong>${formatActivityDuration(a.minutes)}</strong><small>duration</small></div>
-      <div class="rep-cardio-col"><strong>${displayDist>0?`${displayDist} ${unit}`:"—"}</strong><small>distance</small></div>
-      <div class="rep-cardio-col"><strong>${pace||"—"}</strong><small>min/${unit}</small></div>
+      <div class="rep-cardio-col"><strong>${displayDist>0?`${displayDist} ${unit}`:"—"}</strong><small>distance${isDistPR?" 🏆":""}</small></div>
+      <div class="rep-cardio-col"><strong>${pace||"—"}</strong><small>min/${unit}${isPacePR?" 🏆":""}</small></div>
     </div>`;
   }).join("");
   return `<div class="rep-section reveal"><div class="rep-section-head"><div class="rep-section-bar"></div><h2>Cardio</h2></div><div class="rep-cardio-head"><span></span><span>Activity</span><span>Time</span><span>Dist</span><span>Pace</span></div>${rows}</div>`;
@@ -665,6 +678,7 @@ function showDayReport(key){
   const niceDate=dateObj.toLocaleDateString(undefined,{day:"numeric",month:"long",year:"numeric"});
   const workouts=(day.activities||[]).filter(a=>a.type==="workout");
   const cardio=(day.activities||[]).filter(a=>a.type!=="workout");
+  const records=computePersonalRecords();
 
   $("dayReportInner").innerHTML=`
     <div class="rep-hero">
@@ -693,8 +707,8 @@ function showDayReport(key){
       </div>
     </div>
 
-    ${repTrainingSectionHTML(workouts)}
-    ${repCardioSectionHTML(cardio)}
+    ${repTrainingSectionHTML(workouts,key,records)}
+    ${repCardioSectionHTML(cardio,key,records)}
     ${repNutritionSectionHTML(day,target)}
 
     <div class="rep-footer reveal"><div class="rep-footer-mark">— End of report —</div></div>

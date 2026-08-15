@@ -1,4 +1,4 @@
-CholScore v1.6.0 - Personal Records
+CholScore v1.6.1 - Personal bests flagged in the Day Report
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,27 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.6.1 personal bests flagged in the Day Report
+- Personal bests now show up directly in History's Day Report, right next to the
+  exercise or activity that set them — a gold "🏆 PR" chip on the exercise/activity
+  name, plus the whole row gets a gold left-border and background wash so it's
+  genuinely easy to spot while scanning down a day, not just a small icon easy to miss.
+- Cardio rows also mark the specific stat that was the record (distance, pace, or
+  both) with a small 🏆 next to that column's label, since a walk/run can set one,
+  the other, or both at once.
+- Flagging works by matching the day being viewed **and** the exact value against
+  the current all-time record for that exercise/activity — so it only lights up on
+  the day the record actually happened, not on every subsequent viewing of an
+  exercise that merely exists. Tested against two days (one that set a Bench Press
+  and Planks PR, a later weaker day for the same exercises) to confirm the flag
+  appears only where it should.
+- Reuses the same `computePersonalRecords()` from v1.6.0 — one records lookup per
+  report, so this stays free and can't drift out of sync with the Rewards tab's
+  Personal Records list.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v118`.
+- service-worker cache version bumped to `cholscore-v118`.
 
 ## v1.6.0 Personal Records
 - New PR tracking across strength, timed, and cardio (walk/run, as scoped) —
