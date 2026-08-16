@@ -158,15 +158,6 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
 .rewards-hero strong{font-size:74px;letter-spacing:-.07em;display:block;background:linear-gradient(135deg,var(--green),var(--cyan),var(--violet));-webkit-background-clip:text;color:transparent}
 .rewards-hero span{color:#c9ced8}
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
-.stats-grid.stats-grid-2{grid-template-columns:repeat(2,1fr)}
-.best-score-banner{
-  padding:14px 16px;margin:0 0 14px;border-radius:18px;border:1px solid rgba(255,209,102,.28);
-  background:linear-gradient(135deg,rgba(255,209,102,.12),rgba(255,209,102,.04));
-  display:flex;align-items:center;gap:12px;
-}
-.best-score-icon{font-size:24px;flex:none}
-.best-score-banner strong{font-size:22px;color:#ffe6ac;display:block;font-variant-numeric:tabular-nums}
-.best-score-banner small{color:var(--muted);display:block;margin-top:1px;font-size:12px}
 .stat-card{padding:16px 10px;text-align:center;background:#111620;border:1px solid var(--line);border-radius:18px}
 .stat-card span,.stat-card strong,.stat-card small{display:block}
 .stat-card strong{font-size:24px}.stat-card small{color:var(--muted)}

@@ -1,4 +1,4 @@
-CholScore v1.12.2 - Personal best score moved to top of Exercise
+CholScore v1.12.4 - Reverted best-score banner back to Rewards
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,42 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.12.4 reverted best-score banner back to Rewards
+- Full circle: the original move to Exercise (v1.12.2) turned out to be based on a
+  naming mix-up — "personal best" sounded like it meant exercise Personal Records,
+  but it's actually the highest-ever daily CholScore, which blends food and
+  exercise together rather than being an exercise-specific number at all. Once the
+  label was clarified (v1.12.3) it became obvious it never belonged on the
+  Exercise tab to begin with.
+- Reverted cleanly: removed the gold banner from the top of Exercise, restored the
+  third stat card (streak/points/personal best) in Rewards' 3-column grid exactly
+  as it was originally.
+- Removed all the now-dead CSS from the banner detour (`.best-score-banner`,
+  `.best-score-icon`, `.best-score-max`, `.stats-grid-2`) rather than leaving it
+  as unused weight in the stylesheet.
+- Confirmed zero dangling references in either direction before shipping — nothing
+  left pointing at the removed banner elements, and `bestStat` back to exactly one
+  HTML definition and one JS write, matching the file's original shape before this
+  detour began.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v138`.
+- service-worker cache version bumped to `cholscore-v138`.
+
+## v1.12.3 clarified the best-score banner
+- Reported: a bare "40" next to "Personal best CholScore" gave no sense of scale —
+  genuinely read as ambiguous (a count of something? out of what?) rather than
+  obviously "your best day was 40 out of 100."
+- Now reads **"40/100 — Best CholScore"** — the number keeps its bold size, `/100`
+  sits right after it in a smaller, muted gold tone so it doesn't compete with the
+  main figure, and the label underneath is simplified since the number now
+  explains its own scale.
+- Purely a display/wording change — same `bestEverScore()` computation as v1.12.2,
+  same banner position at the top of Exercise, nothing about what's tracked
+  changed.
+- `index.html`, `styles.css`, and the image cache-busting query strings bumped to
+  `v137`.
+- service-worker cache version bumped to `cholscore-v137`.
 
 ## v1.12.2 personal best score moved to top of Exercise
 - Follow-up to v1.12.1: the "personal best" stat card (trophy icon, e.g. "40") was

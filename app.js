@@ -406,7 +406,6 @@ function bestEverScore(){
 }
 function renderExercise(){
   const day=getDay(),t=totals(day);
-  $("exerciseBestScore").textContent=Math.round(bestEverScore());
   $("exerciseMinutes").textContent=Math.round(t.mins);$("exerciseBar").style.width=`${Math.min(100,t.mins/45*100)}%`;
   if($("distanceUnitLabel")) $("distanceUnitLabel").textContent=distanceUnit();
   renderProteinToday(day);
@@ -670,6 +669,7 @@ function renderRewards(){
 
   const totalPoints=metrics.totalPoints;
   $("pointsStat").textContent=Math.round(totalPoints);
+  $("bestStat").textContent=Math.round(bestEverScore());
   $("streakStat").textContent=calculateStreak();
 
   $("rewardCategoryTabs").innerHTML=rewardCategories.map(([id,label])=>
