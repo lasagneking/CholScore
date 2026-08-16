@@ -1,4 +1,4 @@
-CholScore v1.12.4 - Reverted best-score banner back to Rewards
+CholScore v1.13.0 - Reward Bank: persistent points and custom goals
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,50 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.13.0 Reward Bank — persistent points and custom goals
+- Reported: the "Weekly Bank" reset every Monday, discarding points earned the
+  week before — not wanted. Rebuilt as a persistent Reward Bank instead of
+  patching the reset behaviour.
+- **New, simpler earning rule, confirmed explicitly**: points banked = your daily
+  saturated fat target minus what you actually consumed that day, direct and
+  uncapped — 20g limit, 14g consumed = 6 points. This replaces the old formula
+  entirely, which capped at 5/day and used a different scaling curve. Has nothing
+  to do with exercise minutes or the overall CholScore — purely saturated fat
+  headroom, as specified.
+- **Points never expire.** Architecture: a lifetime "earned" total is summed fresh
+  from every checked-out day (same pattern as the rest of the app — nothing stored
+  redundantly, so it can't drift out of sync with day data), and a separate
+  `spentPoints` counter only increases when a reward is actually cashed out.
+  Available balance = earned minus spent. No day's history is ever edited to
+  "remove" points — spending is its own ledger, exactly like a real bank account.
+- **Set a custom reward goal**: tap the card (renamed from "Weekly Bank" to
+  "Reward Bank") to open a sheet — name a goal, pick a point cost, and pick an
+  icon from a 20-option picker (book, chocolate, plant, trainers, game, coffee,
+  and more). Built as a custom dropdown-style grid rather than a native `<select>`,
+  matching how the rest of the app avoids default browser UI for anything visually
+  significant.
+- **Progress tracking**: the card itself shows a live mini progress bar toward the
+  active goal without needing to open anything. The full sheet shows exact
+  fraction (e.g. 14/17), today's contribution, and a Cash Out button that's
+  disabled with "need N more" until the goal is actually reached.
+- **Checkout integration**: the existing checkout summary now gets a reward line
+  underneath it — "+6 points banked today, 3 points away from New plant — keep
+  going," a distinct celebratory version the day the goal is actually reached, and
+  an honest "no points banked today" version on an over-target day, still showing
+  distance to the goal rather than going silent.
+- Cashing out asks for confirmation, deducts the goal's cost from the ledger,
+  archives it to a small history array, and clears the active goal so a new one
+  can be set.
+- Tested the full lifecycle end-to-end before shipping: the exact 20g/14g/6-point
+  example, lifetime accumulation across old and new days (proving the removal of
+  the weekly cutoff actually works), zero points for an over-target day, zero
+  points for a day with no food logged, the cash-out guard correctly blocking
+  early redemption, and the ledger continuing to accumulate correctly immediately
+  after a cash-out (not resetting, not double-counting).
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v139`.
+- service-worker cache version bumped to `cholscore-v139`.
 
 ## v1.12.4 reverted best-score banner back to Rewards
 - Full circle: the original move to Exercise (v1.12.2) turned out to be based on a

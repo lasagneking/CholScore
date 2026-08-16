@@ -26,7 +26,7 @@
        moment the page itself is loading; the splash covers the moment
        before that, while iOS is launching the app shell. -->
   <style>html,body{background:#090b10}</style>
-  <link rel="stylesheet" href="styles.css?v=138" />
+  <link rel="stylesheet" href="styles.css?v=139" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -159,14 +159,15 @@
         </section>
 
         
-        <div class="weekly-bank-card">
+        <div class="weekly-bank-card" id="rewardBankCard" role="button" tabindex="0">
           <div class="bank-icon">🏦</div>
           <div class="bank-copy">
-            <span>WEEKLY BANK</span>
+            <span>REWARD BANK</span>
             <strong><span id="bankPoints">0</span> points</strong>
-            <small id="bankResetText">Resets Monday</small>
+            <small id="bankGoalText">Tap to set a goal</small>
+            <div class="bank-goal-bar hidden" id="bankGoalBar"><i id="bankGoalBarFill"></i></div>
           </div>
-          <div class="bank-badge" id="bankBadge">Flex</div>
+          <div class="bank-badge" id="bankBadge">Tap to view</div>
         </div>
 
 <button id="checkoutBtn" class="checkout-btn">🌙 Check out for today</button>
@@ -505,7 +506,7 @@
     <p id="finishWorkoutSummary" class="workout-celebration-message premium-subtitle"></p>
 
     <div class="premium-athlete premium-athlete-image" aria-hidden="true">
-      <img src="workout-victory-silhouette.png?v=138" alt="" />
+      <img src="workout-victory-silhouette.png?v=139" alt="" />
     </div>
 
     <div class="workout-result-grid premium-result-grid">
@@ -731,6 +732,7 @@
         <div class="checkout-eyebrow">TODAY'S CHECKOUT</div>
         <h2 id="checkoutTitle">Nice work!</h2>
         <p id="checkoutText"></p>
+        <div id="checkoutRewardNote" class="checkout-reward-note hidden"></div>
       </div>
 
       <div class="checkout-rings">
@@ -774,6 +776,48 @@
     </div>
   </dialog>
 
+  <dialog id="rewardBankDialog" class="modal reward-bank-modal">
+    <div class="modal-head"><div><p class="eyebrow">REWARD BANK</p><h3>Your points</h3></div><button type="button" data-close-dialog="rewardBankDialog" aria-label="Close">×</button></div>
+
+    <div class="balance-row">
+      <strong id="rbBalance">0</strong>
+      <small>points banked, never expire</small>
+    </div>
+
+    <div class="today-earn-row hidden" id="rbTodayRow">
+      <span id="rbTodayLabel"></span>
+      <strong id="rbTodayValue"></strong>
+    </div>
+
+    <div id="rbGoalView" class="hidden">
+      <div class="goal-card">
+        <div class="goal-card-head"><strong id="rbGoalTitle"></strong><span id="rbGoalFraction"></span></div>
+        <div class="goal-bar-track"><div class="goal-bar-fill" id="rbGoalBarFill"></div></div>
+        <p class="goal-note" id="rbGoalNote"></p>
+      </div>
+      <button type="button" class="cashout-btn" id="rbCashoutBtn">Cash out</button>
+      <button type="button" class="clear-goal-link" id="rbClearGoalBtn">Change or clear this goal</button>
+    </div>
+
+    <form id="rbGoalForm" class="goal-form hidden">
+      <p class="modal-note">Set something to work toward — 1 point for every gram you finish under target that day.</p>
+      <label>Icon</label>
+      <div class="icon-picker" id="rbIconPicker">
+        <button type="button" class="icon-picker-trigger" id="rbIconTrigger">
+          <span class="current-icon" id="rbCurrentIconEmoji">🎁</span>
+          <span class="current-label" id="rbCurrentIconLabel">Something nice</span>
+          <span class="chevron">▾</span>
+        </button>
+        <div class="icon-picker-panel"><div class="icon-picker-panel-inner" id="rbIconGrid"></div></div>
+      </div>
+      <label>What are you working toward?</label>
+      <input id="rbGoalName" placeholder="e.g. New plant, a book, a lazy Sunday" required />
+      <label>How many points?</label>
+      <input id="rbGoalTarget" type="number" min="1" placeholder="e.g. 15" required />
+      <button type="submit" class="goal-save-btn">Set this goal</button>
+    </form>
+  </dialog>
+
   <dialog id="settingsDialog" class="modal">
     <form method="dialog">
       <div class="modal-head"><h3>Profile</h3><button type="button" data-close-dialog="settingsDialog" aria-label="Cancel">×</button></div>
@@ -804,7 +848,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=138"></script>
+  <script src="app.js?v=139"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

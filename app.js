@@ -8,7 +8,8 @@ const defaultState = {
   days: {},
   routines: [],
   activeWorkout: null,
-  achievements: { firstFood:false, firstMove:false, onTarget:false, score80:false }
+  achievements: { firstFood:false, firstMove:false, onTarget:false, score80:false },
+  rewardBank: { spentPoints: 0, goal: null, history: [] }
 };
 
 let state = loadState();
@@ -63,7 +64,8 @@ function normaliseState(s){
     profile,
     routines:Array.isArray(s?.routines)?s.routines:[],
     activeWorkout:s?.activeWorkout||null,
-    achievements:{...d.achievements,...(s?.achievements||{})}
+    achievements:{...d.achievements,...(s?.achievements||{})},
+    rewardBank:{...d.rewardBank,...(s?.rewardBank||{}),goal:(s?.rewardBank?.goal||null),history:Array.isArray(s?.rewardBank?.history)?s.rewardBank.history:[]}
   };
 }
 function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -200,33 +202,45 @@ function mondayKeyFor(dateLike=new Date()){
   return d.toISOString().slice(0,10);
 }
 
-function weeklyBankPoints(){
-  const monday=mondayKeyFor(new Date());
+/* v1.13.0 Reward Bank — points are banked purely from saturated fat headroom
+   on checked-out days: target minus consumed, direct, uncapped (1g under a
+   day's limit = 1 point). Nothing to do with exercise minutes or the overall
+   CholScore. Points are permanent once earned — the "earned" ledger below
+   never shrinks; only cashing out a reward (which adds to
+   state.rewardBank.spentPoints) reduces the available balance. This is a
+   deliberately different, simpler rule than the old capped/scaled weekly
+   formula it replaces. */
+function dailyBankPoints(day){
+  if(!day || !day.checkedOut || !day.foods?.length) return 0;
+  const t=totals(day);
+  const target=Number(state.profile?.target||30);
+  return Math.max(0, Math.round(target - t.sat));
+}
+function lifetimeBankPoints(){
   let total=0;
-  for(const [key,day] of Object.entries(state.days)){
-    if(key < monday) continue;
-    if(!day.checkedOut) continue;
-    const t=totals(day);
-    const target=Number(state.profile?.target||30);
-    if(!day.foods.length || t.sat>=target) continue;
-
-    // Reward consistency, but cap each day so "eating as little as possible"
-    // never becomes the game.
-    const remaining=Math.max(0,target-t.sat);
-    const daily=Math.min(5,Math.round((remaining/target)*10));
-    total += daily;
-  }
+  for(const day of Object.values(state.days)) total += dailyBankPoints(day);
   return total;
 }
-
-function bankResetLabel(){
-  const now=new Date();
-  const next=new Date(now);
-  const days=(8-now.getDay())%7 || 7;
-  next.setDate(now.getDate()+days);
-  next.setHours(0,0,0,0);
-  const diff=Math.max(1,Math.ceil((next-now)/86400000));
-  return diff===1?"Resets tomorrow morning":`Resets Monday · ${diff} days`;
+function availableBankPoints(){
+  return Math.max(0, lifetimeBankPoints() - Number(state.rewardBank?.spentPoints||0));
+}
+function setRewardGoal(icon,name,target){
+  state.rewardBank.goal = {icon, name:String(name).trim(), target:Math.max(1,Math.round(Number(target)||0)), createdAt:Date.now()};
+  saveState();
+}
+function clearRewardGoal(){
+  state.rewardBank.goal = null;
+  saveState();
+}
+function cashOutReward(){
+  const goal=state.rewardBank.goal;
+  if(!goal || availableBankPoints() < goal.target) return false;
+  state.rewardBank.spentPoints = Number(state.rewardBank.spentPoints||0) + goal.target;
+  state.rewardBank.history = state.rewardBank.history || [];
+  state.rewardBank.history.unshift({icon:goal.icon,name:goal.name,target:goal.target,claimedAt:Date.now()});
+  state.rewardBank.goal = null;
+  saveState();
+  return true;
 }
 
 function renderAll(){renderToday();renderFood();renderExercise();renderRewards();renderCalendar();if(!$("historyTrendsView").classList.contains("hidden"))renderTrends();}
@@ -257,8 +271,24 @@ function renderToday(){
     :`<div class="log-item"><div><strong>${x.type==="run"?"🏃":x.type==="walk"?"🚶":x.type==="workout"?"🏋️":"⚡"} ${esc(x.name)}</strong><small>${x.minutes} min${x.distance?` · ${distanceText(x.distance)}`:""}${x.type==="workout"&&x.exerciseCount?` · ${x.exerciseCount} exercises`:""}</small></div><div class="log-value">${feelEmoji(x.feel)}</div></div>`
   ).join(""):"Nothing logged yet. Your first win starts here.";
   wireFoodCards();
-  if($("bankPoints")) $("bankPoints").textContent=weeklyBankPoints();
-  if($("bankResetText")) $("bankResetText").textContent=bankResetLabel();
+  renderRewardBankCard();
+}
+
+function renderRewardBankCard(){
+  const balance=availableBankPoints(),goal=state.rewardBank?.goal;
+  if($("bankPoints")) $("bankPoints").textContent=balance;
+  const goalText=$("bankGoalText"),goalBar=$("bankGoalBar"),goalBarFill=$("bankGoalBarFill");
+  if(!goalText) return;
+  if(goal){
+    const remaining=Math.max(0,goal.target-balance);
+    const pct=Math.min(100,Math.round(balance/goal.target*100));
+    goalText.textContent=remaining>0?`${remaining} points to go — ${goal.name} ${goal.icon}`:`Ready to cash out — ${goal.name} ${goal.icon}`;
+    goalBar.classList.remove("hidden");
+    goalBarFill.style.width=`${pct}%`;
+  }else{
+    goalText.textContent="Tap to set a goal";
+    goalBar.classList.add("hidden");
+  }
 }
 
 function wireFoodCards(){
@@ -2165,6 +2195,21 @@ $("checkoutBtn").addEventListener("click",()=>{
   const moveClause=mins>0?` and exercised for <strong>${Math.round(mins)} minute${Math.round(mins)===1?"":"s"}</strong>`:"";
   $("checkoutText").innerHTML=`${satClause}${moveClause}, earning you a super score of <strong>${score}</strong>.`;
 
+  const todayPoints=dailyBankPoints(day),bankBalance=availableBankPoints(),goal=state.rewardBank?.goal;
+  const noteEl=$("checkoutRewardNote");
+  if(goal){
+    const remaining=Math.max(0,goal.target-bankBalance);
+    noteEl.classList.remove("hidden");
+    noteEl.classList.toggle("reached",remaining<=0);
+    const earnedClause=todayPoints>0?`<strong>+${todayPoints} point${todayPoints===1?"":"s"}</strong> banked today`:"No points banked today";
+    noteEl.innerHTML=remaining<=0
+      ?`🎉 <span>${earnedClause} — goal reached! <strong>${esc(goal.name)}</strong> is yours whenever you cash out.</span>`
+      :`${goal.icon} <span>${earnedClause}. ${remaining} point${remaining===1?"":"s"} away from <strong>${esc(goal.name)}</strong> — keep going.</span>`;
+  }else{
+    noteEl.classList.add("hidden");
+  }
+  renderRewardBankCard();
+
   const satPct=Math.min(1,sat/target),minsPct=Math.min(1,mins/45),scorePct=Math.min(1,score/100);
   $("checkoutRingSatNum").innerHTML=`${fmt(sat)}<small>g</small>`;
   $("checkoutRingMinsNum").innerHTML=`${Math.round(mins)}<small>min</small>`;
@@ -2186,6 +2231,101 @@ $("checkoutBtn").addEventListener("click",()=>{
   renderAll();
 });
 $("closeCheckout").addEventListener("click",()=>$("checkoutDialog").close());
+
+/* v1.13.0 Reward Bank dialog */
+const REWARD_ICONS=[
+  {e:"📚",l:"Book"},{e:"🍫",l:"Chocolate"},{e:"🪴",l:"Plant"},{e:"👟",l:"Trainers"},
+  {e:"🎮",l:"Game"},{e:"☕",l:"Coffee"},{e:"🎬",l:"Movie night"},{e:"👕",l:"Clothes"},
+  {e:"✈️",l:"Trip"},{e:"🎧",l:"Headphones"},{e:"🍕",l:"Takeaway"},{e:"💆",l:"Massage"},
+  {e:"🛋️",l:"Lazy day"},{e:"🎨",l:"Hobby kit"},{e:"🍷",l:"Drink"},{e:"🍦",l:"Treat"},
+  {e:"🎳",l:"Day out"},{e:"🧴",l:"Skincare"},{e:"🎁",l:"Something nice"},{e:"⭐",l:"Other"},
+];
+let selectedRewardIcon=REWARD_ICONS[REWARD_ICONS.length-2]; // "Something nice" default
+
+function renderRewardIconGrid(){
+  $("rbIconGrid").innerHTML=REWARD_ICONS.map(i=>
+    `<button type="button" class="icon-option${i.e===selectedRewardIcon.e?" selected":""}" data-emoji="${i.e}" data-label="${i.l}">
+      <span class="emoji">${i.e}</span><span class="label">${esc(i.l)}</span>
+    </button>`
+  ).join("");
+  qsa(".icon-option",$("rbIconGrid")).forEach(btn=>btn.addEventListener("click",()=>{
+    selectedRewardIcon={e:btn.dataset.emoji,l:btn.dataset.label};
+    $("rbCurrentIconEmoji").textContent=selectedRewardIcon.e;
+    $("rbCurrentIconLabel").textContent=selectedRewardIcon.l;
+    $("rbIconPicker").classList.remove("open");
+    renderRewardIconGrid();
+  }));
+}
+$("rbIconTrigger").addEventListener("click",()=>$("rbIconPicker").classList.toggle("open"));
+
+function openRewardBankDialog(){
+  const balance=availableBankPoints(),goal=state.rewardBank?.goal;
+  $("rbBalance").textContent=balance;
+
+  const todayPoints=dailyBankPoints(getDay());
+  if(getDay().checkedOut){
+    $("rbTodayRow").classList.remove("hidden");
+    $("rbTodayLabel").textContent="Today so far";
+    $("rbTodayValue").textContent=`+${todayPoints} today`;
+  }else{
+    $("rbTodayRow").classList.add("hidden");
+  }
+
+  if(goal){
+    $("rbGoalView").classList.remove("hidden");
+    $("rbGoalForm").classList.add("hidden");
+    const pct=Math.min(100,Math.round(balance/goal.target*100));
+    const remaining=Math.max(0,goal.target-balance);
+    $("rbGoalTitle").textContent=`${goal.icon} ${goal.name}`;
+    $("rbGoalFraction").textContent=`${Math.min(balance,goal.target)} / ${goal.target}`;
+    $("rbGoalBarFill").style.width=`${pct}%`;
+    $("rbGoalNote").textContent=remaining>0?`${remaining} point${remaining===1?"":"s"} to go — keep it up.`:"Goal reached! Cash out whenever you're ready.";
+    const cashoutBtn=$("rbCashoutBtn");
+    cashoutBtn.disabled=remaining>0;
+    cashoutBtn.textContent=remaining>0?`Cash out (need ${remaining} more)`:`Cash out ${goal.target} points`;
+  }else{
+    $("rbGoalView").classList.add("hidden");
+    $("rbGoalForm").classList.remove("hidden");
+    $("rbGoalForm").reset();
+    selectedRewardIcon=REWARD_ICONS[REWARD_ICONS.length-2];
+    $("rbCurrentIconEmoji").textContent=selectedRewardIcon.e;
+    $("rbCurrentIconLabel").textContent=selectedRewardIcon.l;
+  }
+  $("rbIconPicker").classList.remove("open");
+  renderRewardIconGrid();
+  $("rewardBankDialog").showModal();
+}
+$("rewardBankCard").addEventListener("click",openRewardBankDialog);
+$("rewardBankCard").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openRewardBankDialog();}});
+
+$("rbGoalForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const name=$("rbGoalName").value.trim(),target=Number($("rbGoalTarget").value);
+  if(!name)return alert("Give your goal a name.");
+  if(!target||target<1)return alert("Enter how many points this goal needs.");
+  setRewardGoal(selectedRewardIcon.e,name,target);
+  $("rewardBankDialog").close();
+  renderRewardBankCard();
+});
+
+$("rbCashoutBtn").addEventListener("click",()=>{
+  const goal=state.rewardBank?.goal;
+  if(!goal)return;
+  if(!confirm(`Cash out ${goal.target} points for "${goal.name}"? This can't be undone.`))return;
+  if(cashOutReward()){
+    $("rewardBankDialog").close();
+    renderRewardBankCard();
+  }
+});
+
+$("rbClearGoalBtn").addEventListener("click",()=>{
+  const goal=state.rewardBank?.goal;
+  if(!goal)return;
+  if(!confirm(`Clear "${goal.name}"? Your points stay banked — you can set a new goal any time.`))return;
+  clearRewardGoal();
+  openRewardBankDialog();
+});
+
 $("shareCheckout").addEventListener("click",async()=>{
   const day=getDay(),score=scoreDay(day),{sat,mins}=totals(day);
   const text=`My CholScore today: ${score}/100 — ${fmt(sat)}g saturated fat, ${Math.round(mins)} minutes of activity. 💪`;
