@@ -802,7 +802,8 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 }
 .complete-exercise-btn:disabled{opacity:.28;box-shadow:none}
 .exercise-complete-modal{
-  width:min(95vw,520px);padding:0;overflow:hidden;border-radius:30px;position:relative;
+  width:min(95vw,520px);padding:0;overflow:hidden;border-radius:30px;
+  position:fixed;inset:0;margin:auto;height:auto;max-height:94dvh;
   border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 70px -20px rgba(0,0,0,.6);
 }
 .ecm-scene{
@@ -872,7 +873,8 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 
 /* ============ v1.3.0 quick-activity (walk/run) completion card ============ */
 .activity-complete-modal{
-  width:min(95vw,480px);padding:0;overflow:hidden;border-radius:30px;position:relative;
+  width:min(95vw,480px);padding:0;overflow:hidden;border-radius:30px;
+  position:fixed;inset:0;margin:auto;height:auto;max-height:94dvh;
   border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 70px -20px rgba(0,0,0,.6);
 }
 .acm-scene{
@@ -965,7 +967,7 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
     radial-gradient(circle at 50% 38%,rgba(165,35,255,.34),transparent 29%),
     radial-gradient(circle at 50% 0%,rgba(74,25,130,.34),transparent 38%),
     linear-gradient(180deg,#090615 0%,#080913 58%,#05070d 100%);
-  box-shadow:0 30px 90px rgba(0,0,0,.65),inset 0 0 0 1px rgba(255,196,58,.08);position:relative;overflow:auto
+  box-shadow:0 30px 90px rgba(0,0,0,.65),inset 0 0 0 1px rgba(255,196,58,.08);overflow:auto
 }
 .premium-workout-result::backdrop{background:rgba(0,0,0,.84);backdrop-filter:blur(8px)}
 .premium-workout-result::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 33%,rgba(187,63,255,.18),transparent 34%)}

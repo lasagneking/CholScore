@@ -1,4 +1,4 @@
-CholScore v1.7.0 - Staples: quick-add for repeat foods
+CholScore v1.7.1 - Fixed celebration dialogs appearing off-screen
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,33 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.7.1 fixed celebration dialogs appearing off-screen
+- Reported: the walk/run completion card sometimes appeared scrolled above the
+  visible viewport, requiring a scroll up to see it — most noticeable on the first
+  activity logged in a session, right after scrolling down the Exercise tab to reach
+  the Quick Activity buttons.
+- Root cause, found by auditing every custom celebration dialog's CSS: three of the
+  four never actually had working `position:fixed` centering, so they fell back to
+  rendering wherever the page's current scroll position happened to place them
+  rather than staying pinned to the viewport:
+  - `.exercise-complete-modal` and `.activity-complete-modal` (the walk/run medal
+    card) only ever had `position:relative` — no fixed/centered positioning was set
+    at all.
+  - `.premium-workout-result` (the main end-of-workout screen) actually did have
+    `position:fixed` — but a second, contradictory `position:relative` later in the
+    exact same CSS rule silently won and overrode it. This one's been quietly broken
+    since it was first styled; it just hadn't been reported yet because it wasn't
+    always visible from the page's default scroll position.
+  - `.checkout-premium` (the daily checkout dialog) was the only one written
+    correctly from the start, which is exactly why it was never reported.
+- Fixed by making all three match the one dialog that was already correct: a single,
+  unambiguous `position:fixed;inset:0;margin:auto`, so every completion dialog is
+  now always centered in the viewport regardless of where the underlying page
+  happens to be scrolled.
+- `index.html`, `styles.css`, and the image cache-busting query strings bumped to
+  `v120`.
+- service-worker cache version bumped to `cholscore-v120`.
 
 ## v1.7.0 Staples — quick add for repeat foods
 - New "Staples" row on the Food tab, between the barcode scanner and today's food
