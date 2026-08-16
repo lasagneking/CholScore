@@ -409,6 +409,7 @@ function renderExercise(){
   showActiveWorkoutBanner();
   $("exerciseList").innerHTML=day.activities.length?day.activities.slice().reverse().map(x=>`<div class="log-item activity-log-item"><div><strong>${x.type==="run"?"🏃":x.type==="walk"?"🚶":x.type==="workout"?"🏋️":"⚡"} ${esc(x.name)}</strong><small>${x.type==="workout"?`${x.exerciseCount||0} exercises · `:""}${x.minutes} min${x.distance?` · ${distanceText(x.distance)}`:""}</small></div><div class="activity-log-right"><div class="log-value">${feelEmoji(x.feel)}</div><button type="button" class="activity-delete-btn" data-activity-id="${esc(x.id||"")}" aria-label="Delete this activity">🗑</button></div></div>`).join(""):`<div class="empty-state">No completed activity today.</div>`;
   wireActivityCards();
+  renderPersonalRecords();
 }
 function wireActivityCards(){
   qsa(".activity-delete-btn").forEach(btn=>btn.addEventListener("click",()=>{
@@ -651,7 +652,6 @@ function renderPersonalRecords(){
   $("prList").innerHTML=rows.length?rows.join(""):`<p class="pr-empty">Complete a weighted or timed exercise, or log a walk/run, to start setting personal records.</p>`;
 }
 function renderRewards(){
-  renderPersonalRecords();
   const metrics=achievementMetrics();
   const unlocked=achievementDefs.filter(a=>Number(metrics[a.metric]||0)>=a.goal);
   const pct=achievementDefs.length?unlocked.length/achievementDefs.length*100:0;

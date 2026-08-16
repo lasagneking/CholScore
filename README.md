@@ -1,4 +1,4 @@
-CholScore v1.12.0 - 10 new achievements, including 2 real Mythic ones
+CholScore v1.12.1 - Personal Records moved from Rewards to Exercise
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,26 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.12.1 Personal Records moved to Exercise
+- Reported: with 6+ PR entries, the Rewards tab required scrolling past the entire
+  Personal Records list before reaching the actual achievement collection — the
+  thing the tab is supposedly about.
+- Moved the whole Personal Records section from Rewards to the bottom of the
+  Exercise tab, where it's more topically at home — it's about exercise history,
+  not the gamification/collection layer.
+- Rewards' "personal best" stat card (the trophy one showing e.g. "40") stays
+  exactly where it is — checked, and despite the similar name it's actually your
+  highest-ever daily CholScore, a completely different thing from exercise PRs
+  that just happened to share a name. No reason to move it.
+- Straightforward move, not a rebuild: `renderPersonalRecords()` now runs as part
+  of `renderExercise()` instead of `renderRewards()`, so it's still just as live
+  (refreshes every render), just attached to the right tab. Confirmed exactly one
+  definition and exactly one call site afterward, and that `#prList` only exists
+  once in the page.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v135`.
+- service-worker cache version bumped to `cholscore-v135`.
 
 ## v1.12.0 10 new achievements, including 2 real Mythic ones
 - v1.11.0 shipped the colour-coding system and the Mythic visual treatment, but
