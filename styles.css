@@ -25,6 +25,14 @@ body{
     var(--bg);
   min-height:100vh;
 }
+/* v1.7.2 — applied to <body> while any dialog is open, see the
+   lockBodyScrollForDialogs() patch in app.js. position:fixed (rather than
+   just overflow:hidden) is what's actually needed here — plain
+   overflow:hidden on body is well known not to reliably stop touch-scroll
+   from reaching the page underneath on iOS Safari. `top` is set inline by
+   the JS to the negative of the scroll position being locked at, so the
+   page doesn't visually jump before the dialog opens. */
+body.dialog-scroll-lock{position:fixed;left:0;right:0;width:100%}
 button,input,select{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}

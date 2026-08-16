@@ -1,4 +1,4 @@
-CholScore v1.7.1 - Fixed celebration dialogs appearing off-screen
+CholScore v1.7.2 - Background no longer scrolls behind an open dialog
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,33 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.7.2 background scroll lock for all dialogs
+- Reported: with a dialog open on top (e.g. Exercise tab → "+ Routine"), scrolling
+  sometimes scrolled the page underneath instead of the dialog itself, requiring
+  scrolling back within the dialog to regain control of it.
+- Root cause: native `<dialog>` doesn't reliably stop the page behind it from
+  scrolling on mobile Safari — a well-known platform quirk, not specific to any one
+  dialog in this app.
+- Fixed at the root rather than patching individual dialogs: `showModal()` is now
+  wrapped once so **every** dialog in the app is covered automatically, including
+  ones added in the future, instead of needing a scroll-lock call added at each of
+  the ~16 individual `showModal()` sites throughout the app.
+- Uses the standard mobile-safe technique — `position:fixed` on `<body>` with the
+  scroll position preserved via `top` and restored via `window.scrollTo()` on close
+  — rather than plain `overflow:hidden`, which is the part that doesn't actually
+  work reliably on iOS Safari.
+- Cleanup listens for the dialog's native `close` event (captured, since `close`
+  doesn't bubble) so it correctly unlocks regardless of *how* the dialog closed —
+  Esc key or a form submit included, not just an explicit `.close()` call.
+- Handles stacked dialogs correctly via an open-counter: if a dialog is opened from
+  within another dialog, the lock stays engaged until the last one actually closes,
+  not the first. Verified this exact scenario (open → nested open → nested close →
+  outer close) before shipping, since it's the case most likely to get the count
+  wrong.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v121`.
+- service-worker cache version bumped to `cholscore-v121`.
 
 ## v1.7.1 fixed celebration dialogs appearing off-screen
 - Reported: the walk/run completion card sometimes appeared scrolled above the

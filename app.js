@@ -76,6 +76,43 @@ function getDay(key=todayKey()){
 }
 const $ = id=>document.getElementById(id);
 const qsa = (sel,root=document)=>[...root.querySelectorAll(sel)];
+
+/* v1.7.2 — lock background scroll while any dialog is open. Native <dialog>
+   does NOT reliably prevent the page underneath from scrolling on mobile
+   Safari (a well-known platform quirk), so without this, touch-scrolling
+   inside or near an open dialog can scroll the page behind it instead.
+   Patches showModal() once here so every dialog in the app is covered
+   automatically — including ones added in future — rather than needing a
+   scroll-lock call at every individual showModal() site. Cleanup listens
+   for the dialog's native 'close' event (captured, since 'close' doesn't
+   bubble) so it correctly unlocks however the dialog closed: a JS .close()
+   call, Esc key, or a <form method="dialog"> submit — not just the cases
+   this code explicitly triggers. An open counter handles stacked dialogs
+   (a dialog opened from within another dialog) so the lock only lifts once
+   the last one is actually closed. */
+(function lockBodyScrollForDialogs(){
+  let openCount=0,savedScrollY=0;
+  const nativeShowModal=HTMLDialogElement.prototype.showModal;
+  HTMLDialogElement.prototype.showModal=function(...args){
+    if(openCount===0){
+      savedScrollY=window.scrollY||window.pageYOffset||0;
+      document.body.classList.add("dialog-scroll-lock");
+      document.body.style.top=`-${savedScrollY}px`;
+    }
+    openCount++;
+    return nativeShowModal.apply(this,args);
+  };
+  document.addEventListener("close",e=>{
+    if(!(e.target instanceof HTMLDialogElement))return;
+    openCount=Math.max(0,openCount-1);
+    if(openCount===0){
+      document.body.classList.remove("dialog-scroll-lock");
+      document.body.style.top="";
+      window.scrollTo(0,savedScrollY);
+    }
+  },true);
+})();
+
 function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));}
 
 function distanceUnit(){
