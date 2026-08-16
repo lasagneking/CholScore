@@ -1199,7 +1199,7 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 }
 .day-report-dialog::backdrop{background:var(--rep-bg)}
 .rep-close{
-  position:absolute;top:16px;right:16px;z-index:10;width:40px;height:40px;border-radius:50%;
+  position:absolute;top:calc(env(safe-area-inset-top) + 16px);right:16px;z-index:10;width:40px;height:40px;border-radius:50%;
   background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#fff;
   font-size:18px;display:grid;place-items:center;backdrop-filter:blur(6px);
 }

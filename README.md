@@ -1,4 +1,4 @@
-CholScore v1.9.2 - Splash links switched to absolute URLs
+CholScore v1.9.3 - Fixed unreachable Day Report close button on notched phones
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,28 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.9.3 fixed unreachable Day Report close button
+- Reported: the Day Report's close (✕) button appeared to do nothing when tapped,
+  with the report stuck open — screenshot showed the button visually overlapping
+  the status bar/battery indicator on an iPhone 17 Pro Max.
+- Root cause: `.rep-close` was positioned with a flat `top:16px`, with no account
+  for `env(safe-area-inset-top)` — the only element in the entire stylesheet with
+  this gap; every other top-anchored element already handled it correctly. On a
+  phone with a notch or Dynamic Island, that placed the button underneath the area
+  iOS reserves for its own status bar. Taps landing there get intercepted by iOS
+  itself (e.g. the tap-to-scroll-to-top gesture) rather than ever reaching the
+  button's own click handler — which was actually correct and unchanged the whole
+  time; this was never a JavaScript bug.
+- Fixed by changing it to `top:calc(env(safe-area-inset-top) + 16px)`, so the
+  button now sits a consistent 16px below the safe area on any device — notched,
+  Dynamic Island, or neither, since the inset resolves to 0 on older devices and
+  the calc simplifies back to the original 16px automatically.
+- Audited the rest of the stylesheet for the same class of bug (any top-anchored
+  fixed/absolute element not using the safe-area inset) before shipping — this was
+  the only instance.
+- `index.html`, `styles.css`, and `sw.js` updated; cache-busting query strings and
+  the service worker cache version bumped to `v127`.
 
 ## v1.9.2 splash links switched to absolute URLs
 - Follow-up to v1.9.1: after the white-flash fix, a full cold reboot + fresh launch
