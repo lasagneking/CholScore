@@ -1,4 +1,4 @@
-CholScore v1.8.0 - Trends
+CholScore v1.8.1 - Cardio progress added to Trends
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,32 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.8.1 Cardio progress added to Trends
+- Reported: walk/run activities (both cardio) weren't represented anywhere in
+  Trends — only Strength progress existed, covering workout exercises only.
+- New **Cardio progress** card, directly under Strength progress, mirroring its
+  exact structure: pick Walk or Run from a chip row, see a session-by-session chart,
+  get a plain-language callout.
+- Chart shows **speed**, not raw pace, deliberately — pace is "lower is better",
+  which would make an improving trend look like a *decline* on a normal up-right
+  chart. Charting speed instead means a rising line always reads as "getting
+  faster", the same up-is-better visual language as the Strength chart's rising
+  weight line. The callout still describes it in ordinary pace (e.g. "19:14/mi"),
+  since that's the familiar way anyone actually talks about running/walking pace —
+  only the chart's axis is inverted, not the language.
+- Handles all three directions honestly: faster ("3:05/mi faster since 1 Aug"),
+  slower ("Pace eased from... to..." — no judgemental framing), and steady,
+  with a small dead-zone around exact ties so float rounding can't produce a
+  meaningless "0:00 faster" message.
+- Only activity types with 2+ logged sessions appear in the picker — same
+  threshold as Strength progress and Personal Records — so a single one-off walk
+  doesn't produce a meaningless one-point "trend".
+- Tested pace-series extraction against a realistic 5-session improving walk (20:00/mi
+  down to 16:55/mi) and all three callout branches (faster/slower/steady) before
+  shipping.
+- `index.html`, `app.js`, and the image cache-busting query strings bumped to `v123`.
+- service-worker cache version bumped to `cholscore-v123`.
 
 ## v1.8.0 Trends
 - New **Calendar / Trends** toggle at the top of the History tab — switches between

@@ -10,7 +10,7 @@
   <meta name="application-name" content="CholScore" />
   <title>CholScore</title>
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="styles.css?v=122" />
+  <link rel="stylesheet" href="styles.css?v=123" />
 </head>
 <body>
   <div id="app">
@@ -315,6 +315,19 @@
                 <div class="pr-callout" id="strengthCallout"><span>🏆</span><div id="strengthCalloutText"></div></div>
               </div>
             </div>
+
+            <div class="trend-card">
+              <div class="trend-head">
+                <div><h3>Cardio progress</h3><p>Pace per session — walk or run</p></div>
+              </div>
+              <div id="cardioEmptyState" class="empty-state hidden">Log the same activity type twice to see its trend.</div>
+              <div id="cardioTrendBody">
+                <div class="exercise-picker" id="cardioPicker"></div>
+                <div class="chart-wrap"><svg id="cardioChart" viewBox="0 0 320 110" preserveAspectRatio="none"></svg></div>
+                <div class="chart-xlabels" id="cardioChartLabels"></div>
+                <div class="pr-callout" id="cardioCallout"><span>⚡</span><div id="cardioCalloutText"></div></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -456,7 +469,7 @@
     <p id="finishWorkoutSummary" class="workout-celebration-message premium-subtitle"></p>
 
     <div class="premium-athlete premium-athlete-image" aria-hidden="true">
-      <img src="workout-victory-silhouette.png?v=122" alt="" />
+      <img src="workout-victory-silhouette.png?v=123" alt="" />
     </div>
 
     <div class="workout-result-grid premium-result-grid">
@@ -755,7 +768,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=122"></script>
+  <script src="app.js?v=123"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

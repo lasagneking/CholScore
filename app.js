@@ -694,7 +694,7 @@ function showHistoryDay(key,btn){
    are built. Every series is computed fresh from totals()/scoreDay()/the
    same exercise data used by Personal Records — never a separate cache
    that could drift out of sync. */
-let trendsRange=30,trendsExercise=null;
+let trendsRange=30,trendsExercise=null,trendsCardioType=null;
 
 function lastNDaysKeys(n){
   const out=[],today=new Date();
@@ -773,6 +773,45 @@ function renderStrengthTrend(){
     ? `<b>+${isTimed?formatExerciseSeconds(diff):fmt(diff)+"kg"}</b> since ${firstDateNice} — up from ${fmtVal(first)} to ${fmtVal(last)}.`
     : `Holding steady at ${fmtVal(last)} since ${firstDateNice}.`;
 }
+function buildCardioSeries(){
+  const map={walk:{points:[]},run:{points:[]}};
+  for(const dayKey of Object.keys(state.days||{}).sort()){
+    const day=state.days[dayKey];
+    for(const act of day.activities||[]){
+      if(act.type!=="walk"&&act.type!=="run")continue;
+      const distanceKm=Number(act.distance||0),minutes=Number(act.minutes||0);
+      if(distanceKm>0&&minutes>0)map[act.type].points.push({date:dayKey,paceDisplay:minutes/kmToDisplay(distanceKm)});
+    }
+  }
+  return map;
+}
+function renderCardioTrend(){
+  const series=buildCardioSeries();
+  const types=["walk","run"].filter(t=>series[t].points.length>=2);
+  const emptyEl=$("cardioEmptyState"),bodyEl=$("cardioTrendBody");
+  if(!types.length){emptyEl.classList.remove("hidden");bodyEl.classList.add("hidden");return;}
+  emptyEl.classList.add("hidden");bodyEl.classList.remove("hidden");
+  if(!trendsCardioType||!types.includes(trendsCardioType))trendsCardioType=types[0];
+  $("cardioPicker").innerHTML=types.map(t=>`<button type="button" class="exercise-chip${t===trendsCardioType?" active":""}" data-type="${t}">${t==="run"?"🏃 Run":"🚶 Walk"}</button>`).join("");
+  qsa(".exercise-chip",$("cardioPicker")).forEach(chip=>chip.addEventListener("click",()=>{trendsCardioType=chip.dataset.type;renderCardioTrend();}));
+
+  const pts=series[trendsCardioType].points,unit=distanceUnit(),dateKeys=pts.map(p=>p.date);
+  // Chart shows speed (units/hour), not raw pace — a rising line reads as
+  // "getting faster", same up-is-better visual language as Strength
+  // progress. The callout still talks in ordinary pace (min:sec/unit)
+  // since that's the familiar way to describe running/walking pace.
+  const speeds=pts.map(p=>p.paceDisplay>0?60/p.paceDisplay:0);
+  svgAreaChart("cardioChart","cardioChartLabels",speeds,dateKeys,{color:"#ffd166"});
+
+  const fmtPace=v=>{const m=Math.floor(v),s=Math.round((v-m)*60);return `${m}:${String(s).padStart(2,"0")}`;};
+  const firstPace=pts[0].paceDisplay,lastPace=pts[pts.length-1].paceDisplay,paceDiff=firstPace-lastPace;
+  const firstDateNice=new Date(dateKeys[0]+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"});
+  $("cardioCalloutText").innerHTML=paceDiff>0.01
+    ? `<b>${fmtPace(Math.abs(paceDiff))}/${unit} faster</b> since ${firstDateNice} — pace improved from ${fmtPace(firstPace)}/${unit} to ${fmtPace(lastPace)}/${unit}.`
+    : paceDiff<-0.01
+    ? `Pace eased from ${fmtPace(firstPace)}/${unit} to ${fmtPace(lastPace)}/${unit} since ${firstDateNice}.`
+    : `Holding steady at ${fmtPace(lastPace)}/${unit} since ${firstDateNice}.`;
+}
 function renderTrends(){
   const hasAnyData=Object.keys(state.days||{}).length>0;
   $("trendsEmptyState").classList.toggle("hidden",hasAnyData);
@@ -780,6 +819,7 @@ function renderTrends(){
   if(!hasAnyData)return;
   renderTrendsSatScore();
   renderStrengthTrend();
+  renderCardioTrend();
 }
 qsa(".range-btn").forEach(btn=>btn.addEventListener("click",()=>{
   qsa(".range-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
