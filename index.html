@@ -26,7 +26,7 @@
        moment the page itself is loading; the splash covers the moment
        before that, while iOS is launching the app shell. -->
   <style>html,body{background:#090b10}</style>
-  <link rel="stylesheet" href="styles.css?v=143" />
+  <link rel="stylesheet" href="styles.css?v=144" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -103,6 +103,7 @@
 
       <section id="todayView" class="view active">
         <div class="hero-card">
+          <button type="button" id="scoreInfoBtn" class="hero-info-btn" aria-label="What do these score labels mean?">ⓘ</button>
           <div>
             <p id="heroMessage" class="hero-message">You're building a better day.</p>
             <h3>Today's progress</h3>
@@ -506,7 +507,7 @@
     <p id="finishWorkoutSummary" class="workout-celebration-message premium-subtitle"></p>
 
     <div class="premium-athlete premium-athlete-image" aria-hidden="true">
-      <img src="workout-victory-silhouette.png?v=143" alt="" />
+      <img src="workout-victory-silhouette.png?v=144" alt="" />
     </div>
 
     <div class="workout-result-grid premium-result-grid">
@@ -818,6 +819,12 @@
     </form>
   </dialog>
 
+  <dialog id="scoreInfoDialog" class="modal">
+    <div class="modal-head"><div><p class="eyebrow">CHOLSCORE</p><h3>What the labels mean</h3></div><button type="button" data-close-dialog="scoreInfoDialog" aria-label="Close">×</button></div>
+    <p class="modal-note">Your daily score, and what it's called at each level.</p>
+    <div id="scoreBandList" class="score-band-list"></div>
+  </dialog>
+
   <dialog id="settingsDialog" class="modal">
     <form method="dialog">
       <div class="modal-head"><h3>Profile</h3><button type="button" data-close-dialog="settingsDialog" aria-label="Cancel">×</button></div>
@@ -848,7 +855,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=143"></script>
+  <script src="app.js?v=144"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

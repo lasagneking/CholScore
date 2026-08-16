@@ -182,7 +182,15 @@ function scoreDay(day=getDay()){
   const consistency=(day.foods.length?5:0)+(activities?5:0);
   return Math.max(0,Math.min(100,Math.round(foodScore+moveBase+participation+consistency)));
 }
-function scoreLabel(s){return s>=90?"Outstanding":s>=80?"Flying":s>=70?"Great day":s>=55?"Building momentum":s>=35?"Good start":"Getting started";}
+const SCORE_BANDS=[
+  {min:90,label:"Outstanding"},
+  {min:80,label:"Flying"},
+  {min:70,label:"Great day"},
+  {min:55,label:"Building momentum"},
+  {min:35,label:"Good start"},
+  {min:0,label:"Getting started"},
+];
+function scoreLabel(s){return SCORE_BANDS.find(b=>s>=b.min).label;}
 
 function init(){
   if(!state.profile){
@@ -2427,6 +2435,16 @@ $("shareCheckout").addEventListener("click",async()=>{
 /* History/profile */
 $("prevMonth").addEventListener("click",()=>{calendarDate.setMonth(calendarDate.getMonth()-1);renderCalendar();});
 $("nextMonth").addEventListener("click",()=>{calendarDate.setMonth(calendarDate.getMonth()+1);renderCalendar();});
+function renderScoreBandList(){
+  const rows=SCORE_BANDS.map((band,i)=>{
+    const max=i===0?100:SCORE_BANDS[i-1].min-1;
+    const rangeText=i===0?`${band.min}+`:`${band.min}–${max}`;
+    return `<div class="score-band-row"><span class="score-band-range">${rangeText}</span><span class="score-band-label">${esc(band.label)}</span></div>`;
+  }).join("");
+  $("scoreBandList").innerHTML=rows;
+}
+$("scoreInfoBtn").addEventListener("click",()=>{renderScoreBandList();$("scoreInfoDialog").showModal();});
+
 $("profileBtn").addEventListener("click",()=>{$("settingsName").value=state.profile.name;$("settingsTarget").value=state.profile.target;$("settingsUnits").value=distanceUnit();renderBackupStatus();$("settingsDialog").showModal();});
 $("saveSettings").addEventListener("click",()=>{const n=$("settingsName").value.trim(),t=Number($("settingsTarget").value),u=$("settingsUnits").value==="km"?"km":"mi";if(n&&t>0){state.profile={...state.profile,name:n,target:t,distanceUnit:u};saveState();renderAll();}});
 $("resetData").addEventListener("click",()=>{if(confirm("Reset all CholScore data on this device?")){localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(LEGACY_KEY);state=cloneDefault();$("settingsDialog").close();location.reload();}});

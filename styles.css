@@ -86,6 +86,18 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
   content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-120px;top:-120px;
   background:radial-gradient(circle,rgba(84,217,255,.15),transparent 65%)
 }
+.hero-info-btn{
+  position:absolute;top:16px;right:16px;z-index:2;width:30px;height:30px;border-radius:50%;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:#aeb5c4;font-size:15px;
+  display:grid;place-items:center
+}
+.score-band-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.score-band-row{
+  display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-radius:13px;
+  background:#111620;border:1px solid var(--line)
+}
+.score-band-range{font-size:13px;font-weight:800;color:var(--violet);font-variant-numeric:tabular-nums}
+.score-band-label{font-size:13px;color:#dce5ef}
 .hero-card h3{font-size:25px;margin:3px 0 18px}
 .hero-message{color:#aeb5c4;margin:0;font-size:14px}
 .rings-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}

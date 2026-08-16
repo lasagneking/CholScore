@@ -1,4 +1,4 @@
-CholScore v1.14.2 - Weight adjuster repositioned to fill the row
+CholScore v1.15.0 - Score label info button on Today's progress
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,25 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.15.0 score label info button
+- Asked directly: a score of 95 shows as "Outstanding" — what are the actual
+  thresholds for each label? Confirmed from the real code (90+ Outstanding, 80–89
+  Flying, 70–79 Great day, 55–69 Building momentum, 35–54 Good start, 0–34 Getting
+  started), then added an in-app way for anyone to see this without having to ask.
+- New small ⓘ button in the top-right of the "Today's progress" card, opening a
+  simple dialog listing every score band and its label.
+- Refactored `scoreLabel()` to read from a shared `SCORE_BANDS` array instead of a
+  hardcoded if/else chain, and the new dialog generates its list from that exact
+  same array — not a separately hand-typed copy. If the thresholds are ever
+  changed later, the info dialog updates automatically instead of silently
+  drifting out of sync with what the score actually does.
+- Verified the refactor didn't change behaviour: every boundary score (34/35,
+  54/55, 69/70, 79/80, 89/90) produces the identical label before and after, and
+  the generated ranges have no gaps or overlaps between them.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v144`.
+- service-worker cache version bumped to `cholscore-v144`.
 
 ## v1.14.2 weight adjuster repositioned to fill the row
 - Reported with a screenshot: the "Weight" label and the −/value/+ stepper were
