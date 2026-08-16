@@ -1,4 +1,4 @@
-CholScore v1.12.1 - Personal Records moved from Rewards to Exercise
+CholScore v1.12.2 - Personal best score moved to top of Exercise
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,23 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.12.2 personal best score moved to top of Exercise
+- Follow-up to v1.12.1: the "personal best" stat card (trophy icon, e.g. "40") was
+  still sitting in Rewards, unmoved.
+- Moved it to a new compact gold banner right at the very top of the Exercise tab —
+  above "Movement today", the first thing visible on the tab, matching "see it at a
+  glance" rather than being buried at the bottom with the Personal Records list.
+- Rewards now shows only day streak and total points — rearranged from a 3-column
+  grid down to a proper 2-column one rather than leaving an empty gap where the
+  third card used to be.
+- The computation itself (highest-ever daily CholScore across all checked-out days)
+  didn't change at all, just where it's read from — factored into a small
+  `bestEverScore()` helper so it's not duplicated, and tested against both real
+  multi-day data and a brand-new-user zero-data case before shipping.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v136`.
+- service-worker cache version bumped to `cholscore-v136`.
 
 ## v1.12.1 Personal Records moved to Exercise
 - Reported: with 6+ PR entries, the Rewards tab required scrolling past the entire

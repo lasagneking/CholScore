@@ -26,7 +26,7 @@
        moment the page itself is loading; the splash covers the moment
        before that, while iOS is launching the app shell. -->
   <style>html,body{background:#090b10}</style>
-  <link rel="stylesheet" href="styles.css?v=135" />
+  <link rel="stylesheet" href="styles.css?v=136" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -208,6 +208,11 @@
           <button id="newRoutineBtn" class="mini-btn">+ Routine</button>
         </div>
 
+        <div class="best-score-banner">
+          <div class="best-score-icon">🏆</div>
+          <div><strong id="exerciseBestScore">0</strong><small>Personal best CholScore</small></div>
+        </div>
+
         <div class="metric-card">
           <span>Movement today</span>
           <strong><span id="exerciseMinutes">0</span> minutes</strong>
@@ -277,10 +282,9 @@
           <div class="collection-progress"><i id="collectionProgressBar"></i></div>
         </div>
 
-        <div class="stats-grid">
+        <div class="stats-grid stats-grid-2">
           <div class="stat-card"><span>🔥</span><strong id="streakStat">0</strong><small>day streak</small></div>
           <div class="stat-card"><span>⭐</span><strong id="pointsStat">0</strong><small>total points</small></div>
-          <div class="stat-card"><span>🏆</span><strong id="bestStat">0</strong><small>personal best</small></div>
         </div>
 
         <div class="reward-tabs" id="rewardCategoryTabs"></div>
@@ -505,7 +509,7 @@
     <p id="finishWorkoutSummary" class="workout-celebration-message premium-subtitle"></p>
 
     <div class="premium-athlete premium-athlete-image" aria-hidden="true">
-      <img src="workout-victory-silhouette.png?v=135" alt="" />
+      <img src="workout-victory-silhouette.png?v=136" alt="" />
     </div>
 
     <div class="workout-result-grid premium-result-grid">
@@ -804,7 +808,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=135"></script>
+  <script src="app.js?v=136"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

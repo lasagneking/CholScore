@@ -400,8 +400,13 @@ function renderProteinToday(day=getDay()){
   `).join("");
 }
 
+function bestEverScore(){
+  const days=Object.entries(state.days).filter(([_,d])=>d.checkedOut);
+  return days.length?Math.max(...days.map(([_,d])=>Number(d.finalScore??scoreDay(d)))):scoreDay();
+}
 function renderExercise(){
   const day=getDay(),t=totals(day);
+  $("exerciseBestScore").textContent=Math.round(bestEverScore());
   $("exerciseMinutes").textContent=Math.round(t.mins);$("exerciseBar").style.width=`${Math.min(100,t.mins/45*100)}%`;
   if($("distanceUnitLabel")) $("distanceUnitLabel").textContent=distanceUnit();
   renderProteinToday(day);
@@ -663,11 +668,8 @@ function renderRewards(){
     ?`You collected everything, ${state.profile.name}!`
     :`${achievementDefs.length-unlocked.length} still waiting to be unlocked.`;
 
-  const days=Object.entries(state.days).filter(([_,d])=>d.checkedOut);
   const totalPoints=metrics.totalPoints;
-  const best=days.length?Math.max(...days.map(([_,d])=>Number(d.finalScore??scoreDay(d)))):scoreDay();
   $("pointsStat").textContent=Math.round(totalPoints);
-  $("bestStat").textContent=Math.round(best);
   $("streakStat").textContent=calculateStreak();
 
   $("rewardCategoryTabs").innerHTML=rewardCategories.map(([id,label])=>
