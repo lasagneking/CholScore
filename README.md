@@ -1,4 +1,4 @@
-CholScore v1.8.1 - Cardio progress added to Trends
+CholScore v1.9.0 - iOS launch splash screens
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,46 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.9.0 iOS launch splash screens
+- Reported: on Android, installing the PWA shows an auto-generated splash screen
+  (from the manifest icon); on iOS, "Add to Home Screen" showed nothing at launch.
+- Confirmed via current research: unlike Android, iOS Safari still doesn't generate
+  a splash screen from the web manifest as of 2026 — it's a known, long-standing gap.
+  It needs an exact, pixel-matched PNG per physical device size and orientation,
+  declared as a separate `<link rel="apple-touch-startup-image">` per size, matched
+  by a media query it won't scale to fit if the numbers are even slightly off.
+- Added the two meta tags that actually enable proper standalone-mode behaviour on
+  iOS (`apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`) —
+  kept alongside the existing modern `mobile-web-app-capable` tag rather than
+  replacing it, since not every iOS version in circulation honours the newer
+  standard tag yet.
+- Generated 10 splash images (portrait only — the app is orientation-locked to
+  portrait-primary already) covering iPhone X through the iPhone 16 line: the
+  CholScore icon centred on the exact `background_color` from the manifest, so it
+  reads as a continuation of the app rather than a separate loading screen.
+- Found and fixed a real bug in the source icon while generating these: it has no
+  actual alpha transparency (checked directly — alpha channel is 255 everywhere),
+  just a flat near-white background baked into the file behind the rounded-square
+  shape. Centering it as-is on the dark splash background produced a visible white
+  halo. Fixed by colour-keying near-white pixels to transparent before compositing.
+  This is very likely also why the existing Android splash "isn't very good" — same
+  underlying icon file, same white-background problem — worth a follow-up if you'd
+  like that specifically improved too, since I haven't seen your wife's phone's
+  actual result to confirm the exact cause there.
+- Deliberately left out the very newest iPhone 17 series / iPhone Air — their exact
+  CSS-point dimensions weren't confidently verifiable from current sources at the
+  time of writing, and a wrong number silently fails a media-query match with no
+  visible error. Better to ship a solid, verified range now and extend it once
+  those numbers are confirmed than guess.
+- Verified all 10 entries three ways before shipping: every referenced file exists
+  on disk, every file's actual pixel dimensions exactly match its filename and its
+  media query, and the CSS-width × pixel-ratio arithmetic is internally consistent
+  for every single entry (e.g. 393×852 at 3x really does equal the 1179×2556 PNG).
+- New `splash/` folder added to the service worker's precached app shell, so these
+  load offline too, consistent with the rest of the app's assets.
+- `index.html` and `sw.js` updated; cache-busting query strings and the service
+  worker cache version bumped to `v124`.
 
 ## v1.8.1 Cardio progress added to Trends
 - Reported: walk/run activities (both cardio) weren't represented anywhere in

@@ -1,4 +1,4 @@
-const CACHE = "cholscore-v123";
+const CACHE = "cholscore-v124";
 
 const APP_SHELL = [
   "./",
@@ -9,7 +9,17 @@ const APP_SHELL = [
   "./icon-192.png",
   "./icon-512.png",
   "./apple-touch-icon.png",
-  "./workout-victory-silhouette.png"
+  "./workout-victory-silhouette.png",
+  "./splash/apple-splash-750x1334.png",
+  "./splash/apple-splash-1125x2436.png",
+  "./splash/apple-splash-828x1792.png",
+  "./splash/apple-splash-1242x2688.png",
+  "./splash/apple-splash-1170x2532.png",
+  "./splash/apple-splash-1284x2778.png",
+  "./splash/apple-splash-1179x2556.png",
+  "./splash/apple-splash-1290x2796.png",
+  "./splash/apple-splash-1206x2622.png",
+  "./splash/apple-splash-1320x2868.png"
 ];
 
 self.addEventListener("install", event => {
