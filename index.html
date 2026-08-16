@@ -17,17 +17,26 @@
   <meta name="application-name" content="CholScore" />
   <title>CholScore</title>
   <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="styles.css?v=124" />
+  <!-- v1.9.1: sets the dark background the instant the page starts parsing,
+       before styles.css has had a chance to load. Without this there's a
+       real gap — however brief — where the browser shows its own default
+       white background until the external stylesheet arrives, which reads
+       as a white flash on launch. This is a separate mechanism from the
+       apple-touch-startup-image splash screens below: this covers the
+       moment the page itself is loading; the splash covers the moment
+       before that, while iOS is launching the app shell. -->
+  <style>html,body{background:#090b10}</style>
+  <link rel="stylesheet" href="styles.css?v=125" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
        physical device size, chosen by a media query it matches literally
        (no scaling to fit). Portrait-only, since the app is orientation-
        locked to portrait-primary in manifest.json. Covers iPhone X (2017)
-       through the iPhone 16 line (2024) — the very newest 2025/2026 models
-       (17 series, iPhone Air) are deliberately left out for now since their
-       exact dimensions weren't confidently verifiable at the time this was
-       written; add them once confirmed, following the same pattern. -->
+       through iPhone 17 Pro Max — the 17 Pro Max shares the exact same
+       440×956 CSS viewport as the 16 Pro Max (verified against three
+       independent sources), so no separate entry was needed for it. Only
+       the base iPhone 17/17 Pro and iPhone Air are still unconfirmed. -->
   <link rel="apple-touch-startup-image" href="splash/apple-splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
   <link rel="apple-touch-startup-image" href="splash/apple-splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
   <link rel="apple-touch-startup-image" href="splash/apple-splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
@@ -496,7 +505,7 @@
     <p id="finishWorkoutSummary" class="workout-celebration-message premium-subtitle"></p>
 
     <div class="premium-athlete premium-athlete-image" aria-hidden="true">
-      <img src="workout-victory-silhouette.png?v=124" alt="" />
+      <img src="workout-victory-silhouette.png?v=125" alt="" />
     </div>
 
     <div class="workout-result-grid premium-result-grid">
@@ -795,7 +804,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=124"></script>
+  <script src="app.js?v=125"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

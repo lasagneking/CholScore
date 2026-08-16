@@ -1,4 +1,4 @@
-CholScore v1.9.0 - iOS launch splash screens
+CholScore v1.9.1 - Fixed white flash on launch (separate issue from splash)
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,30 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.9.1 fixed the white flash on launch
+- Follow-up to v1.9.0: on an iPhone 17 Pro Max, the splash mechanism was fully
+  verified correct (file serves correctly, dimensions confirmed against three
+  independent sources, tag syntax correct) but a brief white screen was still
+  appearing on launch. Traced this to a genuinely separate issue.
+- Root cause: the dark background only existed in the external `styles.css` file,
+  which has to be fetched and parsed before it applies. Until then, the browser
+  shows its own default white background — a real gap, however brief, between the
+  page starting to load and the stylesheet actually arriving. That gap is what was
+  reading as a white flash, independent of whatever is or isn't happening with the
+  `apple-touch-startup-image` splash mechanism.
+- Fixed by setting the background colour inline in the `<head>`, before the
+  external stylesheet link, so it's applied the instant the page starts parsing
+  rather than waiting on a network round-trip.
+- Confirmed also correctly resolves the also-reported iPhone 17 Pro Max case: it
+  shares the exact same 440×956 CSS viewport as the 16 Pro Max (verified against
+  three independent sources), so it was already covered by the existing splash
+  image — no new device-specific entry was actually needed for it, just this fix.
+- Also corrected a stale code comment left over from v1.9.0 that still said the 17
+  series was excluded, which was no longer accurate once the shared-dimensions fact
+  was confirmed.
+- `index.html` and `sw.js` updated; cache-busting query strings and the service
+  worker cache version bumped to `v125`.
 
 ## v1.9.0 iOS launch splash screens
 - Reported: on Android, installing the PWA shows an auto-generated splash screen
