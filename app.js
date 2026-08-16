@@ -2422,14 +2422,157 @@ $("rbClearGoalBtn").addEventListener("click",()=>{
   openRewardBankDialog();
 });
 
+/* v1.16.0 — shareable checkout image. The app has no server, so this image
+   is drawn entirely client-side on a <canvas> at share time — nothing to
+   host, nothing to keep in sync with the real card design beyond copying
+   its colours. Deliberately includes the CholScore name prominently, since
+   that's the whole point of sharing an image instead of plain text. */
+function wrapCanvasText(ctx,text,x,y,maxWidth,lineHeight){
+  const words=text.split(" ");
+  let line="",lines=0;
+  for(let i=0;i<words.length;i++){
+    const test=line+words[i]+" ";
+    if(ctx.measureText(test).width>maxWidth&&line!==""){
+      ctx.fillText(line.trim(),x,y+lines*lineHeight);
+      line=words[i]+" ";
+      lines++;
+    }else{
+      line=test;
+    }
+  }
+  ctx.fillText(line.trim(),x,y+lines*lineHeight);
+  return lines+1; // number of lines actually drawn, so callers can lay out what comes next
+}
+function drawShareRing(ctx,cx,cy,r,pct,color,value,label){
+  ctx.lineWidth=14;ctx.lineCap="round";
+  ctx.strokeStyle="rgba(255,255,255,.08)";
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle=color;
+  ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,Math.max(0,pct)));ctx.stroke();
+  ctx.fillStyle="#ffffff";ctx.textAlign="center";ctx.font="bold 46px sans-serif";
+  ctx.fillText(value,cx,cy+16);
+  ctx.fillStyle="#9299aa";ctx.font="28px sans-serif";
+  ctx.fillText(label,cx,cy+r+50);
+}
+async function generateShareImageBlob(){
+  const day=getDay(),score=scoreDay(day),{sat,mins}=totals(day);
+  const target=Number(state.profile?.target||30);
+  const label=scoreLabel(score),name=state.profile?.name||"there";
+  const goal=state.rewardBank?.goal,todayPoints=dailyBankPoints(day);
+  const satOverTarget=sat>target;
+  const satColor=satOverTarget?"#ff8a65":"#55f0a7"; // over target reads as a warning colour, not a misleadingly "complete" green ring
+  const satClause=sat<=target?`stayed within their ${fmt(target)}g saturated fat limit (${fmt(sat)}g consumed)`:`logged ${fmt(sat)}g of saturated fat`;
+  const moveClause=mins>0?` and exercised for ${Math.round(mins)} minute${Math.round(mins)===1?"":"s"}`:"";
+  const bodyText=`${name} ${satClause}${moveClause}, earning a super score of ${score}.`;
+
+  const remaining=goal?Math.max(0,goal.target-availableBankPoints()):0;
+  const goalText=goal?(remaining>0?`+${todayPoints} points banked — ${remaining} away from ${goal.name}`:`+${todayPoints} points banked — ${goal.name} unlocked!`):"";
+
+  const W=1080;
+  // Dry-run layout pass on a scratch canvas, purely to measure how tall the
+  // wrapped text actually is — reuses wrapCanvasText's line-count return
+  // value, nothing here is ever shown. Without this, a fixed canvas height
+  // either wastes a lot of space on short messages or risks clipping long
+  // ones; this way the real canvas is created at exactly the right size.
+  const scratch=document.createElement("canvas");scratch.width=W;scratch.height=2000;
+  const sctx=scratch.getContext("2d");
+  sctx.font="bold 62px sans-serif";
+  const headlineLines=wrapCanvasText(sctx,`${label}, ${name}!`,70,310,940,70);
+  sctx.font="34px sans-serif";
+  const bodyY=310+headlineLines*70+50;
+  const bodyLines=wrapCanvasText(sctx,bodyText,70,bodyY,940,48);
+  let measuredY=bodyY+bodyLines*48+40;
+  let goalBoxHeight=0;
+  if(goal&&todayPoints>0){
+    sctx.font="bold 32px sans-serif";
+    const goalLines=wrapCanvasText(sctx,goalText,100,measuredY+52,880,40);
+    goalBoxHeight=Math.max(110,goalLines*40+60); // grows to fit a wrapped second line instead of a fixed single-line height
+    measuredY+=goalBoxHeight+40;
+  }
+  const ringY=measuredY+160;
+  const H=ringY+320;
+
+  const canvas=document.createElement("canvas");canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext("2d");
+
+  const bg=ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,"#121826");bg.addColorStop(1,"#090b10");
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  const glow=ctx.createRadialGradient(W*0.85,120,10,W*0.85,120,420);
+  glow.addColorStop(0,"rgba(84,217,255,.16)");glow.addColorStop(1,"rgba(84,217,255,0)");
+  ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+
+  ctx.textAlign="left";
+  ctx.fillStyle="#54d9ff";ctx.font="bold 40px sans-serif";
+  ctx.fillText("CHOLSCORE",70,110);
+  ctx.fillStyle="#8a93a8";ctx.font="26px sans-serif";
+  ctx.fillText("Track your heart health, one day at a time",70,148);
+
+  ctx.fillStyle="#7c8496";ctx.font="bold 26px sans-serif";
+  ctx.fillText("TODAY'S CHECKOUT",70,230);
+  ctx.fillStyle="#ffffff";ctx.font="bold 62px sans-serif";
+  wrapCanvasText(ctx,`${label}, ${name}!`,70,310,940,70); // identical inputs to the dry run above, so this draws exactly where measuredY assumed it would
+
+  ctx.fillStyle="#c7cedb";ctx.font="34px sans-serif";
+  wrapCanvasText(ctx,bodyText,70,bodyY,940,48);
+
+  let nextY=bodyY+bodyLines*48+40;
+  if(goal&&todayPoints>0){
+    ctx.fillStyle="rgba(255,209,102,.1)";
+    roundRectPath(ctx,70,nextY,940,goalBoxHeight,20);ctx.fill();
+    ctx.strokeStyle="rgba(255,209,102,.35)";ctx.lineWidth=2;
+    roundRectPath(ctx,70,nextY,940,goalBoxHeight,20);ctx.stroke();
+    ctx.fillStyle="#ffe6ac";ctx.font="bold 32px sans-serif";
+    wrapCanvasText(ctx,goalText,100,nextY+52,880,40);
+    nextY+=goalBoxHeight+40;
+  }
+
+  drawShareRing(ctx,220,ringY,110,satOverTarget?1:sat/Math.max(1,target),satColor,`${fmt(sat)}g`,"SAT FAT");
+  drawShareRing(ctx,540,ringY,110,Math.min(1,mins/45),"#54d9ff",`${Math.round(mins)}`,"MINUTES");
+  drawShareRing(ctx,860,ringY,110,Math.min(1,score/100),"#a879ff",`${score}`,"SCORE");
+
+  ctx.textAlign="center";ctx.fillStyle="#6b7284";ctx.font="26px sans-serif";
+  ctx.fillText("CholScore — track yours free",W/2,H-60);
+
+  return new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+}
+function roundRectPath(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
+}
 $("shareCheckout").addEventListener("click",async()=>{
   const day=getDay(),score=scoreDay(day),{sat,mins}=totals(day);
   const text=`My CholScore today: ${score}/100 — ${fmt(sat)}g saturated fat, ${Math.round(mins)} minutes of activity. 💪`;
   const btn=$("shareCheckout"),original=btn.textContent;
+  btn.textContent="Preparing image…";
   try{
-    if(navigator.share){await navigator.share({text});}
-    else if(navigator.clipboard){await navigator.clipboard.writeText(text);btn.textContent="Copied to clipboard ✨";setTimeout(()=>{btn.textContent=original;},1600);}
-  }catch(err){/* user dismissed the native share sheet — nothing to do */}
+    const blob=await generateShareImageBlob();
+    const file=new File([blob],"cholscore-checkout.png",{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      btn.textContent=original;
+      await navigator.share({files:[file],title:"CholScore",text});
+    }else if(navigator.share){
+      btn.textContent=original;
+      await navigator.share({text});
+    }else{
+      // No native share at all — offer the image as a direct download rather
+      // than losing it entirely, same fallback pattern Backup & Restore uses.
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");a.href=url;a.download="cholscore-checkout.png";a.click();
+      URL.revokeObjectURL(url);
+      btn.textContent="Image saved ✨";setTimeout(()=>{btn.textContent=original;},1600);
+    }
+  }catch(err){
+    if(err?.name==="AbortError"){btn.textContent=original;return;} // user dismissed the share sheet
+    // Image generation or file-sharing failed for some reason — fall back to
+    // the original text-only share rather than leaving the button stuck.
+    try{
+      if(navigator.share){await navigator.share({text});}
+      else if(navigator.clipboard){await navigator.clipboard.writeText(text);btn.textContent="Copied to clipboard ✨";setTimeout(()=>{btn.textContent=original;},1600);}
+    }catch(err2){/* dismissed again — nothing more to do */}
+    btn.textContent=original;
+  }
 });
 
 /* History/profile */

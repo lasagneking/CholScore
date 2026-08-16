@@ -1,4 +1,4 @@
-CholScore v1.15.0 - Score label info button on Today's progress
+CholScore v1.16.0 - Shareable branded checkout image
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,49 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.16.0 shareable branded checkout image
+- Reported: "Share achievement" on the checkout dialog only produced plain text —
+  wanted an actual shareable image, with the app name included, since a real image
+  is genuinely worth sharing (and a bit of free advertising in the process).
+- Built entirely client-side on a `<canvas>` at share time — the app has no server
+  to render an image for, so this draws the whole card from scratch: gradient
+  background, CholScore wordmark and tagline, the headline and summary text, the
+  reward-bank progress line when a goal's active, and the three rings, matching
+  the app's real colours.
+- Wired into the existing share button with a full fallback chain: image share on
+  browsers that support it, falling back to the original text-only share, falling
+  back to a direct image download if there's no native share at all, falling back
+  further to text-share/clipboard if image generation itself fails for any reason
+  — nothing regresses on a browser that can't do the new thing.
+- **Actually tested by installing a real canvas renderer and running the drawing
+  code for real**, not just reading it — this caught three genuine bugs no amount
+  of code review would have:
+  - A compound font string worked as CSS but silently reset to a 10px default
+    inside canvas specifically. Traced it to the `-apple-system` keyword itself
+    breaking font parsing — replaced every canvas font string with plain
+    `sans-serif` rather than gamble on real browsers behaving differently, on the
+    one platform already known for its own rendering quirks.
+  - The ring row was pinned to a fixed minimum position regardless of how much
+    text came before it, leaving a large dead gap on ordinary days with no active
+    goal box.
+  - A two-line goal message was drawn inside a box still sized for one line,
+    cramming the second line right against the border.
+- Fixed by switching to a two-pass approach: a scratch canvas measures the exact
+  wrapped-text height first (headline, body, and the goal box if present), then
+  the real canvas is created at precisely the right size — nothing wasted, nothing
+  clipped, regardless of name length or message length.
+- Also fixed a real, if smaller, honesty issue while building this: an
+  over-target saturated fat day was rendering as a fully-filled *green* ring,
+  which reads as "complete/good" even though the day was actually over the limit.
+  Now renders in a warning orange when over target instead.
+- Verified all of the above across four rendered scenarios before shipping: a
+  normal day, a day with an active goal (including the two-line wrap case), an
+  over-target day with an unusually long name, and a short single-line goal for
+  comparison — checked pixel dimensions directly, not just eyeballed.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v145`.
+- service-worker cache version bumped to `cholscore-v145`.
 
 ## v1.15.0 score label info button
 - Asked directly: a score of 95 shows as "Outstanding" — what are the actual
