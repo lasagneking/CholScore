@@ -1,4 +1,4 @@
-CholScore v1.9.1 - Fixed white flash on launch (separate issue from splash)
+CholScore v1.9.2 - Splash links switched to absolute URLs
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,31 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.9.2 splash links switched to absolute URLs
+- Follow-up to v1.9.1: after the white-flash fix, a full cold reboot + fresh launch
+  still showed a brief white screen with no branded splash. That specific
+  combination is actually a useful, clean result — the inline background-colour
+  fix applies instantly, before any network activity, so a white screen persisting
+  through that fix isn't the page rendering at all. It's iOS's own built-in
+  fallback for "no startup image matched", happening at the OS level before the
+  page starts loading — a different layer entirely from anything the page's own
+  CSS can reach.
+- Changed all 10 `apple-touch-startup-image` links (and `apple-touch-icon`) from
+  relative paths to absolute URLs (`https://lasagneking.github.io/splash/...`) —
+  an occasionally-cited fix for this exact mechanism specifically failing to
+  resolve relative paths correctly on some iOS versions, despite the same relative
+  paths working completely normally for every other resource on the page.
+- Re-verified every referenced splash file still exists under the new absolute
+  URLs before shipping.
+- If this doesn't resolve it: everything checkable from a static-HTML level has
+  now been verified correct or tried — file serving, dimensions (3 independent
+  sources), tag syntax, required meta tags, FOUC elimination, relative vs. absolute
+  URLs, and testing on an actual cold boot. At that point this is a genuine
+  platform-level quirk on this specific device/iOS build, not something further
+  code changes can reach.
+- `index.html` and `sw.js` updated; cache-busting query strings and the service
+  worker cache version bumped to `v126`.
 
 ## v1.9.1 fixed the white flash on launch
 - Follow-up to v1.9.0: on an iPhone 17 Pro Max, the splash mechanism was fully
