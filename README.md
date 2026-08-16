@@ -1,4 +1,4 @@
-CholScore v1.14.1 - Fixed PRs/Trends missing the true heaviest set
+CholScore v1.14.2 - Weight adjuster repositioned to fill the row
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,21 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.14.2 weight adjuster repositioned to fill the row
+- Reported with a screenshot: the "Weight" label and the −/value/+ stepper were
+  stacked and bunched to the left, leaving a large empty gap on the right.
+- Mocked up first, approved, then built for real. Now one row: label on the left,
+  stepper pushed all the way to the right edge, wrapped in its own subtle card
+  matching the same background/border treatment already used for the sets below
+  it, so it reads as a distinct control rather than floating text.
+- Pure layout change — the HTML structure and class names were already exactly
+  right (same IDs, same behaviour), so this only touched CSS: `justify-content`,
+  the card wrapper, and resized the stepper slightly to sit comfortably against
+  the right edge. Nothing about how the stepper actually works changed.
+- `styles.css` and the image cache-busting query strings bumped; `index.html` and
+  `app.js` cache-busting query strings bumped to `v143`.
+- service-worker cache version bumped to `cholscore-v143`.
 
 ## v1.14.1 fixed PRs/Trends missing the true heaviest set
 - Asked directly: "will the reports all be correct if there's a mid-set weight

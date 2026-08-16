@@ -931,7 +931,7 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 .exercise-note span{display:block;font-size:9px;font-weight:950;letter-spacing:.14em;color:#a68ada;margin-bottom:4px}
 .guided-set-list{display:flex;flex-direction:column;gap:9px}
 .guided-set-row{
-  display:grid;grid-template-columns:70px 1fr;align-items:center;gap:10px;margin:0;padding:10px 11px;border-radius:16px;
+  position:relative;display:grid;grid-template-columns:70px 1fr;align-items:center;gap:10px;margin:0;padding:10px 11px;border-radius:16px;
   background:#0b1017;border:1px solid rgba(255,255,255,.06);transition:border-color .15s ease,background .15s ease
 }
 .guided-set-row>span{font-size:11px;letter-spacing:.11em;font-weight:900;color:#8e98aa}
@@ -940,6 +940,23 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 .set-tick{
   width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#131923;border:1px solid rgba(255,255,255,.07);
   color:#06130d;font-size:22px
+}
+/* v1.14.0 — in-workout weight adjuster */
+.weight-adjuster{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:12px 14px;margin-bottom:14px;border-radius:14px;background:#0d1119;border:1px solid rgba(255,255,255,.07)
+}
+.weight-adjuster-label{font-size:13.5px;font-weight:700;color:#cbd0db}
+.stepper{display:flex;align-items:center;background:#141a24;border:1px solid rgba(255,255,255,.1);border-radius:13px;overflow:hidden;flex:none}
+.stepper button{width:38px;height:38px;border:none;background:none;color:var(--cyan);font-size:19px;font-weight:800;display:grid;place-items:center}
+.stepper button:active{background:rgba(84,217,255,.14)}
+.stepper .weight-value{
+  min-width:70px;text-align:center;font-size:15.5px;font-weight:850;padding:0 4px;color:#fff;
+  border-left:1px solid rgba(255,255,255,.08);border-right:1px solid rgba(255,255,255,.08)
+}
+.set-weight-tag{
+  position:absolute;top:-8px;right:10px;font-size:8.5px;font-weight:800;z-index:1;
+  background:#1c2331;color:#ffd166;padding:2px 7px;border-radius:999px;border:1px solid rgba(255,209,102,.4)
 }
 .guided-set-row.is-complete{border-color:rgba(85,240,167,.35);background:rgba(85,240,167,.055)}
 .guided-set-row.is-complete .set-tick{background:linear-gradient(135deg,var(--green),var(--cyan));border-color:transparent;box-shadow:0 0 22px rgba(85,240,167,.16)}
