@@ -229,7 +229,7 @@ function bankResetLabel(){
   return diff===1?"Resets tomorrow morning":`Resets Monday · ${diff} days`;
 }
 
-function renderAll(){renderToday();renderFood();renderExercise();renderRewards();renderCalendar();}
+function renderAll(){renderToday();renderFood();renderExercise();renderRewards();renderCalendar();if(!$("historyTrendsView").classList.contains("hidden"))renderTrends();}
 
 function renderToday(){
   const day=getDay(),t=totals(day),score=scoreDay(day),target=Number(state.profile.target);
@@ -687,6 +687,113 @@ function showHistoryDay(key,btn){
   $("historyDetail").classList.remove("empty-state");
   $("historyDetail").innerHTML=`<h3>${nice}</h3><div class="history-grid"><div><span>Sat fat</span><strong>${fmt(t.sat)}g</strong></div><div><span>Movement</span><strong>${Math.round(t.mins)} min</strong></div><div><span>CholScore</span><strong>${sc}</strong></div></div><p style="color:#9299aa;font-size:12px;margin-bottom:0">${day.foods.length} food entries · ${day.activities.length} activities${day.checkedOut?" · checked out":""}</p>`;
 }
+
+/* v1.8.0 Trends — Calendar/Trends toggle on the History tab. Hand-rolled
+   SVG line/area charts (no charting library) so it stays lightweight and
+   fully offline-safe for the PWA, consistent with how the rings elsewhere
+   are built. Every series is computed fresh from totals()/scoreDay()/the
+   same exercise data used by Personal Records — never a separate cache
+   that could drift out of sync. */
+let trendsRange=30,trendsExercise=null;
+
+function lastNDaysKeys(n){
+  const out=[],today=new Date();
+  for(let i=n-1;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);out.push(d.toISOString().slice(0,10));}
+  return out;
+}
+function buildExerciseSeries(){
+  const map={};
+  for(const dayKey of Object.keys(state.days||{}).sort()){
+    const day=state.days[dayKey];
+    for(const act of day.activities||[]){
+      if(act.type!=="workout")continue;
+      for(const ex of act.exercises||[]){
+        const name=String(ex.name||"").trim();if(!name)continue;
+        if(ex.timed){
+          const best=(ex.sets||[]).reduce((m,s)=>Math.max(m,Number(s.timedSeconds||s.actual||0)),0);
+          if(best>0){(map[name]=map[name]||{type:"timed",points:[]}).points.push({date:dayKey,value:best});}
+        }else{
+          const weight=Number(ex.weight||0);
+          if(weight>0){(map[name]=map[name]||{type:"strength",points:[]}).points.push({date:dayKey,value:weight});}
+        }
+      }
+    }
+  }
+  return map;
+}
+function svgAreaChart(svgId,labelsId,data,dateKeys,opts){
+  const svg=$(svgId);if(!svg)return;
+  const W=320,H=110,PAD=6,n=data.length;
+  const max=opts.max!=null?opts.max:Math.max(1,...data)*1.15;
+  const stepX=n>1?(W-PAD*2)/(n-1):0;
+  const y=v=>H-PAD-(v/(max||1))*(H-PAD*2);
+  const pts=data.map((v,i)=>[PAD+i*stepX,y(v)]);
+  const linePath=pts.map((p,i)=>(i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+  let html=`<defs><linearGradient id="grad-${svgId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${opts.color}" stop-opacity="0.55"/><stop offset="100%" stop-color="${opts.color}" stop-opacity="0"/></linearGradient></defs>`;
+  if(opts.target!=null){const ty=y(opts.target);html+=`<line class="chart-target-line" x1="${PAD}" y1="${ty}" x2="${W-PAD}" y2="${ty}"/>`;}
+  if(n>1){
+    const areaPath=linePath+` L${pts[n-1][0].toFixed(1)},${H-PAD} L${pts[0][0].toFixed(1)},${H-PAD} Z`;
+    html+=`<path class="chart-area" fill="url(#grad-${svgId})" d="${areaPath}"/><path class="chart-line" stroke="${opts.color}" d="${linePath}"/>`;
+  }
+  const dotIdxs=n<=8?pts.map((_,i)=>i):[0,Math.floor((n-1)*0.33),Math.floor((n-1)*0.66),n-1];
+  dotIdxs.forEach(i=>{if(pts[i])html+=`<circle class="chart-dot" stroke="${opts.color}" cx="${pts[i][0].toFixed(1)}" cy="${pts[i][1].toFixed(1)}" r="3.2"/>`;});
+  svg.innerHTML=html;
+  const labelsEl=$(labelsId);
+  if(labelsEl){
+    const step=Math.max(1,Math.round(n/5));
+    labelsEl.innerHTML=dateKeys.filter((_,i)=>i%step===0||i===dateKeys.length-1)
+      .map(k=>`<span>${new Date(k+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"})}</span>`).join("");
+  }
+}
+function renderTrendsSatScore(){
+  const dayKeys=lastNDaysKeys(trendsRange);
+  const satSeries=dayKeys.map(k=>totals(getDay(k)).sat);
+  const scoreSeries=dayKeys.map(k=>{const day=getDay(k);return day.finalScore??scoreDay(day);});
+  const target=Number(state.profile?.target||30);
+  svgAreaChart("satChart","satChartLabels",satSeries,dayKeys,{color:"#55f0a7",target});
+  svgAreaChart("scoreChart","scoreChartLabels",scoreSeries,dayKeys,{color:"#a879ff",max:100});
+  $("satTrendStat").querySelector("strong").textContent=`${fmt(satSeries.reduce((a,b)=>a+b,0)/satSeries.length)}g`;
+  $("scoreTrendStat").querySelector("strong").textContent=Math.round(scoreSeries.reduce((a,b)=>a+b,0)/scoreSeries.length);
+}
+function renderStrengthTrend(){
+  const series=buildExerciseSeries();
+  const names=Object.keys(series).filter(n=>series[n].points.length>=2).sort((a,b)=>series[b].points.length-series[a].points.length);
+  const emptyEl=$("strengthEmptyState"),bodyEl=$("strengthTrendBody");
+  if(!names.length){emptyEl.classList.remove("hidden");bodyEl.classList.add("hidden");return;}
+  emptyEl.classList.add("hidden");bodyEl.classList.remove("hidden");
+  if(!trendsExercise||!names.includes(trendsExercise))trendsExercise=names[0];
+  $("exercisePicker").innerHTML=names.map(n=>`<button type="button" class="exercise-chip${n===trendsExercise?" active":""}" data-name="${esc(n)}">${esc(n)}</button>`).join("");
+  qsa(".exercise-chip",$("exercisePicker")).forEach(chip=>chip.addEventListener("click",()=>{trendsExercise=chip.dataset.name;renderStrengthTrend();}));
+  const ex=series[trendsExercise],values=ex.points.map(p=>p.value),dateKeys=ex.points.map(p=>p.date);
+  svgAreaChart("strengthChart","strengthChartLabels",values,dateKeys,{color:"#54d9ff"});
+  const first=values[0],last=values[values.length-1],diff=last-first,isTimed=ex.type==="timed";
+  const fmtVal=v=>isTimed?formatExerciseSeconds(v):`${fmt(v)}kg`;
+  const firstDateNice=new Date(dateKeys[0]+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"});
+  $("strengthCalloutText").innerHTML=diff>0
+    ? `<b>+${isTimed?formatExerciseSeconds(diff):fmt(diff)+"kg"}</b> since ${firstDateNice} — up from ${fmtVal(first)} to ${fmtVal(last)}.`
+    : `Holding steady at ${fmtVal(last)} since ${firstDateNice}.`;
+}
+function renderTrends(){
+  const hasAnyData=Object.keys(state.days||{}).length>0;
+  $("trendsEmptyState").classList.toggle("hidden",hasAnyData);
+  $("trendsContent").classList.toggle("hidden",!hasAnyData);
+  if(!hasAnyData)return;
+  renderTrendsSatScore();
+  renderStrengthTrend();
+}
+qsa(".range-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  qsa(".range-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
+  trendsRange=Number(btn.dataset.range);renderTrendsSatScore();
+}));
+$("historyTabCalendar").addEventListener("click",()=>{
+  $("historyTabCalendar").classList.add("active");$("historyTabTrends").classList.remove("active");
+  $("historyCalendarView").classList.remove("hidden");$("historyTrendsView").classList.add("hidden");
+});
+$("historyTabTrends").addEventListener("click",()=>{
+  $("historyTabTrends").classList.add("active");$("historyTabCalendar").classList.remove("active");
+  $("historyTrendsView").classList.remove("hidden");$("historyCalendarView").classList.add("hidden");
+  renderTrends();
+});
 
 /* v1.4.0 full-screen Day Report — a "sports report" style recap of one
    whole day, built from the exact same data functions used everywhere

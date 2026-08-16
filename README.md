@@ -1,4 +1,4 @@
-CholScore v1.7.2 - Background no longer scrolls behind an open dialog
+CholScore v1.8.0 - Trends
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,35 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.8.0 Trends
+- New **Calendar / Trends** toggle at the top of the History tab — switches between
+  the existing calendar and a new charts view, matching the approved mockup. No new
+  bottom-nav tab; it lives where History already lives.
+- **Saturated fat** and **CholScore** trend charts over a 7/30/90-day range you pick,
+  each a hand-rolled SVG area chart (no charting library — stays lightweight and
+  fully offline-safe for the PWA, same principle as the existing progress rings).
+  Sat fat chart includes a dashed line at your actual daily target.
+- **Strength progress** — the feature I said I'd push hardest for. Pick any exercise
+  you've done at least twice from a chip row and see a chart of weight (or hold time,
+  for timed exercises) over every session, plus a plain-language callout: "+15.0kg
+  since 12 Jun — up from 15.0kg to 30.0kg." Only exercises with 2+ data points appear
+  in the picker, sorted by how much history they have.
+- Every series computed fresh from `totals()`/`scoreDay()`/the same exercise-scanning
+  logic Personal Records already uses — never a separate cache, so it can't drift out
+  of sync with the rest of the app.
+- Empty states throughout: the whole Trends view stays quiet with a plain message
+  until at least one day has ever been logged; the Strength card independently stays
+  quiet until some exercise has 2+ sessions, even if sat fat/score data already exists.
+- If you're looking at Trends and log something elsewhere, it refreshes automatically
+  next render rather than going stale until you manually flip back to it.
+- Tested date-key generation (chronological order, correct count), exercise-series
+  building (progressive weight capture, single-session exercises correctly excluded
+  from the picker), and the chart coordinate math against edge cases — all-zero data,
+  a single data point — to confirm nothing produces `NaN`/`Infinity` in the SVG paths.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v122`.
+- service-worker cache version bumped to `cholscore-v122`.
 
 ## v1.7.2 background scroll lock for all dialogs
 - Reported: with a dialog open on top (e.g. Exercise tab → "+ Routine"), scrolling

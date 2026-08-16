@@ -1386,3 +1386,41 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
   font-size:12.5px;line-height:1.25;font-weight:750;
 }
 .staple-card small{display:block;color:var(--muted);font-size:10.5px;margin-top:5px}
+
+/* ============ v1.8.0 Trends ============ */
+.segmented{display:flex;background:#0d1119;border:1px solid var(--line);border-radius:14px;padding:4px;margin-bottom:16px}
+.segmented button{flex:1;padding:10px;border:none;border-radius:11px;background:none;color:var(--muted);font-weight:800;font-size:13.5px}
+.segmented button.active{background:linear-gradient(135deg,var(--green),var(--cyan));color:#07130e}
+
+.range-row{display:flex;gap:8px;margin-bottom:16px}
+.range-btn{flex:1;padding:9px;border-radius:11px;border:1px solid var(--line);background:#111620;color:#aeb6c4;font-weight:800;font-size:12.5px}
+.range-btn.active{background:rgba(84,217,255,.14);border-color:rgba(84,217,255,.5);color:#bfeeff}
+
+.trend-card{background:#111620;border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px}
+.trend-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:10px}
+.trend-head h3{margin:0 0 3px;font-size:15px}
+.trend-head p{margin:0;font-size:11.5px;color:var(--muted)}
+.trend-stat{text-align:right;flex:none}
+.trend-stat strong{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.trend-stat small{display:block;font-size:10.5px;color:var(--muted);margin-top:1px}
+
+.chart-wrap{width:100%}
+.chart-wrap svg{width:100%;height:auto;display:block;overflow:visible}
+.chart-area{opacity:.16}
+.chart-line{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.chart-target-line{stroke:rgba(255,255,255,.25);stroke-width:1;stroke-dasharray:4 4}
+.chart-dot{fill:#111620;stroke-width:2.5}
+.chart-xlabels{display:flex;justify-content:space-between;margin-top:6px;font-size:9.5px;color:#6b7284}
+
+.exercise-picker{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px;padding-bottom:2px;scrollbar-width:none}
+.exercise-picker::-webkit-scrollbar{display:none}
+.exercise-chip{flex:0 0 auto;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:#0d1119;color:#aeb6c4;font-size:12.5px;font-weight:700;white-space:nowrap}
+.exercise-chip.active{background:rgba(168,121,255,.16);border-color:rgba(168,121,255,.5);color:#e3d4ff}
+
+.pr-callout{
+  display:flex;align-items:center;gap:10px;margin-top:14px;padding:11px 14px;border-radius:13px;
+  background:linear-gradient(135deg,rgba(255,196,53,.12),rgba(255,196,53,.03));border:1px solid rgba(255,196,53,.3);
+}
+.pr-callout span{font-size:18px}
+.pr-callout div{font-size:12.5px;color:#ffd875;font-weight:700;line-height:1.4}
+.pr-callout b{color:#fff}
