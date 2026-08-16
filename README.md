@@ -1,4 +1,4 @@
-CholScore v1.9.4 - Delete a mis-logged activity from Exercise
+CholScore v1.10.0 - Collapsible exercise rows in the routine builder
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,35 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.10.0 collapsible exercise rows in the routine builder
+- Reported: editing a routine with several exercises meant every exercise was
+  fully expanded at once — name, the timed toggle with its two-line description,
+  the sets/reps/weight grid, and a notes textarea — so only about 1.5 exercises
+  fit on screen at a time and reviewing a routine meant constant scrolling.
+- Built and approved as a mockup first, then implemented for real: exercises are
+  now collapsed by default, showing just the name and a one-line summary
+  ("3 sets × 10 reps · 12kg", or a "⏱ Timed" indicator, plus a 📝 mark if there
+  are notes). Tap a row to expand it for editing.
+- A brand-new blank exercise still opens automatically — there's nothing to
+  summarize yet, so it makes sense to land straight in the fields. This falls out
+  naturally from one rule (open if the exercise has no name yet) rather than
+  needing special-case handling at each of the three places rows get created
+  (new routine, editing an existing one, tapping "+ Exercise").
+- Rows are numbered (1, 2, 3...) so it's easier to reference a specific exercise
+  when a routine has several.
+- Every actual form field — name, timed toggle, sets, reps, weight, notes — is
+  exactly the same as before, same classes, same validation, same data shape.
+  This only changes what's visible by default, not what's editable or how
+  `saveRoutine()` reads the data back out.
+- Removed the old always-expanded grid CSS entirely rather than leaving it as
+  dead weight in the stylesheet, since nothing references it anymore.
+- Cross-checked every class name used in the new markup against both the CSS and
+  against `saveRoutine()`'s field reads before shipping, to make sure the
+  restructuring didn't silently break saving.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v129`.
+- service-worker cache version bumped to `cholscore-v129`.
 
 ## v1.9.4 delete a mis-logged activity
 - Reported: an incorrectly-entered exercise/activity under "Today's completed

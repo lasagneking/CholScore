@@ -1401,33 +1401,83 @@ $("manualFoodFromNotFound").addEventListener("click",()=>{
 
 
 /* Routine builder */
+function routineRowSummaryText(row){
+  const timed=row.querySelector(".rb-timed").checked;
+  const sets=Number(row.querySelector(".rb-sets").value)||0;
+  if(timed) return `${sets} timed ${sets===1?"set":"sets"}`;
+  const reps=Number(row.querySelector(".rb-reps").value)||0;
+  const weight=Number(row.querySelector(".rb-weight").value||0);
+  let text=`${sets} sets × ${reps||"?"} reps`;
+  if(weight>0) text+=` · ${weight}kg`;
+  return text;
+}
+function renumberRoutineRows(){
+  qsa(".exercise-row-num",$("routineExerciseRows")).forEach((el,i)=>{el.textContent=i+1;});
+}
 function addRoutineExerciseRow(data={name:"",sets:3,reps:10,weight:"",notes:"",id:"",timed:false}){
-  const row=document.createElement("div");row.className="routine-exercise-row";
+  const row=document.createElement("div");
+  const startOpen=!data.name; // a blank/new exercise opens automatically; an existing one starts collapsed
+  row.className="exercise-row"+(startOpen?" is-open":"");
   if(data.id) row.dataset.exerciseId=data.id;
   const isTimed=Boolean(data.timed);
   row.innerHTML=`
-    <div class="rb-main-fields">
-      <label>Exercise<input class="rb-name" required placeholder="e.g. Bench press or Plank" value="${esc(data.name)}"></label>
-      <label class="timed-exercise-toggle">
-        <input class="rb-timed" type="checkbox" ${isTimed?"checked":""}>
-        <span><b>⏱ Timed exercise</b><small>Use a stopwatch for each set instead of entering reps.</small></span>
-      </label>
-      <div class="rb-number-grid">
-        <label>Sets<input class="rb-sets" type="number" min="1" max="20" value="${Number(data.sets)||3}" required></label>
-        <label class="rb-reps-label">Reps<input class="rb-reps" type="number" min="1" max="200" value="${Number(data.reps)||10}" ${isTimed?"disabled":""}></label>
-        <label>Weight (kg)<input class="rb-weight" type="number" min="0" step="0.5" placeholder="Optional" value="${Number(data.weight)>0?Number(data.weight):""}"></label>
+    <div class="exercise-row-head">
+      <div class="exercise-row-num"></div>
+      <div class="exercise-row-head-main">
+        <strong class="exercise-row-title">${esc(data.name)||"New exercise"}</strong>
+        <div class="exercise-row-summary">
+          <span class="exercise-row-summary-text"></span>
+          <span class="notes-flag${data.notes?"":" hidden"}">📝</span>
+        </div>
       </div>
-      <label>Exercise notes<textarea class="rb-notes" rows="2" placeholder="Optional cue or reminder">${esc(data.notes||"")}</textarea></label>
+      <button type="button" class="exercise-row-expand" aria-label="Expand exercise">⌄</button>
+      <button type="button" class="row-remove" aria-label="Remove exercise">×</button>
     </div>
-    <button type="button" class="row-remove" aria-label="Remove exercise">×</button>`;
+    <div class="exercise-row-body">
+      <div class="rb-main-fields">
+        <label>Exercise<input class="rb-name" required placeholder="e.g. Bench press or Plank" value="${esc(data.name)}"></label>
+        <label class="timed-exercise-toggle">
+          <input class="rb-timed" type="checkbox" ${isTimed?"checked":""}>
+          <span><b>⏱ Timed exercise</b><small>Use a stopwatch for each set instead of entering reps.</small></span>
+        </label>
+        <div class="rb-number-grid">
+          <label>Sets<input class="rb-sets" type="number" min="1" max="20" value="${Number(data.sets)||3}" required></label>
+          <label class="rb-reps-label">Reps<input class="rb-reps" type="number" min="1" max="200" value="${Number(data.reps)||10}" ${isTimed?"disabled":""}></label>
+          <label>Weight (kg)<input class="rb-weight" type="number" min="0" step="0.5" placeholder="Optional" value="${Number(data.weight)>0?Number(data.weight):""}"></label>
+        </div>
+        <label>Exercise notes<textarea class="rb-notes" rows="2" placeholder="Optional cue or reminder">${esc(data.notes||"")}</textarea></label>
+      </div>
+    </div>`;
+
+  const head=row.querySelector(".exercise-row-head");
+  const nameInput=row.querySelector(".rb-name");
+  const titleEl=row.querySelector(".exercise-row-title");
+  const summaryEl=row.querySelector(".exercise-row-summary-text");
+  const notesFlag=row.querySelector(".notes-flag");
+  const notesInput=row.querySelector(".rb-notes");
   const timed=row.querySelector(".rb-timed"),reps=row.querySelector(".rb-reps"),repsLabel=row.querySelector(".rb-reps-label");
-  const syncTimed=()=>{
-    reps.disabled=timed.checked;
-    repsLabel.classList.toggle("timed-disabled",timed.checked);
-  };
-  timed.addEventListener("change",syncTimed);syncTimed();
-  row.querySelector(".row-remove").addEventListener("click",()=>row.remove());
+  const setsInput=row.querySelector(".rb-sets"),weightInput=row.querySelector(".rb-weight");
+
+  const refreshSummary=()=>{summaryEl.textContent=routineRowSummaryText(row);};
+  const syncTimed=()=>{reps.disabled=timed.checked;repsLabel.classList.toggle("timed-disabled",timed.checked);refreshSummary();};
+  timed.addEventListener("change",syncTimed);
+  setsInput.addEventListener("input",refreshSummary);
+  reps.addEventListener("input",refreshSummary);
+  weightInput.addEventListener("input",refreshSummary);
+  nameInput.addEventListener("input",()=>{titleEl.textContent=nameInput.value||"New exercise";});
+  notesInput.addEventListener("input",()=>{notesFlag.classList.toggle("hidden",!notesInput.value.trim());});
+  syncTimed();
+
+  head.addEventListener("click",e=>{
+    if(e.target.closest(".row-remove"))return;
+    row.classList.toggle("is-open");
+  });
+  row.querySelector(".row-remove").addEventListener("click",e=>{
+    e.stopPropagation();row.remove();renumberRoutineRows();
+  });
+
   $("routineExerciseRows").appendChild(row);
+  renumberRoutineRows();
 }
 function openRoutineBuilder(){
   editingRoutineId=null;
@@ -1457,7 +1507,7 @@ $("addRoutineExercise").addEventListener("click",()=>addRoutineExerciseRow());
 $("routineForm").addEventListener("submit",e=>{
   e.preventDefault();
   const name=$("routineName").value.trim();
-  const exercises=qsa(".routine-exercise-row").map(row=>{
+  const exercises=qsa(".exercise-row").map(row=>{
     const timed=row.querySelector(".rb-timed").checked;
     return {
       id:row.dataset.exerciseId||id(),
