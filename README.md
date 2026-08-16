@@ -1,4 +1,4 @@
-CholScore v1.13.1 - Reward claims now show on the Day Report
+CholScore v1.14.1 - Fixed PRs/Trends missing the true heaviest set
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,74 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.14.1 fixed PRs/Trends missing the true heaviest set
+- Asked directly: "will the reports all be correct if there's a mid-set weight
+  change?" Checked rather than assumed — they weren't.
+- Found the bug: Personal Records, the "New PR!" badge on the completion card, and
+  the Trends strength-progress chart all read the exercise's *final* weight (the
+  last value the stepper was left on) rather than the actual heaviest weight used
+  across its sets. In the exact reported scenario — 15kg on set 1, dropped to 10kg
+  for the rest — the exercise gets saved with `weight: 10`, so all three would
+  have silently missed that 15kg was ever lifted at all. A genuine new PR at 15kg
+  would never have fired the badge, never shown up in Personal Records, and never
+  plotted correctly on the Trends chart.
+- The Day Report's "kg volume" number was already correct — that one already used
+  `exerciseVolume()`, fixed in v1.14.0.
+- Fixed with one shared helper (`exerciseHeaviestWeight`) — the true max across a
+  set's own recorded weights, falling back to the exercise-level value for older
+  data with no per-set weight — used consistently in all four places rather than
+  patching each spot separately with potentially inconsistent logic.
+- Caught and fixed a mistake in my own edit before it shipped: an early version of
+  this change accidentally deleted the `workoutVolume` function's own declaration
+  line while inserting the new helper next to it, which would have been a hard
+  syntax error. Runs a syntax check after every edit specifically to catch this
+  class of mistake before it reaches a real device.
+- Tested the exact reported scenario end to end: the true heaviest weight (15kg)
+  is now correctly detected as a new PR against a lower prior best, correctly
+  recorded in Personal Records, and correctly plotted in Trends — plus confirmed
+  older workout data with no per-set weight, and the common case of an exercise
+  whose weight was never adjusted, are both completely unaffected.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v142`.
+- service-worker cache version bumped to `cholscore-v142`.
+
+## v1.14.0 in-workout weight adjuster
+- Reported: weight is locked in once a workout starts — if it turns out too heavy
+  (or too light) a few reps in, the only option was cancelling the whole exercise.
+  Mocked up first, approved, then built for real.
+- **Stepper (−/+), always visible**, right where the weight used to show as plain
+  text — no "enter edit mode" tap needed first, since speed matters mid-set.
+  2.5kg per tap, matching real plate/dumbbell increments. Tapping the number
+  itself opens exact entry for a bigger jump in one go.
+- **Completed sets keep the weight they were actually done at.** This needed a
+  real data model change, not just new buttons: exercises used to store one
+  weight applied to every set uniformly. Each set now snapshots its own weight
+  the moment it's marked complete, so adjusting mid-exercise only affects sets
+  not yet done — set 1 at 15kg stays recorded at 15kg even after dropping to
+  10kg for the rest. A completed set whose weight differs from the current
+  value gets a small gold tag showing what it was actually done at.
+- As a side effect, this is also now a genuine way to do drop sets on purpose
+  (deliberately lighter for the last set or two) — same control, not a
+  separate feature.
+- Volume calculation (`exerciseVolume`) now uses each set's own recorded weight
+  when present, falling back to the exercise-level value for older saved
+  workouts that predate this change — fully backward compatible, nothing needed
+  migrating.
+- Found and fixed a real edge case while building this: the existing weight
+  resolution logic treated exactly 0kg as "never set" and would silently fall
+  back to the routine's original weight on the next render — meaning
+  deliberately dropping all the way to bodyweight would have quietly reset
+  itself moments later. Added a `weightManuallySet` flag so an intentional 0kg
+  is respected once the adjuster's actually been used.
+- Tested against the exact scenario from the report — a set done at 15kg
+  followed by two at an adjusted 10kg — confirming volume comes out to exactly
+  350kg (10×15 + 10×10 + 10×10), plus backward compatibility with old workout
+  data with no per-set weight, the 0kg drop staying put, and confirming
+  untouched exercises still correctly inherit the routine's original weight.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v141`.
+- service-worker cache version bumped to `cholscore-v141`.
 
 ## v1.13.1 reward claims now show on the Day Report
 - Requested: when a reward is cashed out, show what it was and how many points it

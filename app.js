@@ -783,7 +783,7 @@ function buildExerciseSeries(){
           const best=(ex.sets||[]).reduce((m,s)=>Math.max(m,Number(s.timedSeconds||s.actual||0)),0);
           if(best>0){(map[name]=map[name]||{type:"timed",points:[]}).points.push({date:dayKey,value:best});}
         }else{
-          const weight=Number(ex.weight||0);
+          const weight=exerciseHeaviestWeight(ex);
           if(weight>0){(map[name]=map[name]||{type:"strength",points:[]}).points.push({date:dayKey,value:weight});}
         }
       }
@@ -924,7 +924,7 @@ function repTrainingSectionHTML(workouts,dayKey,records){
         isPR=!!(rec&&rec.date===dayKey&&bestSetSeconds>0&&rec.seconds===bestSetSeconds);
       }else{
         const vol=exerciseVolume(ex);
-        const weight=Number(ex.weight||0);
+        const weight=exerciseHeaviestWeight(ex);
         meta=`${(ex.sets||[]).length} sets${ex.targetReps?` × ${ex.targetReps} reps`:""}`;
         value=Number(vol)>0?fmt(vol):"—";unit="kg volume";
         const rec=records?.strength?.[name];
@@ -1648,6 +1648,11 @@ function routineExerciseForWorkoutExercise(w,e){
     || null;
 }
 function resolvedWorkoutWeight(w,e){
+  // Once the live weight adjuster has been used for this exercise, its value
+  // is authoritative even at exactly 0kg (deliberately dropped to bodyweight)
+  // — without this flag, 0 would look identical to "never set" below and get
+  // silently overwritten back to the routine's original weight on next render.
+  if(e?.weightManuallySet) return Math.max(0,Number(e.weight||0));
   const direct=Number(e?.weight||0);
   if(Number.isFinite(direct)&&direct>0)return direct;
   const source=routineExerciseForWorkoutExercise(w,e);
@@ -1677,15 +1682,34 @@ function ensureWorkoutShape(w){
 // guarded with Number.isFinite so one bad exercise can only ever
 // contribute 0, never wipe out the rest of the total.
 function exerciseVolume(e,w=null){
-  const rawWeight=w?resolvedWorkoutWeight(w,e):Number(e?.weight||0);
-  const weight=Number.isFinite(rawWeight)?rawWeight:0;
-  if(weight<=0)return 0;
+  const rawFallback=w?resolvedWorkoutWeight(w,e):Number(e?.weight||0);
+  const fallbackWeight=Number.isFinite(rawFallback)?rawFallback:0;
   return (e?.sets||[]).reduce((sum,set)=>{
     const rawReps=Number(set?.actual||0);
     const reps=Number.isFinite(rawReps)?rawReps:0;
     const setDone=Boolean(set?.completed)||String(set?.actual??"").trim()!=="";
+    // A set completed before a mid-exercise weight adjustment keeps its own
+    // recorded weight; older data with no per-set weight falls back to the
+    // exercise-level value exactly as before.
+    const rawWeight=set?.weight!=null?Number(set.weight):fallbackWeight;
+    const weight=Number.isFinite(rawWeight)?rawWeight:0;
+    if(weight<=0)return sum;
     return sum+(setDone&&reps>0?reps*weight:0);
   },0);
+}
+// The exercise-level weight field reflects whatever the live adjuster was
+// last set to — not necessarily the heaviest weight actually used, if the
+// exercise was adjusted down (or up) partway through. PRs, the Trends
+// strength chart, and the completion-card PR badge all need the true max
+// across completed sets, not just wherever the exercise ended up.
+function exerciseHeaviestWeight(ex){
+  const fromSets=(ex?.sets||[]).reduce((m,s)=>{
+    if(s?.weight==null)return m;
+    const w=Number(s.weight);
+    return Number.isFinite(w)&&w>m?w:m;
+  },0);
+  if(fromSets>0)return fromSets;
+  return Number(ex?.weight||0); // older data with no per-set weight recorded
 }
 function workoutVolume(w){
   if(!w)return 0;
@@ -1727,6 +1751,34 @@ function startWorkoutTimer(){
   };
   tick();workoutTimer=setInterval(tick,1000);
 }
+/* v1.14.0 in-workout weight adjuster — lets a weight be changed mid-exercise
+   if it turns out too heavy (or too light) once a few reps are already in,
+   rather than the only option being to cancel the exercise entirely.
+   Completed sets keep whatever weight they were actually done at (see the
+   set.weight snapshot at completion time above); only sets not yet done
+   pick up the adjusted value. This also means a genuine drop set — going
+   lighter on purpose for the last set or two — falls out of the same
+   control rather than needing its own separate feature. */
+function adjustLiveWeight(delta){
+  const w=state.activeWorkout;if(!w)return;
+  const e=w.exercises[w.currentExerciseIndex||0];if(!e)return;
+  e.weight=Math.max(0,Math.round((Number(e.weight||0)+delta)*10)/10);
+  e.weightManuallySet=true;
+  saveState();
+  renderLiveExercises();
+}
+function promptLiveWeight(){
+  const w=state.activeWorkout;if(!w)return;
+  const e=w.exercises[w.currentExerciseIndex||0];if(!e)return;
+  const val=prompt("Enter exact weight (kg):",fmt(Number(e.weight||0)));
+  if(val===null)return;
+  const num=Number(val);
+  if(!Number.isFinite(num)||num<0)return;
+  e.weight=Math.round(num*10)/10;
+  e.weightManuallySet=true;
+  saveState();
+  renderLiveExercises();
+}
 function renderLiveExercises(){
   const w=state.activeWorkout;if(!w)return;ensureWorkoutShape(w);
   const ei=w.currentExerciseIndex||0,e=w.exercises[ei];
@@ -1734,25 +1786,41 @@ function renderLiveExercises(){
   clearTimedSetTimers();
   const done=e.sets.filter(s=>s.completed).length;
   $("workoutProgress").innerHTML=`<div><span>EXERCISE ${ei+1} OF ${w.exercises.length}</span><strong>${done}/${e.sets.length} sets complete</strong></div><div class="guided-progress-bar"><i style="width:${(done/e.sets.length)*100}%"></i></div>`;
-  const descriptor=e.timed?`Timed exercise · ${e.sets.length} ${e.sets.length===1?"set":"sets"}`:`${e.targetReps} target reps per set${Number(e.weight)>0?` · <b>${fmt(e.weight)} kg</b>`:""}`;
+  const descriptor=e.timed?`Timed exercise · ${e.sets.length} ${e.sets.length===1?"set":"sets"}`:`${e.targetReps} target reps per set`;
+  const currentWeight=Number(e.weight||0);
+  const weightAdjuster=`
+    <div class="weight-adjuster">
+      <span class="weight-adjuster-label">Weight</span>
+      <div class="stepper">
+        <button type="button" id="liveWeightDown" aria-label="Decrease weight">−</button>
+        <span class="weight-value" id="liveWeightValue" role="button" tabindex="0">${fmt(currentWeight)} kg</span>
+        <button type="button" id="liveWeightUp" aria-label="Increase weight">+</button>
+      </div>
+    </div>`;
   const setMarkup=e.timed
-    ? e.sets.map((set,si)=>`
+    ? e.sets.map((set,si)=>{
+        const weightTag=set.completed&&set.weight!=null&&Number(set.weight)!==currentWeight?`<span class="set-weight-tag">${fmt(set.weight)}kg</span>`:"";
+        return `
         <div class="guided-set-row timed-set-row ${set.completed?"is-complete":""}" data-timed-row="${si}">
+          ${weightTag}
           <span>SET ${si+1}</span>
           <div class="timed-set-controls">
             <strong class="timed-set-display" data-timed-display="${si}">${set.completed?formatExerciseSeconds(set.timedSeconds||set.actual):"Ready"}</strong>
             <button type="button" class="timed-set-btn ${set.timerStartedAt?"is-running":""}" data-timed-set="${si}" ${set.completed?"disabled":""}>${set.timerStartedAt?"Stop":"⏱ Start"}</button>
             <b class="set-tick" aria-label="${set.completed?"Complete":"Not complete"}">${set.completed?"✓":""}</b>
           </div>
-        </div>`).join("")
-    : e.sets.map((set,si)=>`
+        </div>`;}).join("")
+    : e.sets.map((set,si)=>{
+        const weightTag=set.completed&&set.weight!=null&&Number(set.weight)!==currentWeight?`<span class="set-weight-tag">${fmt(set.weight)}kg</span>`:"";
+        return `
         <label class="guided-set-row ${set.completed?"is-complete":""}">
+          ${weightTag}
           <span>SET ${si+1}</span>
           <div class="guided-rep-entry">
             <input inputmode="numeric" type="number" min="0" max="999" placeholder="${e.targetReps}" value="${esc(set.actual)}" data-workout-set="${si}" aria-label="Set ${si+1} reps">
             <b class="set-tick" aria-label="${set.completed?"Complete":"Not complete"}">${set.completed?"✓":""}</b>
           </div>
-        </label>`).join("");
+        </label>`;}).join("");
 
   $("liveExerciseList").innerHTML=`
     <div class="guided-exercise-card">
@@ -1761,10 +1829,16 @@ function renderLiveExercises(){
         <div><p class="eyebrow">CURRENT EXERCISE</p><h3>${esc(e.name)}</h3><p>${descriptor}${e.random?` · <b class="random-tag">added today</b>`:""}</p></div>
       </div>
       ${e.notes?`<div class="exercise-note"><span>NOTE</span>${esc(e.notes)}</div>`:""}
+      ${weightAdjuster}
       <div class="guided-set-list">${setMarkup}</div>
       <p class="enter-hint">${e.timed?"Tap Start for a 3–2–1 countdown. The stopwatch runs until you press Stop.":"Enter your reps, then press Enter / Done to tick off each set."}</p>
       <button id="completeCurrentExerciseBtn" class="complete-exercise-btn" ${allSetsComplete(e)?"":"disabled"}>Complete exercise</button>
     </div>`;
+
+  $("liveWeightDown")?.addEventListener("click",()=>adjustLiveWeight(-2.5));
+  $("liveWeightUp")?.addEventListener("click",()=>adjustLiveWeight(2.5));
+  $("liveWeightValue")?.addEventListener("click",promptLiveWeight);
+  $("liveWeightValue")?.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();promptLiveWeight();}});
 
   if(e.timed){
     // If the app was re-rendered while a timed set was running, resume its live display.
@@ -1782,7 +1856,7 @@ function renderLiveExercises(){
       const markComplete=()=>{
         if(String(inp.value).trim()==="")return;
         const si=Number(inp.dataset.workoutSet),set=state.activeWorkout?.exercises?.[ei]?.sets?.[si];if(!set)return;
-        set.actual=inp.value;set.completed=true;saveState();renderLiveExercises();
+        set.actual=inp.value;set.completed=true;set.weight=Number(e.weight||0);saveState();renderLiveExercises();
         const next=qsa("[data-workout-set]").find(x=>Number(x.dataset.workoutSet)>si&&!state.activeWorkout.exercises[ei].sets[Number(x.dataset.workoutSet)].completed);
         if(next) setTimeout(()=>next.focus(),0);
       };
@@ -1831,7 +1905,8 @@ function stopTimedSet(ei,si){
   const set=state.activeWorkout?.exercises?.[ei]?.sets?.[si];if(!set?.timerStartedAt)return;
   const seconds=Math.max(1,Math.round((Date.now()-new Date(set.timerStartedAt).getTime())/1000));
   clearTimedSetTimers();
-  set.timedSeconds=seconds;set.actual=String(seconds);set.timerStartedAt=null;set.completed=true;saveState();
+  const e=state.activeWorkout.exercises[ei];
+  set.timedSeconds=seconds;set.actual=String(seconds);set.timerStartedAt=null;set.completed=true;set.weight=Number(e?.weight||0);saveState();
   renderLiveExercises();
 }
 /* v1.6.0 Personal Records — heaviest weight and longest hold per exercise
@@ -1857,7 +1932,7 @@ function computePersonalRecords(){
             const best=(ex.sets||[]).reduce((m,s)=>Math.max(m,Number(s.timedSeconds||s.actual||0)),0);
             if(best>0&&(!timed[name]||best>timed[name].seconds))timed[name]={seconds:best,date:dayKey};
           }else{
-            const weight=Number(ex.weight||0);
+            const weight=exerciseHeaviestWeight(ex);
             if(weight>0&&(!strength[name]||weight>strength[name].weight))strength[name]={weight,date:dayKey};
           }
         }
@@ -1882,7 +1957,7 @@ function checkExercisePR(ex){
     const prevBest=prior.timed[name]?.seconds||0;
     if(best>0&&best>prevBest)return[`New PR — longest ${esc(name)} hold: ${formatExerciseSeconds(best)}`];
   }else{
-    const weight=Number(ex.weight||0);
+    const weight=exerciseHeaviestWeight(ex);
     const prevWeight=prior.strength[name]?.weight||0;
     if(weight>0&&weight>prevWeight)return[`New PR — heaviest ${esc(name)}: ${fmt(weight)} kg`];
   }
