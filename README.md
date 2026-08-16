@@ -1,4 +1,4 @@
-CholScore v1.10.1 - Full-screen routine editor + clearer expanded rows
+CholScore v1.10.2 - Fixed iOS touch-scroll failing on nested scroll containers
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,29 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.10.2 fixed iOS touch-scroll failing on nested scroll containers
+- Reported: after expanding an exercise (e.g. Bench press) in the newly full-screen
+  routine editor, the list couldn't be scrolled — no way to reach Save/Cancel.
+- Root cause: `.routine-builder-list` uses `overflow:auto` on a flex child to scroll
+  independently of the header/buttons around it — correct approach, but missing
+  `-webkit-overflow-scrolling:touch`. Without it, iOS Safari frequently fails to
+  register actual finger-swipe gestures on a nested flex-child scroll container,
+  even though the exact same element would scroll fine via a mouse wheel — which is
+  exactly why this wasn't obvious from the CSS alone and needed a real report on a
+  real phone to surface.
+- Fixed by adding the missing property — the same one every other *working* scroll
+  container in the app already had, which is what made this easy to spot once
+  looked for directly.
+- Audited every `overflow:auto`/`overflow-y:auto` in the stylesheet for the same gap
+  rather than fixing only the reported instance, and found it in two more real,
+  live dialogs: the main workout-complete celebration screen and the daily checkout
+  dialog. Both could have hit the identical "can't scroll, can't reach the button"
+  failure on iOS if their content ever ran long enough to need scrolling — fixed
+  both before they could get reported separately.
+- `styles.css` cache-busting query string bumped; `index.html`, `app.js`, and the
+  image cache-busting query strings bumped to `v131`.
+- service-worker cache version bumped to `cholscore-v131`.
 
 ## v1.10.1 full-screen routine editor + clearer expanded rows
 - Reported, with a screenshot marked up in red: significant wasted space down both

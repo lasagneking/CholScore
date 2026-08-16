@@ -281,7 +281,7 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
 .routine-builder-head{display:flex;justify-content:space-between;align-items:center;margin:20px 0 10px}
 .routine-builder-head strong,.routine-builder-head small{display:block}
 .routine-builder-head small{color:var(--muted);font-size:11px;margin-top:3px}
-.routine-builder-list{display:flex;flex-direction:column;gap:14px;flex:1;min-height:0;overflow:auto;padding-right:2px}
+.routine-builder-list{display:flex;flex-direction:column;gap:14px;flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding-right:2px}
 /* v1.10.0: old grid-based .routine-exercise-row layout removed — replaced
    by the collapsible .exercise-row component (see the dedicated block
    below). .row-remove is still used by the new markup, kept as-is. */
@@ -987,7 +987,7 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
     radial-gradient(circle at 50% 38%,rgba(165,35,255,.34),transparent 29%),
     radial-gradient(circle at 50% 0%,rgba(74,25,130,.34),transparent 38%),
     linear-gradient(180deg,#090615 0%,#080913 58%,#05070d 100%);
-  box-shadow:0 30px 90px rgba(0,0,0,.65),inset 0 0 0 1px rgba(255,196,58,.08);overflow:auto
+  box-shadow:0 30px 90px rgba(0,0,0,.65),inset 0 0 0 1px rgba(255,196,58,.08);overflow:auto;-webkit-overflow-scrolling:touch
 }
 .premium-workout-result::backdrop{background:rgba(0,0,0,.84);backdrop-filter:blur(8px)}
 .premium-workout-result::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 33%,rgba(187,63,255,.18),transparent 34%)}
@@ -1124,7 +1124,7 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 .checkout-premium{
   width:calc(100vw - 24px);max-width:460px;height:auto;max-height:calc(100dvh - 28px);
   position:fixed;top:max(14px, env(safe-area-inset-top));left:50%;transform:translateX(-50%);margin:0;
-  padding:0;border:1px solid rgba(255,255,255,.1);border-radius:28px;overflow:auto;overscroll-behavior:contain;
+  padding:0;border:1px solid rgba(255,255,255,.1);border-radius:28px;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
   box-shadow:0 30px 60px -20px rgba(0,0,0,.6);
   text-align:left;
 }
