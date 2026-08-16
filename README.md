@@ -1,4 +1,4 @@
-CholScore v1.9.3 - Fixed unreachable Day Report close button on notched phones
+CholScore v1.9.4 - Delete a mis-logged activity from Exercise
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,26 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.9.4 delete a mis-logged activity
+- Reported: an incorrectly-entered exercise/activity under "Today's completed
+  activity" on the Exercise tab had no way to be removed — the row was static, no
+  tap handler, no delete option at all.
+- Added a small delete button to every activity row (workout, walk, run, or
+  one-off — all of them, since all four types already carried a unique `id`, this
+  needed no data migration). Tap it, confirm, it's gone — same simple
+  confirm()-then-remove pattern the app already uses for other destructive actions
+  like resetting data, rather than introducing a new dialog for something this
+  straightforward.
+- Deletion targets the specific activity by its `id`, not its position in the list,
+  so it can't accidentally remove the wrong entry if two activities look similar.
+- Tested against a realistic 3-activity day (workout, walk, and a mis-entered
+  workout) — confirms only the targeted activity is removed, the other two are
+  left completely untouched, and deleting a non-existent id safely no-ops rather
+  than corrupting the list.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v128`.
+- service-worker cache version bumped to `cholscore-v128`.
 
 ## v1.9.3 fixed unreachable Day Report close button
 - Reported: the Day Report's close (✕) button appeared to do nothing when tapped,

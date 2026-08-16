@@ -407,7 +407,20 @@ function renderExercise(){
   renderProteinToday(day);
   renderRoutines();
   showActiveWorkoutBanner();
-  $("exerciseList").innerHTML=day.activities.length?day.activities.slice().reverse().map(x=>`<div class="log-item"><div><strong>${x.type==="run"?"🏃":x.type==="walk"?"🚶":x.type==="workout"?"🏋️":"⚡"} ${esc(x.name)}</strong><small>${x.type==="workout"?`${x.exerciseCount||0} exercises · `:""}${x.minutes} min${x.distance?` · ${distanceText(x.distance)}`:""}</small></div><div class="log-value">${feelEmoji(x.feel)}</div></div>`).join(""):`<div class="empty-state">No completed activity today.</div>`;
+  $("exerciseList").innerHTML=day.activities.length?day.activities.slice().reverse().map(x=>`<div class="log-item activity-log-item"><div><strong>${x.type==="run"?"🏃":x.type==="walk"?"🚶":x.type==="workout"?"🏋️":"⚡"} ${esc(x.name)}</strong><small>${x.type==="workout"?`${x.exerciseCount||0} exercises · `:""}${x.minutes} min${x.distance?` · ${distanceText(x.distance)}`:""}</small></div><div class="activity-log-right"><div class="log-value">${feelEmoji(x.feel)}</div><button type="button" class="activity-delete-btn" data-activity-id="${esc(x.id||"")}" aria-label="Delete this activity">🗑</button></div></div>`).join(""):`<div class="empty-state">No completed activity today.</div>`;
+  wireActivityCards();
+}
+function wireActivityCards(){
+  qsa(".activity-delete-btn").forEach(btn=>btn.addEventListener("click",()=>{
+    const aid=btn.dataset.activityId,day=getDay();
+    const idx=day.activities.findIndex(a=>String(a.id||"")===String(aid));
+    if(idx===-1)return;
+    const activity=day.activities[idx];
+    if(!confirm(`Delete "${activity.name||"this activity"}" from today? This can't be undone.`))return;
+    day.activities.splice(idx,1);
+    saveState();
+    renderAll();
+  }));
 }
 function renderRoutines(){
   $("routineCount").textContent=`${state.routines.length} ${state.routines.length===1?"routine":"routines"}`;

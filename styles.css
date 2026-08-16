@@ -125,6 +125,15 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
 .log-item strong{display:block;font-size:14px}
 .log-item small{color:var(--muted)}
 .log-value{text-align:right;font-weight:850}
+/* v1.9.4 — delete button on each logged activity, since there was
+   previously no way to remove a mis-entered walk/run/workout. */
+.activity-log-item{gap:10px}
+.activity-log-right{display:flex;align-items:center;gap:10px;flex:none}
+.activity-delete-btn{
+  width:34px;height:34px;border-radius:10px;border:1px solid rgba(255,107,122,.25);
+  background:rgba(255,107,122,.08);color:#ff9aa5;font-size:15px;display:grid;place-items:center;flex:none;
+}
+.activity-delete-btn:active{background:rgba(255,107,122,.18)}
 .checkout-btn{
   width:100%;margin-top:22px;padding:17px;background:linear-gradient(135deg,#1c2331,#252d40);color:#eef1f7;
   border:1px solid rgba(255,255,255,.08)
