@@ -237,7 +237,7 @@ function cashOutReward(){
   if(!goal || availableBankPoints() < goal.target) return false;
   state.rewardBank.spentPoints = Number(state.rewardBank.spentPoints||0) + goal.target;
   state.rewardBank.history = state.rewardBank.history || [];
-  state.rewardBank.history.unshift({icon:goal.icon,name:goal.name,target:goal.target,claimedAt:Date.now()});
+  state.rewardBank.history.unshift({icon:goal.icon,name:goal.name,target:goal.target,claimedAt:Date.now(),dayKey:todayKey()});
   state.rewardBank.goal = null;
   saveState();
   return true;
@@ -978,6 +978,18 @@ function repNutritionSectionHTML(day,target){
     ${foodRows}
   </div>`;
 }
+function repRewardSectionHTML(key){
+  const claims=(state.rewardBank?.history||[]).filter(h=>h.dayKey===key);
+  if(!claims.length) return "";
+  return claims.map(c=>`
+    <div class="rep-section reveal">
+      <div class="rep-section-head"><div class="rep-section-bar"></div><h2>Reward Claimed</h2></div>
+      <div class="rep-reward-claim">
+        <span class="rep-reward-icon">${c.icon}</span>
+        <div><strong>${esc(c.name)}</strong><small>Cashed out for ${c.target} point${c.target===1?"":"s"}</small></div>
+      </div>
+    </div>`).join("");
+}
 function showDayReport(key){
   const day=getDay(key),t=totals(day),target=Number(state.profile?.target||30);
   const score=day.finalScore??scoreDay(day);
@@ -1015,6 +1027,7 @@ function showDayReport(key){
       </div>
     </div>
 
+    ${repRewardSectionHTML(key)}
     ${repTrainingSectionHTML(workouts,key,records)}
     ${repCardioSectionHTML(cardio,key,records)}
     ${repNutritionSectionHTML(day,target)}

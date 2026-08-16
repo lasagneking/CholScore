@@ -1,4 +1,4 @@
-CholScore v1.13.0 - Reward Bank: persistent points and custom goals
+CholScore v1.13.1 - Reward claims now show on the Day Report
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,26 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.13.1 reward claims now show on the Day Report
+- Requested: when a reward is cashed out, show what it was and how many points it
+  cost on that day's History report — matching the same gold treatment the report
+  already uses for Personal Record badges.
+- Cash-out history entries now store which day they happened on (`dayKey`), so the
+  report can look up "was anything claimed on this exact day" directly rather than
+  parsing a raw timestamp.
+- New section appears right after Today's Rings, before Strength Session — shows
+  the reward's icon, name, and its point cost. Only appears on days something was
+  actually claimed; every other day's report is completely unaffected, same as how
+  PR badges only show up where they were actually earned rather than adding empty
+  placeholders everywhere.
+- Tested against realistic multi-day claim history before shipping: a claim
+  correctly appears on its own day, is correctly absent from every other day,
+  a different day's claim doesn't leak into the wrong report, and a brand-new
+  user who's never touched the Reward Bank doesn't crash the report.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v140`.
+- service-worker cache version bumped to `cholscore-v140`.
 
 ## v1.13.0 Reward Bank — persistent points and custom goals
 - Reported: the "Weekly Bank" reset every Monday, discarding points earned the

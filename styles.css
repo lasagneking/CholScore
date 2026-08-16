@@ -1505,6 +1505,14 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 @keyframes repPrPulse{0%,100%{box-shadow:0 0 0 rgba(255,196,53,0)}50%{box-shadow:0 0 10px rgba(255,196,53,.5)}}
 @media(prefers-reduced-motion:reduce){.rep-pr-chip{animation:none;box-shadow:0 0 6px rgba(255,196,53,.3)}}
 
+.rep-reward-claim{
+  display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(255,196,53,.12),rgba(255,196,53,.03));border:1px solid rgba(255,196,53,.3);
+}
+.rep-reward-icon{font-size:28px;flex:none}
+.rep-reward-claim strong{display:block;font-size:15px;color:#fff}
+.rep-reward-claim small{display:block;color:#e2c07a;font-size:12px;margin-top:2px}
+
 /* ============ v1.7.0 Staples (quick-add) ============ */
 .staples-section{margin-bottom:18px}
 .staples-heading{margin:2px 0 12px;font-size:16px}
