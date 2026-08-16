@@ -277,11 +277,11 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
   box-shadow:none;
 }
 .routine-modal::backdrop{background:rgba(0,0,0,.7);backdrop-filter:blur(8px)}
-.routine-modal #routineForm{height:100%;display:flex;flex-direction:column;padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));overflow:hidden}
+.routine-modal #routineForm{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom))}
 .routine-builder-head{display:flex;justify-content:space-between;align-items:center;margin:20px 0 10px}
 .routine-builder-head strong,.routine-builder-head small{display:block}
 .routine-builder-head small{color:var(--muted);font-size:11px;margin-top:3px}
-.routine-builder-list{display:flex;flex-direction:column;gap:14px;flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;padding-right:2px}
+.routine-builder-list{display:flex;flex-direction:column;gap:14px;padding-right:2px}
 /* v1.10.0: old grid-based .routine-exercise-row layout removed — replaced
    by the collapsible .exercise-row component (see the dedicated block
    below). .row-remove is still used by the new markup, kept as-is. */

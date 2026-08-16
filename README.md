@@ -1,4 +1,4 @@
-CholScore v1.10.2 - Fixed iOS touch-scroll failing on nested scroll containers
+CholScore v1.10.3 - Routine editor scrolls as one page, no nested container
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,27 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.10.3 routine editor scrolls as one page, not a nested container
+- Reported again after the v1.10.2 fix: still couldn't reach the rest of an
+  expanded exercise's fields or the Save/Cancel buttons.
+- v1.10.2 fixed the iOS touch-scroll bug on the nested list container, but the
+  underlying layout — a fixed-size scrollable list sitting between a fixed header
+  and fixed Save/Cancel buttons — was still the wrong shape for this content. A
+  single tall expanded exercise can genuinely need more room than that inner box
+  ever had, regardless of whether its scrolling worked.
+- Removed the nested scroll container entirely rather than continuing to patch it.
+  The whole form (header, routine name, exercise list, Save/Cancel) is now one
+  single natural scrolling page — expand an exercise and the page simply grows and
+  scrolls to show it, the same way a normal long web page works. No inner box with
+  its own height limit to run out of room.
+- Simpler and more robust than the previous approach: one scroll context instead of
+  two nested ones means there's no equivalent of the v1.10.2 bug left to hit here,
+  since there's no longer a separate inner container that could fail independently
+  of the outer page.
+- `styles.css` cache-busting query string bumped; `index.html`, `app.js`, and the
+  image cache-busting query strings bumped to `v132`.
+- service-worker cache version bumped to `cholscore-v132`.
 
 ## v1.10.2 fixed iOS touch-scroll failing on nested scroll containers
 - Reported: after expanding an exercise (e.g. Bench press) in the newly full-screen
