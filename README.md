@@ -1,4 +1,4 @@
-CholScore v1.10.3 - Routine editor scrolls as one page, no nested container
+CholScore v1.11.0 - Colour-coded achievement rarity + a glowing Mythic tier
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,30 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.11.0 colour-coded achievement rarity + Mythic tier
+- Every existing achievement now shows its actual rarity colour — Common (grey),
+  Rare (cyan), Epic (violet), Legend (gold). Previously every tier looked visually
+  identical; only the printed word ("COMMON"/"LEGEND"/etc.) differed at all.
+- One-line change applies retroactively to every achievement already defined —
+  added a `r-{rarity}` class at render time rather than needing to touch each of
+  the ~35 existing achievement definitions individually.
+- Added a new **Mythic** tier above Legend, reserved for genuine long-haul
+  achievements (a year-long streak, lifetime tonnage lifted) — not shipped with any
+  achievements using it yet, since which specific long-haul achievements to add is
+  still being decided, but the treatment is ready.
+- Mythic is deliberately not just "gold but bigger": a multi-colour glow around the
+  whole card, an animated shifting gradient ring instead of a flat border, a
+  shimmer sweep that periodically catches the light like foil, a glowing icon, and
+  a gradient-text title. Stays glowing even while locked (just slightly dimmer)
+  rather than the usual flat grey-out other locked achievements get — the point is
+  that it should look worth a year of dedication before it's earned, not just
+  decorate it after the fact.
+- Respects `prefers-reduced-motion` (shimmer/border/pulse animations disabled,
+  glow stays as a static state).
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v133`.
+- service-worker cache version bumped to `cholscore-v133`.
 
 ## v1.10.3 routine editor scrolls as one page, not a nested container
 - Reported again after the v1.10.2 fix: still couldn't reach the rest of an

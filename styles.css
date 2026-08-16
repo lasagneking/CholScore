@@ -729,6 +729,68 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
   position:absolute;right:11px;top:11px;padding:5px 7px;border-radius:999px;
   background:rgba(255,255,255,.05);font-size:9.5px;color:#929bad;font-weight:900;letter-spacing:.08em
 }
+
+/* v1.11.0 — colour-coded rarity, applied to every existing achievement via
+   the r-{rarity} class added at render time. Previously every tier just
+   said the word with no visual distinction at all. */
+.achievement-card.r-common{border-color:rgba(154,163,181,.16)}
+.achievement-card.r-common .achievement-rarity{background:rgba(154,163,181,.14);color:#c4cad8}
+.achievement-card.r-rare{border-color:rgba(84,217,255,.2)}
+.achievement-card.r-rare .achievement-rarity{background:rgba(84,217,255,.14);color:#a6ecff}
+.achievement-card.r-epic{border-color:rgba(168,121,255,.22)}
+.achievement-card.r-epic .achievement-rarity{background:rgba(168,121,255,.16);color:#dcc6ff}
+.achievement-card.r-legend{border-color:rgba(255,209,102,.25)}
+.achievement-card.r-legend .achievement-rarity{background:rgba(255,209,102,.16);color:#ffe6ac}
+
+/* MYTHIC — reserved for the true long-haul achievements (a year-long
+   streak, lifetime tonnage lifted). Deliberately a different treatment,
+   not just "gold but bigger": a multi-colour glow around the whole card,
+   an animated gradient ring instead of a flat border, a shimmer sweep
+   that periodically catches the light like foil, a glowing icon, and a
+   gradient-text title. Stays glowing even while locked (just slightly
+   dimmer) rather than the usual flat grey-out, since the whole point is
+   that it should look enticing and worth the year of work before it's
+   earned, not just after. */
+.achievement-card.r-mythic{
+  border:none;
+  background:
+    radial-gradient(120% 100% at 50% 0%, rgba(255,95,209,.16), transparent 60%),
+    linear-gradient(165deg,#1c1424 0%,#12081a 45%,#0a0510 100%);
+  box-shadow:0 0 0 1px rgba(255,95,209,.22), 0 0 36px -6px rgba(255,95,209,.35), 0 0 60px -18px rgba(84,217,255,.3);
+}
+.achievement-card.r-mythic.locked{opacity:.78;filter:saturate(.9)}
+.achievement-card.r-mythic::before{
+  content:"";position:absolute;inset:-1.5px;border-radius:21px;padding:1.5px;pointer-events:none;z-index:1;
+  background:linear-gradient(120deg,#ff5fd1,#54d9ff,#a879ff,#ffd166,#ff5fd1);
+  background-size:400% 400%;-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;
+  animation:mythicBorderShift 4.5s linear infinite;
+}
+.achievement-card.r-mythic::after{
+  content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;z-index:1;
+  background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,.22) 46%, transparent 62%);
+  background-size:250% 250%;background-position:-40% -40%;
+  animation:mythicShimmer 3.4s ease-in-out infinite;
+}
+.achievement-card.r-mythic .achievement-icon{filter:drop-shadow(0 0 9px rgba(255,95,209,.55)) drop-shadow(0 0 16px rgba(84,217,255,.35));position:relative;z-index:2}
+.achievement-card.r-mythic h4{
+  position:relative;z-index:2;
+  background:linear-gradient(90deg,#ffd8f4,#d8f3ff 65%);-webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.achievement-card.r-mythic p,.achievement-card.r-mythic .achievement-state{position:relative;z-index:2}
+.achievement-card.r-mythic .achievement-rarity{
+  background:linear-gradient(135deg,#ff5fd1,#54d9ff);color:#0c0614;z-index:2;
+  animation:mythicPulse 2.1s ease-in-out infinite;
+}
+.achievement-card.r-mythic .achievement-mini-progress i{background:linear-gradient(90deg,#ff5fd1,#54d9ff,#a879ff)}
+@keyframes mythicBorderShift{0%{background-position:0% 50%}100%{background-position:400% 50%}}
+@keyframes mythicShimmer{0%,20%{background-position:-40% -40%}65%,100%{background-position:140% 140%}}
+@keyframes mythicPulse{0%,100%{box-shadow:0 0 6px rgba(255,95,209,.35)}50%{box-shadow:0 0 18px rgba(255,95,209,.75)}}
+@media(prefers-reduced-motion:reduce){
+  .achievement-card.r-mythic::before,.achievement-card.r-mythic::after,.achievement-card.r-mythic .achievement-rarity{animation:none}
+  .achievement-card.r-mythic::before{opacity:.7}
+}
+
 @media(max-width:520px){
   .achievement-collection{grid-template-columns:1fr 1fr;gap:8px}
   .achievement-card{padding:14px;min-height:160px}

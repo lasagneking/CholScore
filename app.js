@@ -664,7 +664,7 @@ function renderRewards(){
     const displayVal=a.metric.toLowerCase().includes("miles")?value.toFixed(1):Math.floor(value);
     const goalVal=a.goal;
     const shown=achievementDisplay(a);
-    return `<div class="achievement-card ${done?"unlocked":"locked"}">
+    return `<div class="achievement-card r-${a.rarity.toLowerCase()} ${done?"unlocked":"locked"}">
       <span class="achievement-rarity">${a.rarity}</span>
       <span class="achievement-icon">${a.icon}</span>
       <h4>${esc(shown.title)}</h4>
