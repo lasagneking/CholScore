@@ -1,4 +1,4 @@
-CholScore v1.11.0 - Colour-coded achievement rarity + a glowing Mythic tier
+CholScore v1.12.0 - 10 new achievements, including 2 real Mythic ones
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,35 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.12.0 10 new achievements, including 2 real Mythic ones
+- v1.11.0 shipped the colour-coding system and the Mythic visual treatment, but
+  left it unused — no achievement actually had `rarity:"MYTHIC"` yet. That was a
+  real miss: the whole point of the two brainstorming rounds and the mockup was to
+  get actual new achievements in, not just a palette. Fixed properly this time —
+  10 new achievements added, going from 44 to 54 total.
+- **Quick wins**: Back Again (2-day streak), Scan Squad (3 scanned foods, bridges
+  to the existing 10), Set It Once (first custom routine), Personal Best (first PR),
+  On A Roll (3 PRs).
+- **Long haul**: Two Months Strong (60-day streak), Century Streak (100-day
+  streak), Ten Ton Club (10,000kg lifted lifetime).
+- **Mythic, finally used for real**: 365 Days (a full year streak) and Hundred Ton
+  Club (100,000kg lifted, lifetime — "roughly a loaded shipping container").
+- Three new metrics added to `achievementMetrics()`: `routines` (just
+  `state.routines.length`), `totalWeightLifted` (summed from the `totalWeight`
+  field workouts already store at save time — not recalculated, so it's guaranteed
+  to agree with what the workout-complete screen showed on the day), and `prCount`
+  (reuses the exact same `computePersonalRecords()` function the Rewards tab's
+  Personal Records list and the Day Report's gold PR flags already use, so this
+  can't disagree with what's shown elsewhere in the app).
+- Verified all three new metrics against realistic multi-day data (workouts, a
+  walk, routines, streaks) and a zero-data brand-new-user case before shipping —
+  including catching and correcting my own arithmetic on an edge case (a first-ever
+  walk sets both a distance PR *and* a pace PR at once, since there's nothing to
+  compare it against yet — the code was right, my mental maths checking it wasn't).
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v134`.
+- service-worker cache version bumped to `cholscore-v134`.
 
 ## v1.11.0 colour-coded achievement rarity + Mythic tier
 - Every existing achievement now shows its actual rarity colour — Common (grey),

@@ -462,6 +462,7 @@ const achievementDefs = [
   {id:"food_first",cat:"food",icon:"🍎",title:"First Bite",desc:"Log your first food.",rarity:"COMMON",goal:1,metric:"foodEntries"},
   {id:"food_10",cat:"food",icon:"🥗",title:"Food Explorer",desc:"Log 10 food entries.",rarity:"COMMON",goal:10,metric:"foodEntries"},
   {id:"food_50",cat:"food",icon:"🛒",title:"Label Legend",desc:"Log 50 food entries.",rarity:"RARE",goal:50,metric:"foodEntries"},
+  {id:"food_scan_3",cat:"food",icon:"📸",title:"Scan Squad",desc:"Add 3 foods by barcode.",rarity:"COMMON",goal:3,metric:"scannedFoods"},
   {id:"food_scan_10",cat:"food",icon:"📷",title:"Scanner Pro",desc:"Add 10 foods by barcode.",rarity:"RARE",goal:10,metric:"scannedFoods"},
   {id:"food_ontarget_5",cat:"food",icon:"🎯",title:"On Target",desc:"Check out within target on 5 days.",rarity:"RARE",goal:5,metric:"onTargetDays"},
 
@@ -472,6 +473,11 @@ const achievementDefs = [
   {id:"workout_100",cat:"workout",icon:"🦾",title:"Iron Habit",desc:"Complete 100 workouts.",rarity:"EPIC",goal:100,metric:"workouts"},
   {id:"sets_100",cat:"workout",icon:"🔢",title:"Century Sets",desc:"Log 100 completed workout sets.",rarity:"RARE",goal:100,metric:"completedSets"},
   {id:"sets_500",cat:"workout",icon:"🏆",title:"Set Collector",desc:"Log 500 completed workout sets.",rarity:"EPIC",goal:500,metric:"completedSets"},
+  {id:"routine_first",cat:"workout",icon:"📝",title:"Set It Once",desc:"Create your first custom routine.",rarity:"COMMON",goal:1,metric:"routines"},
+  {id:"pr_first",cat:"workout",icon:"🥇",title:"Personal Best",desc:"Set your first personal record.",rarity:"COMMON",goal:1,metric:"prCount"},
+  {id:"pr_3",cat:"workout",icon:"📈",title:"On A Roll",desc:"Set 3 personal records.",rarity:"RARE",goal:3,metric:"prCount"},
+  {id:"weight_10000",cat:"workout",icon:"🏋️‍♂️",title:"Ten Ton Club",desc:"Lift 10,000kg total, lifetime.",rarity:"RARE",goal:10000,metric:"totalWeightLifted"},
+  {id:"weight_100000",cat:"workout",icon:"🌌",title:"Hundred Ton Club",desc:"Lift 100,000kg total, lifetime — roughly a loaded shipping container.",rarity:"MYTHIC",goal:100000,metric:"totalWeightLifted"},
 
   // Walking
   {id:"walk_first",cat:"walking",icon:"🚶",title:"First Steps",desc:"Log your first walk.",rarity:"COMMON",goal:1,metric:"walks"},
@@ -500,10 +506,14 @@ const achievementDefs = [
   {id:"week_combo_30",cat:"weekly",icon:"🛰️",title:"Thirty Mile Week",desc:"Walk and/or run 30 miles this week.",rarity:"LEGEND",goal:30,metric:"weekMoveMiles"},
 
   // Consistency
+  {id:"streak_2",cat:"consistency",icon:"🔁",title:"Back Again",desc:"Check out 2 days in a row.",rarity:"COMMON",goal:2,metric:"bestStreak"},
   {id:"streak_3",cat:"consistency",icon:"🔥",title:"Three In A Row",desc:"Check out 3 days in a row.",rarity:"COMMON",goal:3,metric:"bestStreak"},
   {id:"streak_7",cat:"consistency",icon:"🔥",title:"Full Week",desc:"Reach a 7-day checkout streak.",rarity:"RARE",goal:7,metric:"bestStreak"},
   {id:"streak_14",cat:"consistency",icon:"🌟",title:"Fortnight Flow",desc:"Reach a 14-day checkout streak.",rarity:"EPIC",goal:14,metric:"bestStreak"},
   {id:"streak_30",cat:"consistency",icon:"👑",title:"Thirty Days",desc:"Reach a 30-day checkout streak.",rarity:"LEGEND",goal:30,metric:"bestStreak"},
+  {id:"streak_60",cat:"consistency",icon:"🏔️",title:"Two Months Strong",desc:"Reach a 60-day checkout streak.",rarity:"EPIC",goal:60,metric:"bestStreak"},
+  {id:"streak_100",cat:"consistency",icon:"🗿",title:"Century Streak",desc:"Reach a 100-day checkout streak.",rarity:"LEGEND",goal:100,metric:"bestStreak"},
+  {id:"streak_365",cat:"consistency",icon:"🌅",title:"365 Days",desc:"Reach a full year checkout streak.",rarity:"MYTHIC",goal:365,metric:"bestStreak"},
   {id:"checkout_25",cat:"consistency",icon:"🌙",title:"Day Closer",desc:"Check out 25 days.",rarity:"RARE",goal:25,metric:"checkouts"},
   {id:"checkout_100",cat:"consistency",icon:"📘",title:"Hundred Days Logged",desc:"Check out 100 days.",rarity:"LEGEND",goal:100,metric:"checkouts"},
 
@@ -524,6 +534,7 @@ const rewardCategories = [
 function achievementMetrics(){
   let foodEntries=0,scannedFoods=0,onTargetDays=0,workouts=0,completedSets=0,walks=0,runs=0;
   let walkMiles=0,runMiles=0,checkouts=0,score70Days=0,score80Days=0,score90Days=0,totalPoints=0;
+  let totalWeightLifted=0;
   const checkedDates=[];
 
   const monday=mondayKeyFor(new Date());
@@ -537,6 +548,7 @@ function achievementMetrics(){
       if(a.type==="workout"){
         workouts++;
         completedSets += Number(a.completedSets||0);
+        totalWeightLifted += Number(a.totalWeight||0); // already computed once via workoutVolume() at save time
       }else if(a.type==="walk"){
         walks++;
         const dist=achievementDistanceValue(Number(a.distance||0));
@@ -575,10 +587,23 @@ function achievementMetrics(){
     prev=d;
   }
 
+  const routines=(state.routines||[]).length;
+  // reuses the exact same PR computation the Rewards tab's Personal Records
+  // list and the Day Report's gold PR flags already use — one PR "slot" per
+  // exercise name with a recorded best, plus up to 4 more for walk/run
+  // distance and pace, so this can never disagree with what's shown elsewhere.
+  const prRecords=computePersonalRecords();
+  let prCount=Object.keys(prRecords.strength).length+Object.keys(prRecords.timed).length;
+  for(const t of ["walk","run"]){
+    if(prRecords.cardio[t].longestKm>0) prCount++;
+    if(prRecords.cardio[t].bestPaceMinPerKm!=null) prCount++;
+  }
+
   return {
     foodEntries,scannedFoods,onTargetDays,workouts,completedSets,walks,runs,
     walkMiles,runMiles,weekWalkMiles,weekRunMiles,weekMoveMiles:weekWalkMiles+weekRunMiles,
-    checkouts,bestStreak,score70Days,score80Days,score90Days,totalPoints
+    checkouts,bestStreak,score70Days,score80Days,score90Days,totalPoints,
+    totalWeightLifted,routines,prCount
   };
 }
 
