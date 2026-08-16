@@ -1435,7 +1435,7 @@ function addRoutineExerciseRow(data={name:"",sets:3,reps:10,weight:"",notes:"",i
     </div>
     <div class="exercise-row-body">
       <div class="rb-main-fields">
-        <label>Exercise<input class="rb-name" required placeholder="e.g. Bench press or Plank" value="${esc(data.name)}"></label>
+        <input class="rb-name" required placeholder="e.g. Bench press or Plank" aria-label="Exercise name" value="${esc(data.name)}">
         <label class="timed-exercise-toggle">
           <input class="rb-timed" type="checkbox" ${isTimed?"checked":""}>
           <span><b>⏱ Timed exercise</b><small>Use a stopwatch for each set instead of entering reps.</small></span>

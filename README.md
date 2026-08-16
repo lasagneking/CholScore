@@ -1,4 +1,4 @@
-CholScore v1.10.0 - Collapsible exercise rows in the routine builder
+CholScore v1.10.1 - Full-screen routine editor + clearer expanded rows
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,38 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.10.1 full-screen routine editor + clearer expanded rows
+- Reported, with a screenshot marked up in red: significant wasted space down both
+  sides and across the bottom of the routine editor, and the expanded exercise row
+  ("Sumo squats") was hard to tell apart from the collapsed rows around it — "looks
+  like the same block of text."
+- **Wasted space**: root cause was that the routine editor was still a floating
+  card dialog (94vw wide, default modal padding, centered with visible margins) —
+  a reasonable choice for a short confirmation, wrong for a long, scrollable
+  editing surface with a variable number of exercises. Made it genuinely
+  full-screen instead, the same treatment `.workout-modal` already uses
+  successfully. The exercise list itself was also capped at a fixed `46vh`
+  regardless of how much room was actually available — changed it to flex and
+  fill whatever space the full-screen layout actually provides.
+- Making it full-screen introduced the exact same class of bug fixed earlier this
+  session on the Day Report's close button: the title/close button can end up
+  sitting under the notch/status bar once a dialog is truly edge-to-edge. Caught
+  and fixed it here before it could ship, then proactively audited every other
+  full-screen surface in the app for the same unhandled-safe-area pattern —
+  found and fixed it on two more: the live workout screen and the barcode
+  scanner, both of which had the identical gap.
+- **Expanded row clarity**: added a visible cyan border + glow around the whole
+  card while it's open, a darker background and a divider line marking exactly
+  where the collapsed header ends and the editable fields begin, and increased
+  the gap between separate exercise cards (9px → 14px) so distinct exercises
+  don't read as one continuous block. Also removed the redundant "Exercise" text
+  label above the name field — the name was effectively showing twice (once as
+  the header title, once as the label plus the input's own value), which was
+  part of what made it look duplicated.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v130`.
+- service-worker cache version bumped to `cholscore-v130`.
 
 ## v1.10.0 collapsible exercise rows in the routine builder
 - Reported: editing a routine with several exercises meant every exercise was

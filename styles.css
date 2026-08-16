@@ -265,11 +265,23 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
 }
 .active-workout-banner strong,.active-workout-banner small{display:block}
 .active-workout-banner small{color:var(--muted);margin-top:3px}
-.routine-modal{width:min(94vw,620px)}
+/* v1.10.1: was a floating card (94vw wide, default modal padding, native
+   dialog centering) — fine for a short confirmation, wrong for a long,
+   scrollable editing surface with a variable number of exercises. Full
+   screen like .workout-modal instead, so there's no wasted margin on
+   either side and the exercise list can actually use the available
+   height rather than being capped at a fixed viewport fraction. */
+.routine-modal{
+  width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;
+  border:0;border-radius:0;padding:0;background:#121722;color:var(--text);
+  box-shadow:none;
+}
+.routine-modal::backdrop{background:rgba(0,0,0,.7);backdrop-filter:blur(8px)}
+.routine-modal #routineForm{height:100%;display:flex;flex-direction:column;padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));overflow:hidden}
 .routine-builder-head{display:flex;justify-content:space-between;align-items:center;margin:20px 0 10px}
 .routine-builder-head strong,.routine-builder-head small{display:block}
 .routine-builder-head small{color:var(--muted);font-size:11px;margin-top:3px}
-.routine-builder-list{display:flex;flex-direction:column;gap:9px;max-height:46vh;overflow:auto;padding-right:2px}
+.routine-builder-list{display:flex;flex-direction:column;gap:14px;flex:1;min-height:0;overflow:auto;padding-right:2px}
 /* v1.10.0: old grid-based .routine-exercise-row layout removed — replaced
    by the collapsible .exercise-row component (see the dedicated block
    below). .row-remove is still used by the new markup, kept as-is. */
@@ -282,7 +294,7 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
   box-shadow:0 30px 120px rgba(0,0,0,.8)
 }
 .workout-modal::backdrop{background:rgba(0,0,0,.82);backdrop-filter:blur(10px)}
-.live-workout-shell{min-height:100%;padding:24px 18px 30px;background:
+.live-workout-shell{min-height:100%;padding:calc(24px + env(safe-area-inset-top)) 18px 30px;background:
  radial-gradient(circle at 85% 0%,rgba(84,217,255,.12),transparent 26%),#090c12}
 .live-workout-top{display:flex;justify-content:space-between;align-items:flex-start;position:sticky;top:0;padding:5px 0 12px;background:linear-gradient(#090c12 80%,transparent);z-index:3}
 .live-workout-top h2{font-size:30px;margin:0;letter-spacing:-.04em}
@@ -343,7 +355,7 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
   background:#080b10;color:var(--text);padding:0;
 }
 .scanner-modal::backdrop{background:rgba(0,0,0,.88);backdrop-filter:blur(10px)}
-.scanner-shell{min-height:100%;padding:24px 18px 30px;background:
+.scanner-shell{min-height:100%;padding:calc(24px + env(safe-area-inset-top)) 18px 30px;background:
   radial-gradient(circle at 50% 0%,rgba(84,217,255,.13),transparent 30%),#080b10}
 .scanner-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
 .scanner-head h2{font-size:30px;margin:0;letter-spacing:-.04em}
@@ -1434,7 +1446,11 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
    tap to expand. A brand-new blank exercise still opens
    automatically since there's nothing to summarize yet.
    ============================================================ */
-.exercise-row{border-radius:16px;background:#0d121a;border:1px solid rgba(255,255,255,.055);overflow:hidden}
+.exercise-row{
+  border-radius:16px;background:#0d121a;border:1px solid rgba(255,255,255,.055);overflow:hidden;
+  transition:border-color .2s ease,box-shadow .2s ease;
+}
+.exercise-row.is-open{border-color:rgba(84,217,255,.32);box-shadow:0 0 0 1px rgba(84,217,255,.1)}
 .exercise-row-head{display:flex;align-items:center;gap:10px;padding:12px 12px;cursor:pointer}
 .exercise-row-head-main{flex:1;min-width:0}
 .exercise-row-title{display:block;font-size:14.5px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
@@ -1452,7 +1468,11 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 .exercise-row.is-open .exercise-row-expand{transform:rotate(180deg);color:var(--cyan);border-color:rgba(84,217,255,.35);background:rgba(84,217,255,.08)}
 .exercise-row .row-remove{width:32px;height:32px;font-size:16px;border-radius:9px}
 
-.exercise-row-body{max-height:0;overflow:hidden;transition:max-height .32s cubic-bezier(.22,1,.36,1)}
-.exercise-row.is-open .exercise-row-body{max-height:600px}
-.exercise-row-body .rb-main-fields{padding:0 12px 14px}
+/* Darker background + a visible divider mark exactly where the collapsed
+   header ends and the expanded editing fields begin — without this it
+   reads as one continuous block rather than a header with a drawer
+   underneath it, which was the actual source of the confusion. */
+.exercise-row-body{max-height:0;overflow:hidden;transition:max-height .32s cubic-bezier(.22,1,.36,1);background:rgba(0,0,0,.2)}
+.exercise-row.is-open .exercise-row-body{max-height:600px;border-top:1px solid rgba(255,255,255,.07)}
+.exercise-row-body .rb-main-fields{padding:14px 12px 14px}
 @media(prefers-reduced-motion:reduce){.exercise-row-body{transition:none}.exercise-row-expand{transition:none}}
