@@ -1,4 +1,4 @@
-CholScore v1.6.1 - Personal bests flagged in the Day Report
+CholScore v1.7.0 - Staples: quick-add for repeat foods
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,33 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.7.0 Staples — quick add for repeat foods
+- New "Staples" row on the Food tab, between the barcode scanner and today's food
+  list: a horizontally-scrolling set of cards for foods logged repeatedly, each a
+  single tap to re-add to today.
+- Computed fresh from `state.days` every time — same principle as Personal Records
+  and the Day Report — so it's always accurate and needs no separate storage. Only
+  foods logged **twice or more** qualify; a one-off entry isn't a staple. Grouped by
+  name + brand, case-insensitively, so "Chicken breast" and "chicken breast" count
+  as the same staple rather than splitting into two.
+- Each card carries over the food's most recently logged nutrition values (sat fat,
+  protein, brand, image, amount) and defaults to whichever meal that food is most
+  often logged under — e.g. Greek yoghurt logged 6 times at breakfast defaults to
+  Breakfast automatically, no meal picker needed for the common case.
+- Deliberately no confirmation dialog on tap — it lands straight in today's food
+  list, visible immediately as feedback. If it's ever wrong, the existing tap-to-view
+  → delete flow on any logged food already covers correcting a mistake, so no new
+  undo mechanism was needed.
+- Section stays hidden entirely until there are at least two qualifying staples, so
+  new accounts still see the same clean "no food logged today" state as before.
+- Tested the grouping/threshold/meal-mode logic directly (6× breakfast yoghurt →
+  correctly surfaces with Breakfast default; 3× chicken breast across mixed
+  meals/casing → correctly merges and picks the majority meal; 1× pizza → correctly
+  excluded) before shipping.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v119`.
+- service-worker cache version bumped to `cholscore-v119`.
 
 ## v1.6.1 personal bests flagged in the Day Report
 - Personal bests now show up directly in History's Day Report, right next to the

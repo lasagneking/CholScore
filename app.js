@@ -265,7 +265,61 @@ function showFoodDetail(food){
   $("foodDetailDialog").showModal();
 }
 
+/* v1.7.0 Staples — quick one-tap re-add for foods the person logs
+   repeatedly. Computed fresh from state.days every time (same principle as
+   Personal Records / the Day Report), so it can never drift out of sync
+   with actual history and needs no separate storage. Only foods logged at
+   least twice qualify — a single one-off entry isn't really a "staple". */
+function computeStapleFoods(minCount=2,limit=8){
+  const groups={};
+  for(const day of Object.values(state.days||{})){
+    for(const f of day.foods||[]){
+      const name=String(f.name||"").trim();if(!name)continue;
+      const key=`${name.toLowerCase()}|${String(f.brand||"").trim().toLowerCase()}`;
+      if(!groups[key])groups[key]={count:0,mealCounts:{},latest:f,latestCreated:f.created||0};
+      const g=groups[key];
+      g.count++;
+      const meal=f.meal||"Snack";
+      g.mealCounts[meal]=(g.mealCounts[meal]||0)+1;
+      if((f.created||0)>=g.latestCreated){g.latest=f;g.latestCreated=f.created||0;}
+    }
+  }
+  return Object.values(groups)
+    .filter(g=>g.count>=minCount)
+    .sort((a,b)=>b.count-a.count)
+    .slice(0,limit)
+    .map(g=>({...g.latest,_defaultMeal:Object.entries(g.mealCounts).sort((a,b)=>b[1]-a[1])[0]?.[0]||"Snack"}));
+}
+function quickAddStaple(f){
+  if(!f)return;
+  const entry={id:id(),name:f.name,meal:f._defaultMeal||"Snack",sat:Number(f.sat||0),created:Date.now(),source:f.source||"Manual"};
+  if(f.brand)entry.brand=f.brand;
+  if(f.barcode)entry.barcode=f.barcode;
+  if(f.image)entry.image=f.image;
+  if(f.protein!=null)entry.protein=Number(f.protein);
+  if(f.amount!=null)entry.amount=f.amount;
+  if(f.amountUnit)entry.amountUnit=f.amountUnit;
+  ensureDay().foods.push(entry);
+  state.achievements.firstFood=true;
+  saveState();
+  renderAll();
+}
+function renderStaples(){
+  const section=$("staplesSection");if(!section)return;
+  const staples=computeStapleFoods();
+  if(!staples.length){section.classList.add("hidden");return;}
+  section.classList.remove("hidden");
+  $("staplesRow").innerHTML=staples.map((f,i)=>`
+    <button type="button" class="staple-card" data-idx="${i}">
+      ${f.image?`<img class="staple-thumb" src="${esc(f.image)}" alt="" loading="lazy">`:`<div class="staple-thumb staple-thumb-fallback">🍽️</div>`}
+      <strong>${esc(f.name)}</strong>
+      <small>${fmt(f.sat)}g sat fat</small>
+    </button>`).join("");
+  qsa(".staple-card",$("staplesRow")).forEach(btn=>btn.addEventListener("click",()=>quickAddStaple(staples[Number(btn.dataset.idx)])));
+}
+
 function renderFood(){
+  renderStaples();
   const day=getDay(),t=totals(day),target=Number(state.profile.target);
   $("foodTotal").textContent=fmt(t.sat);$("foodTarget").textContent=fmt(target);$("foodBar").style.width=`${Math.min(100,t.sat/target*100)}%`;
   $("foodList").innerHTML=day.foods.length?day.foods.slice().reverse().map(x=>`
