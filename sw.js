@@ -1,4 +1,4 @@
-const CACHE = "cholscore-v150";
+const CACHE = "cholscore-v151";
 
 const APP_SHELL = [
   "./",
@@ -11,7 +11,7 @@ const APP_SHELL = [
   "./apple-touch-icon.png",
   "./workout-victory-silhouette.png",
   "./walk-share-template.jpg",
-  "./run-share-template.jpg",
+  "./run-share-template.jpeg",
   "./splash/apple-splash-750x1334.png",
   "./splash/apple-splash-1125x2436.png",
   "./splash/apple-splash-828x1792.png",

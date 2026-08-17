@@ -1,4 +1,4 @@
-CholScore v1.18.0 - Shareable walk/run images
+CholScore v1.18.1 - Fixed run template filename mismatch
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,21 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.18.1 fixed run template filename mismatch
+- After replacing the walk/run templates to remove a watermark, GitHub's upload
+  flow normalized `run-share-template.jpg` to `.jpeg` on its own — walk stayed
+  `.jpg`, run became `.jpeg`, genuinely different extensions now live on the two
+  files. The code was asking for `.jpg` on both, so run would have silently
+  loaded nothing (falling back to a blank background rather than crashing,
+  since that fallback was deliberately built in — but still not showing the
+  actual template).
+- Fixed by matching the extension per type rather than asking for another round
+  of GitHub renaming, which had already caused enough friction this session.
+- Updated the service worker's precache list and an outdated code comment to
+  match.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and the image cache-busting
+  query strings bumped to `v151`.
 
 ## v1.18.0 shareable walk/run images
 - Requested with three reference images: a "Share achievement" button on the

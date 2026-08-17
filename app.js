@@ -2744,7 +2744,9 @@ async function generateWorkoutShareImageBlob(){
    images (built entirely from canvas primitives), this one uses a pre-built
    template image as the full background — the card layout, icons, labels,
    circle, and silhouette are already baked into walk-share-template.jpg /
-   run-share-template.jpg. This function only overlays the dynamic text:
+   run-share-template.jpeg (extensions genuinely differ — GitHub's upload
+   flow normalized one but not the other). This function only overlays
+   the dynamic text:
    headline, sub-message, and the three stat values + captions. Coordinates
    below were measured directly from the reference example (pixel analysis
    of where the text actually sits), not eyeballed. Card order follows what's
@@ -2758,7 +2760,7 @@ async function generateActivityShareImageBlob(type,minutes,distanceKm,prBadges){
   const hasPacePR=prBadges.some(b=>b.toLowerCase().includes("pace"));
   const hasDistancePR=prBadges.some(b=>b.toLowerCase().includes("longest"));
 
-  const template=await loadImage(`${type}-share-template.jpg`).catch(()=>null);
+  const template=await loadImage(`${type}-share-template.${type==="run"?"jpeg":"jpg"}`).catch(()=>null);
   const W=template?.width||1008,H=template?.height||1046;
   const canvas=document.createElement("canvas");canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext("2d");
