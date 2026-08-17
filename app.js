@@ -2453,6 +2453,25 @@ function drawShareRing(ctx,cx,cy,r,pct,color,value,label){
   ctx.fillText(value,cx,cy+16);
   ctx.fillStyle="#9299aa";ctx.font="28px sans-serif";
   ctx.fillText(label,cx,cy+r+50);
+
+  // Checkmark badge, top-right of the ring — matching the live checkout
+  // dialog's badge (same position, same colours). Was missing from the
+  // shared image entirely; this replicates the exact checkmark path used
+  // there (M4 12.5L9.5 18L20 6 in a 24x24 viewBox), translated to
+  // coordinates relative to its own centre and scaled to the badge size,
+  // rather than approximating the shape freehand.
+  const bx=cx+r*0.75,by=cy-r*0.75,br=r*0.24;
+  ctx.fillStyle="#55f0a7";
+  ctx.beginPath();ctx.arc(bx,by,br,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#14121e";ctx.lineWidth=4;
+  ctx.beginPath();ctx.arc(bx,by,br,0,Math.PI*2);ctx.stroke();
+  const k=(br*0.72)/12; // scales the original 24x24 viewBox (half-width 12) to fit the badge
+  ctx.strokeStyle="#06110c";ctx.lineWidth=Math.max(2,br*0.16);ctx.lineCap="round";ctx.lineJoin="round";
+  ctx.beginPath();
+  ctx.moveTo(bx+(4-12)*k,by+(12.5-12)*k);
+  ctx.lineTo(bx+(9.5-12)*k,by+(18-12)*k);
+  ctx.lineTo(bx+(20-12)*k,by+(6-12)*k);
+  ctx.stroke();
 }
 async function generateShareImageBlob(){
   const day=getDay(),score=scoreDay(day),{sat,mins}=totals(day);

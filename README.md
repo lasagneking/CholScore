@@ -1,4 +1,4 @@
-CholScore v1.16.1 - Fixed checkmark badges rendering as chevrons
+CholScore v1.16.2 - Checkmark badges added to the shared image
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,31 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.16.2 checkmark badges added to the shared image
+- Reported: checkmarks correct on every real checkout, but missing specifically
+  from the shared image. Took a couple of rounds to pin down exactly what was
+  meant — turned out not to be a regression from the v1.16.1 rotation fix at all.
+  `drawShareRing()` (the canvas share-image code from v1.16.0) simply never drew
+  a checkmark badge in the first place — only the arc, the number, and the label.
+- Added it properly: same position (top-right of the ring), same colours, and the
+  exact same checkmark path used in the live dialog (`M4 12.5L9.5 18L20 6` in a
+  24×24 viewBox) — translated to coordinates relative to its own centre and
+  scaled to the badge size, not approximated freehand, so it can't visually drift
+  from the real one.
+- Rendered real test images afterward to confirm rather than trust the code by
+  eye — both a normal day and an over-target day came out with a correctly
+  upright, well-positioned checkmark.
+- Flagged rather than silently changed: the checkmark still appears even on an
+  over-target ring, matching the live dialog's own current behaviour exactly
+  (`checkoutBadgeSat` always pops regardless of over/under target) — deliberately
+  matched rather than introducing a new inconsistency between the two surfaces.
+  If checkmarks should only appear when actually under target, that's a real,
+  separate change touching both places together, not something to decide
+  unilaterally while fixing a narrower reported bug.
+- `app.js` and the image cache-busting query string bumped; `index.html` and
+  `styles.css` cache-busting query strings bumped to `v147`.
+- service-worker cache version bumped to `cholscore-v147`.
 
 ## v1.16.1 fixed checkmark badges rendering as chevrons
 - Reported: the small green tick badges on the checkout dialog's rings looked
