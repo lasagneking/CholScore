@@ -1316,7 +1316,15 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
   border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:14px 6px 12px;text-align:center;position:relative;
 }
 .checkout-ring-wrap{position:relative;width:82px;height:82px;margin:0 auto}
-.checkout-ring-wrap svg{width:82px;height:82px;transform:rotate(-90deg)}
+/* v1.16.1: was ".checkout-ring-wrap svg" (a descendant selector), which
+   matches ANY svg anywhere inside the wrapper — including the checkmark
+   badge's own inner svg, nested two levels deep inside .checkout-check-badge.
+   That accidentally rotated the checkmark -90deg along with the ring arc,
+   turning it into what looks exactly like a ">" chevron. Direct-child
+   selector scopes this to only the ring's own svg, which is the only one
+   that actually needs the rotation (to start its progress arc at 12
+   o'clock instead of SVG's default 3 o'clock start). */
+.checkout-ring-wrap > svg{width:82px;height:82px;transform:rotate(-90deg)}
 .checkout-ring-track{fill:none;stroke:rgba(255,255,255,.1);stroke-width:8}
 .checkout-ring-fill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1.1s cubic-bezier(.22,1,.36,1)}
 .checkout-ring-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15.5px;font-weight:800;flex-direction:column;line-height:1.05;color:#fff}
@@ -1345,7 +1353,7 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 }
 @media(max-width:420px){
   .checkout-ring-wrap{width:72px;height:72px}
-  .checkout-ring-wrap svg{width:72px;height:72px}
+  .checkout-ring-wrap > svg{width:72px;height:72px}
   .checkout-premium h2{font-size:25px}
 }
 

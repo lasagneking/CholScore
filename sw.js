@@ -1,4 +1,4 @@
-const CACHE = "cholscore-v145";
+const CACHE = "cholscore-v146";
 
 const APP_SHELL = [
   "./",

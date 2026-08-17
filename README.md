@@ -1,4 +1,4 @@
-CholScore v1.16.0 - Shareable branded checkout image
+CholScore v1.16.1 - Fixed checkmark badges rendering as chevrons
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,35 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.16.1 fixed checkmark badges rendering as chevrons
+- Reported: the small green tick badges on the checkout dialog's rings looked
+  like ">" arrows instead of checkmarks.
+- Diagnosed properly rather than guessing — rendered the actual checkmark SVG
+  path in isolation first (came out completely normal), which ruled out the path
+  data itself and pointed at something rotating it after the fact. Found it:
+  `.checkout-ring-wrap svg{transform:rotate(-90deg)}` is a *descendant* selector,
+  matching any `<svg>` anywhere inside that wrapper — not just the intended
+  progress-ring arc it was written for. The checkmark badge has its own inner
+  `<svg>` nested two levels deeper, so it was silently getting caught by the same
+  rule and rotated -90° right along with the ring. Confirmed by rendering the
+  checkmark path with that exact rotation applied — pixel-for-pixel matched the
+  chevron in the screenshot.
+- Fixed by switching to a direct-child selector (`.checkout-ring-wrap > svg`),
+  which only matches the ring's own SVG (a direct child of the wrapper) and
+  correctly leaves the badge's nested SVG alone.
+- While fixing it, searched for the same pattern elsewhere rather than assuming
+  this was the only spot. Found it recurring in a `max-width:420px` mobile media
+  query too — same bug, just gated behind a breakpoint that doesn't apply to a
+  17 Pro Max's 440px viewport, which is exactly why it wasn't visible in the
+  screenshot. Left unfixed it would have blown the checkmark badge up to a broken
+  72×72px on any narrower phone (iPhone SE, mini models, etc.). Fixed that
+  instance too. Separately checked the Day Report's rings for the same risk —
+  confirmed they don't nest any badge SVG, so no fix was needed there, and
+  nothing was changed that wasn't actually broken.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v146`.
+- service-worker cache version bumped to `cholscore-v146`.
 
 ## v1.16.0 shareable branded checkout image
 - Reported: "Share achievement" on the checkout dialog only produced plain text —
