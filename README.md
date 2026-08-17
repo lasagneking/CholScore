@@ -1,4 +1,4 @@
-CholScore v1.18.1 - Fixed run template filename mismatch
+CholScore v1.18.2 - Fixed missing cache-busting on share templates
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,31 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.18.2 fixed missing cache-busting on share templates
+- Reported: replaced the watermarked walk/run template images on GitHub, but the
+  shared image kept showing the old watermarked version regardless.
+- Real cause, and a genuine gap in v1.18.0: every other asset in this app
+  (`styles.css`, `app.js`, the workout silhouette) is loaded with a `?v=NNN`
+  cache-busting query string, specifically so browsers, the service worker, and
+  GitHub's own CDN all know to fetch a fresh copy whenever the underlying file
+  changes. The two new share template images were the only assets in the whole
+  app that never got this treatment — loaded by a plain filename with nothing
+  to signal "this changed," so all three caching layers kept serving whatever
+  they'd fetched the very first time, no matter how many times the file was
+  replaced on GitHub.
+- Confirmed the fix would actually work end-to-end before shipping it, not just
+  assumed: checked the service worker's own fetch handler specifically, since
+  `caches.match()` does an exact URL match including the query string — a
+  request for `run-share-template.jpeg?v=152` genuinely won't match the old
+  entry cached under the plain, query-string-less filename, which correctly
+  forces a real network fetch instead of serving the stale cached copy.
+- Added a proper `APP_VERSION` constant to `app.js` itself, since the template
+  images are requested from inside app.js (not index.html), where the existing
+  `?v=` numbers weren't reachable at all — needed a real source of truth
+  in the right file, not another one-off patch.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and the image cache-busting
+  query strings bumped to `v152`.
 
 ## v1.18.1 fixed run template filename mismatch
 - After replacing the walk/run templates to remove a watermark, GitHub's upload

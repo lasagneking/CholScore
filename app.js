@@ -1,6 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
+const APP_VERSION = "152"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 const todayKey = () => new Date().toISOString().slice(0,10);
 
 const defaultState = {
@@ -2760,7 +2761,7 @@ async function generateActivityShareImageBlob(type,minutes,distanceKm,prBadges){
   const hasPacePR=prBadges.some(b=>b.toLowerCase().includes("pace"));
   const hasDistancePR=prBadges.some(b=>b.toLowerCase().includes("longest"));
 
-  const template=await loadImage(`${type}-share-template.${type==="run"?"jpeg":"jpg"}`).catch(()=>null);
+  const template=await loadImage(`${type}-share-template.${type==="run"?"jpeg":"jpg"}?v=${APP_VERSION}`).catch(()=>null);
   const W=template?.width||1008,H=template?.height||1046;
   const canvas=document.createElement("canvas");canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext("2d");
