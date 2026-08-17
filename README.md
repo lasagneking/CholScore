@@ -1,4 +1,4 @@
-CholScore v1.16.2 - Checkmark badges added to the shared image
+CholScore v1.17.0 - Shareable workout-complete image
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,42 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.17.0 shareable workout-complete image
+- Requested with a reference design: a "Share achievement" button on the
+  workout-complete celebration screen, same pattern as the checkout share, but a
+  deliberately distinct, more elaborate layout built specifically for sharing
+  rather than reusing the in-app celebration screen verbatim.
+- New `generateWorkoutShareImageBlob()` reuses the app's real assets and colours
+  for genuine brand consistency rather than approximating them: the same
+  `workout-victory-silhouette.png` artwork already used live, the exact confetti
+  palette from `startConfettiLoop()` (`#8d36ff #f8bd36 #ea62c8 #fff0ba #54d9ff`),
+  and the same gold/purple tokens as the live celebration's own CSS
+  (`.premium-star`, `.premium-stat-card`, `.premium-motivation`).
+- Circular gold-framed silhouette with a star badge overlapping the top, headline
+  and sub-message, two stat cards (total weight lifted, workout duration) with
+  circular icon badges, and the "every rep brings you closer" banner — matching
+  the reference layout section by section.
+- Same button pattern and full fallback chain as the checkout share (image share
+  → text-only share → direct download → text-share/clipboard on error), and the
+  same `wrapCanvasText` line-count trick so the one variable-length piece of text
+  (a long name in the headline) can wrap to 2 lines without anything below it
+  overlapping.
+- Found and fixed a real rendering issue while testing with actual rendered
+  output, not just reading the code: the source silhouette PNG has almost no
+  transparent margin at its own bottom edge (checked directly — visible content
+  extends to within 2-3px of the full image height), so drawing it too large
+  made that edge visible as a hard cutoff line inside the circle. Fixed by
+  scaling it down and shifting it upward slightly so that edge sits in the
+  darker part of the circle's gradient instead of being prominent.
+- Verified across three rendered scenarios before shipping: a normal two-exercise
+  workout, a bodyweight-only session (correctly shows "—" instead of "0.0 kg",
+  matching how the live screen already handles it), and a long name to confirm
+  the headline wraps to 2 lines with everything below it shifting down cleanly
+  rather than overlapping.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v148`.
+- service-worker cache version bumped to `cholscore-v148`.
 
 ## v1.16.2 checkmark badges added to the shared image
 - Reported: checkmarks correct on every real checkout, but missing specifically

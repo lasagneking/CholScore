@@ -2560,6 +2560,190 @@ function roundRectPath(ctx,x,y,w,h,r){
   ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);
   ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();
 }
+function seededRandom(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;return s/233280;};}
+function loadImage(src){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    img.onload=()=>resolve(img);
+    img.onerror=reject;
+    img.src=src;
+  });
+}
+/* v1.17.0 — shareable workout-complete image. A distinct, more elaborate
+   design than the checkout share image (deliberately, per reference design):
+   reuses the same silhouette artwork, confetti palette, and gold/purple
+   colours as the live celebration screen, in a circular-framed layout built
+   for social sharing rather than reusing the in-app celebration verbatim. */
+async function generateWorkoutShareImageBlob(){
+  const w=state.activeWorkout;
+  const name=state.profile?.name||"there";
+  const cheer=$("finishFeelingTitle")?.querySelector("span")?.textContent?.replace(",","")||"Amazing work";
+  const subMessage=$("finishWorkoutSummary")?.textContent||"You brought the effort today! 💪";
+  const volume=w?workoutVolume(w):0;
+  const mins=w?Math.max(1,elapsedMinutes(w.startedAt)):1;
+  const durationText=mins<60?`${mins} min`:elapsedClock(w.startedAt);
+
+  const W=1080;
+  const confettiColors=["#8d36ff","#f8bd36","#ea62c8","#fff0ba","#54d9ff"];
+  const silhouette=await loadImage("workout-victory-silhouette.png").catch(()=>null);
+
+  // Dry-run measure of just the headline, since it's the one piece of
+  // variable-length text (a long name could wrap to 2 lines) — everything
+  // below it shifts down accordingly rather than risking overlap.
+  const scratch=document.createElement("canvas");scratch.width=W;scratch.height=200;
+  const sctx=scratch.getContext("2d");
+  sctx.font="bold 52px sans-serif";
+  const headlineLines=wrapCanvasText(sctx,`${cheer}, ${name}!`,W/2,0,900,60);
+
+  const circleCx=W/2,circleCy=440,circleR=230;
+  const headStartY=circleCy+circleR+80;
+  const subY=headStartY+50+headlineLines*60+16;
+  const cardY=subY+70;
+  const cardW=460,cardH=300,cardGap=30;
+  const bannerY=cardY+cardH+30,bannerH=110;
+  const footerY=bannerY+bannerH+70;
+  const H=footerY+60;
+
+  const canvas=document.createElement("canvas");canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext("2d");
+
+  const bg=ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,"#0d0a1f");bg.addColorStop(0.5,"#0a0813");bg.addColorStop(1,"#05070d");
+  ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  const glow=ctx.createRadialGradient(W/2,420,10,W/2,420,540);
+  glow.addColorStop(0,"rgba(165,35,255,.28)");glow.addColorStop(1,"rgba(165,35,255,0)");
+  ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+
+  // Confetti scatter — same palette as the live celebration's burst, kept
+  // out of the central content column so it never overlaps text or cards.
+  const rnd=seededRandom(42);
+  for(let i=0;i<18;i++){
+    const leftSide=rnd()<0.5;
+    const x=leftSide?20+rnd()*130:W-150+rnd()*130;
+    const y=40+rnd()*(H-80);
+    const color=confettiColors[Math.floor(rnd()*confettiColors.length)];
+    const size=8+rnd()*14;
+    ctx.save();ctx.translate(x,y);ctx.rotate(rnd()*Math.PI*2);ctx.fillStyle=color;
+    if(rnd()<0.3){ctx.beginPath();ctx.arc(0,0,size*0.4,0,Math.PI*2);ctx.fill();}
+    else{ctx.fillRect(-size*0.25,-size*0.6,size*0.5,size*1.2);}
+    ctx.restore();
+  }
+
+  ctx.textAlign="left";
+  ctx.fillStyle="#54d9ff";ctx.font="bold 40px sans-serif";
+  ctx.fillText("CHOLSCORE",70,110);
+  ctx.fillStyle="#8a93a8";ctx.font="26px sans-serif";
+  ctx.fillText("Track your heart health, one day at a time",70,148);
+
+  // Circular silhouette frame
+  ctx.strokeStyle="rgba(255,196,53,.5)";ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(circleCx,circleCy,circleR,0,Math.PI*2);ctx.stroke();
+  ctx.save();
+  ctx.beginPath();ctx.arc(circleCx,circleCy,circleR-4,0,Math.PI*2);ctx.clip();
+  const innerGlow=ctx.createRadialGradient(circleCx,circleCy,10,circleCx,circleCy,circleR);
+  innerGlow.addColorStop(0,"rgba(165,35,255,.35)");innerGlow.addColorStop(1,"rgba(20,10,35,.92)");
+  ctx.fillStyle=innerGlow;ctx.fillRect(circleCx-circleR,circleCy-circleR,circleR*2,circleR*2);
+  if(silhouette){
+    const imgAspect=silhouette.width/silhouette.height;
+    const boxSize=circleR*2*0.7; // source art has almost no transparent margin at its own bottom edge, so a larger scale here would make that edge visible as a hard cutoff
+    const dw=imgAspect>1?boxSize:boxSize*imgAspect,dh=imgAspect>1?boxSize/imgAspect:boxSize;
+    ctx.drawImage(silhouette,circleCx-dw/2,circleCy-dh/2-circleR*0.08,dw,dh); // shifted up slightly so that edge sits in the darker part of the gradient rather than dead centre
+  }
+  ctx.restore();
+
+  // Star badge, overlapping the top of the circle
+  const starCx=circleCx,starCy=circleCy-circleR;
+  ctx.fillStyle="rgba(255,196,53,.14)";
+  ctx.beginPath();ctx.arc(starCx,starCy,42,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#f7c84a";ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(starCx,starCy,42,0,Math.PI*2);ctx.stroke();
+  ctx.fillStyle="#ffc834";ctx.font="bold 40px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText("★",starCx,starCy+2);
+  ctx.textBaseline="alphabetic";
+
+  ctx.textAlign="center";
+  ctx.fillStyle="#a794c7";ctx.font="bold 24px sans-serif";
+  ctx.fillText("WORKOUT COMPLETE",W/2,headStartY);
+  ctx.fillStyle="#ffffff";ctx.font="bold 52px sans-serif";
+  wrapCanvasText(ctx,`${cheer}, ${name}!`,W/2,headStartY+50,900,60);
+  ctx.fillStyle="#e3d6f5";ctx.font="30px sans-serif";
+  wrapCanvasText(ctx,subMessage,W/2,subY,900,40);
+
+  function drawStatCard(x,y,icon,label,value,caption){
+    ctx.fillStyle="rgba(45,20,65,.75)";
+    roundRectPath(ctx,x,y,cardW,cardH,20);ctx.fill();
+    ctx.strokeStyle="rgba(204,119,255,.32)";ctx.lineWidth=2;
+    roundRectPath(ctx,x,y,cardW,cardH,20);ctx.stroke();
+    const cx=x+cardW/2,iconY=y+55;
+    ctx.fillStyle="rgba(100,31,136,.6)";
+    ctx.beginPath();ctx.arc(cx,iconY,32,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#ffd357";ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.arc(cx,iconY,32,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle="#ffffff";ctx.font="30px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.fillText(icon,cx,iconY+2);
+    ctx.textBaseline="alphabetic";
+    ctx.fillStyle="#cc75ff";ctx.font="bold 18px sans-serif";
+    ctx.fillText(label,cx,iconY+70);
+    ctx.fillStyle="#ffd13f";ctx.font="bold 48px sans-serif";
+    ctx.fillText(value,cx,iconY+130);
+    ctx.strokeStyle="rgba(255,255,255,.12)";ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(x+20,y+cardH-55);ctx.lineTo(x+cardW-20,y+cardH-55);ctx.stroke();
+    ctx.fillStyle="#f4f5f8";ctx.font="20px sans-serif";
+    wrapCanvasText(ctx,caption,cx,y+cardH-25,cardW-40,26);
+  }
+  drawStatCard(W/2-cardW-cardGap/2,cardY,"🏋️","TOTAL WEIGHT LIFTED",volume>0?`${fmt(volume)} kg`:"—","That's serious strength! 💪");
+  drawStatCard(W/2+cardGap/2,cardY,"◷","WORKOUT DURATION",durationText,"Great focus and dedication! ⭐");
+
+  ctx.fillStyle="rgba(45,20,65,.55)";
+  roundRectPath(ctx,70,bannerY,W-140,bannerH,18);ctx.fill();
+  ctx.strokeStyle="rgba(190,76,255,.34)";ctx.lineWidth=2;
+  roundRectPath(ctx,70,bannerY,W-140,bannerH,18);ctx.stroke();
+  ctx.textAlign="left";
+  ctx.fillStyle="#da68ff";ctx.font="60px sans-serif";
+  ctx.fillText("♡",105,bannerY+bannerH/2+20);
+  ctx.fillStyle="#f8f8fb";ctx.font="26px sans-serif";
+  ctx.fillText("Every rep brings you closer to",190,bannerY+45);
+  ctx.fillStyle="#ffd44d";ctx.font="bold 26px sans-serif";
+  ctx.fillText("a stronger, healthier you. ✨",190,bannerY+80);
+
+  ctx.textAlign="center";
+  ctx.fillStyle="#54d9ff";ctx.font="bold 32px sans-serif";
+  ctx.fillText("CHOLSCORE",W/2,footerY);
+  ctx.fillStyle="#7c8496";ctx.font="20px sans-serif";
+  ctx.fillText("Track your heart health, one day at a time",W/2,footerY+32);
+
+  return new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+}
+$("shareWorkoutBtn").addEventListener("click",async()=>{
+  const w=state.activeWorkout;
+  const volume=w?workoutVolume(w):0,mins=w?Math.max(1,elapsedMinutes(w.startedAt)):1;
+  const text=`Just finished a workout on CholScore — ${volume>0?`${fmt(volume)}kg lifted, `:""}${mins} minute${mins===1?"":"s"} of effort. 💪`;
+  const btn=$("shareWorkoutBtn"),original=btn.textContent;
+  btn.textContent="Preparing image…";
+  try{
+    const blob=await generateWorkoutShareImageBlob();
+    const file=new File([blob],"cholscore-workout.png",{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      btn.textContent=original;
+      await navigator.share({files:[file],title:"CholScore",text});
+    }else if(navigator.share){
+      btn.textContent=original;
+      await navigator.share({text});
+    }else{
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");a.href=url;a.download="cholscore-workout.png";a.click();
+      URL.revokeObjectURL(url);
+      btn.textContent="Image saved ✨";setTimeout(()=>{btn.textContent=original;},1600);
+    }
+  }catch(err){
+    if(err?.name==="AbortError"){btn.textContent=original;return;}
+    try{
+      if(navigator.share){await navigator.share({text});}
+      else if(navigator.clipboard){await navigator.clipboard.writeText(text);btn.textContent="Copied to clipboard ✨";setTimeout(()=>{btn.textContent=original;},1600);}
+    }catch(err2){/* dismissed again — nothing more to do */}
+    btn.textContent=original;
+  }
+});
 $("shareCheckout").addEventListener("click",async()=>{
   const day=getDay(),score=scoreDay(day),{sat,mins}=totals(day);
   const text=`My CholScore today: ${score}/100 — ${fmt(sat)}g saturated fat, ${Math.round(mins)} minutes of activity. 💪`;
