@@ -1648,3 +1648,36 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 .exercise-row.is-open .exercise-row-body{max-height:600px;border-top:1px solid rgba(255,255,255,.07)}
 .exercise-row-body .rb-main-fields{padding:14px 12px 14px}
 @media(prefers-reduced-motion:reduce){.exercise-row-body{transition:none}.exercise-row-expand{transition:none}}
+
+/* ============================================================
+   v1.19.0 — Weekly/Monthly Report. Reuses the same standard app
+   palette as Trends/Calendar (not the special gold sports-report
+   theme), since this is a permanent navigational view rather than
+   a one-off celebration.
+   ============================================================ */
+.report-card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:22px;margin-bottom:16px}
+.report-badge{
+  width:56px;height:56px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;font-size:26px;
+  background:linear-gradient(135deg,rgba(85,240,167,.16),rgba(84,217,255,.1));border:1px solid rgba(85,240,167,.3)
+}
+.report-title{font-size:20px;font-weight:800;text-align:center;margin:0 0 4px}
+.report-sub{font-size:12.5px;color:var(--muted);text-align:center;margin:0 0 16px}
+.report-message{
+  font-size:14px;line-height:1.55;color:#dcd6ea;text-align:center;margin:0 0 18px;
+  padding:13px 15px;border-radius:14px;background:rgba(85,240,167,.06);border:1px solid rgba(85,240,167,.18)
+}
+.report-message strong{color:#fff}
+.report-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.report-stat-card{background:#111620;border:1px solid var(--line);border-radius:16px;padding:14px}
+.report-stat-card span{display:block;font-size:9.5px;letter-spacing:.1em;color:#909aab;font-weight:900;text-transform:uppercase}
+.report-stat-card strong{display:block;font-size:22px;margin-top:6px;font-variant-numeric:tabular-nums}
+.report-stat-card small{display:block;font-size:10.5px;color:var(--muted);margin-top:2px}
+.report-stat-card.green strong{color:var(--green)}
+.report-stat-card.cyan strong{color:var(--cyan)}
+.report-stat-card.violet strong{color:var(--violet)}
+.report-week-breakdown{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.report-week-row{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;background:#111620;border:1px solid var(--line)}
+.report-week-row .wk-label{font-size:12px;font-weight:700;width:78px;flex:none;color:#cfc9de}
+.report-week-row .wk-bar-track{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
+.report-week-row .wk-bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--cyan))}
+.report-week-row .wk-value{font-size:11.5px;color:var(--muted);width:60px;text-align:right;flex:none;font-variant-numeric:tabular-nums}

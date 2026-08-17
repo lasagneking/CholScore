@@ -1,4 +1,4 @@
-CholScore v1.18.2 - Fixed missing cache-busting on share templates
+CholScore v1.19.0 - Weekly/Monthly Reports, maskable icon, tenure achievements
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,63 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.19.0 Weekly/Monthly Reports, maskable icon, tenure achievements
+Three loose ends from a step-back review of the whole project, all finished
+properly rather than left as "started but not done."
+
+**Weekly/Monthly Report** — the feature that got mocked up, approved in spirit,
+and then genuinely never built.
+- History's Calendar/Trends toggle is now a 3-way segmented control:
+  Calendar / Trends / Reports.
+- **This week**: date range, a message that actually varies by how the week
+  went (strong ≥85% of days on target, solid ≥50%, quieter otherwise — not one
+  canned line regardless of data), and a 4-stat grid: movement minutes, weight
+  lifted, workouts completed, days under your saturated fat target.
+- **Last 4 weeks**: same stats aggregated, plus a week-by-week bar breakdown so
+  you can see which week was strongest, not just a flat total.
+- **Auto-popup**: fires once, automatically, the first time you open the app
+  after a new week has started — the honest version of "at the start of each
+  week" for an app with no server/push capability. Correctly stays silent for a
+  brand-new user's very first check, for a week already seen, and for a
+  previous week with genuinely zero data (no hollow "0 minutes" popup) —
+  tested all four of those cases directly before shipping, not just the happy
+  path.
+- Reuses `mondayKeyFor()` (the same Monday-Sunday boundary weekly achievements
+  already use) and the same `totals()`/`scoreDay()` functions as the rest of
+  the app, so it can't disagree with Today, Trends, or the Day Report.
+
+**Maskable Android icon** — diagnosed back when the Android splash screen
+"wasn't very good," never actually fixed until now.
+- The existing icon has the CholScore wordmark baked directly into the same
+  image as the heart glyph, extending almost to its own edges — fine for
+  iOS/desktop, but exactly the shape Android's own icon masking (circle,
+  squircle, rounded square) tends to clip.
+- Built a proper maskable variant: isolated just the heart/leaf/heartbeat
+  glyph with real alpha transparency (not just a rectangular crop — an
+  earlier attempt left a visible background ghost, fixed by tightening the
+  brightness threshold used to key it out), scaled to sit inside Android's
+  80% safe-zone circle with real margin, not right at the boundary.
+- Verified by simulating the most aggressive mask Android applies — a full
+  circle — and confirming the entire glyph, leaf tips included, survives with
+  margin to spare.
+- Added as a genuinely additional `purpose: "maskable"` manifest entry, not a
+  replacement — existing icons untouched, still used exactly as before on iOS
+  and everywhere else that doesn't apply its own masking.
+
+**Tenure achievements** — closing out the sparse Mythic tier (2 achievements)
+with a third, and a whole small ladder leading up to it.
+- New `daysSinceFirstLog` metric: days since your very first-ever log,
+  independent of streaks — deliberately more forgiving than a pure streak,
+  since one missed day doesn't erase months of tenure the way breaking a
+  streak would. Tested against multiple days, a brand-new user, and a
+  same-day edge case before shipping.
+- Three new achievements: A Quarter Year (90 days, Rare), Half A Year (180
+  days, Epic), One Year On (365 days, **Mythic**) — 54 achievements → 57.
+
+`index.html`, `styles.css`, `app.js`, `sw.js`, `manifest.json`, the new
+`icon-512-maskable.png`, and all cache-busting query strings (including the
+`APP_VERSION` constant used by the share templates) bumped to `v153`.
 
 ## v1.18.2 fixed missing cache-busting on share templates
 - Reported: replaced the watermarked walk/run template images on GitHub, but the

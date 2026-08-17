@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "152"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "153"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 const todayKey = () => new Date().toISOString().slice(0,10);
 
 const defaultState = {
@@ -10,7 +10,8 @@ const defaultState = {
   routines: [],
   activeWorkout: null,
   achievements: { firstFood:false, firstMove:false, onTarget:false, score80:false },
-  rewardBank: { spentPoints: 0, goal: null, history: [] }
+  rewardBank: { spentPoints: 0, goal: null, history: [] },
+  lastSeenWeeklyReportMonday: null
 };
 
 let state = loadState();
@@ -200,6 +201,7 @@ function init(){
     $("onboarding").classList.add("hidden");$("mainApp").classList.remove("hidden");
     ensureDay(); renderAll();
     if(state.activeWorkout) showActiveWorkoutBanner();
+    checkWeeklyReportPopup();
   }
 }
 
@@ -252,7 +254,7 @@ function cashOutReward(){
   return true;
 }
 
-function renderAll(){renderToday();renderFood();renderExercise();renderRewards();renderCalendar();if(!$("historyTrendsView").classList.contains("hidden"))renderTrends();}
+function renderAll(){renderToday();renderFood();renderExercise();renderRewards();renderCalendar();if(!$("historyTrendsView").classList.contains("hidden"))renderTrends();if(!$("historyReportsView").classList.contains("hidden"))renderReports();}
 
 function renderToday(){
   const day=getDay(),t=totals(day),score=scoreDay(day),target=Number(state.profile.target);
@@ -558,6 +560,9 @@ const achievementDefs = [
   {id:"streak_60",cat:"consistency",icon:"🏔️",title:"Two Months Strong",desc:"Reach a 60-day checkout streak.",rarity:"EPIC",goal:60,metric:"bestStreak"},
   {id:"streak_100",cat:"consistency",icon:"🗿",title:"Century Streak",desc:"Reach a 100-day checkout streak.",rarity:"LEGEND",goal:100,metric:"bestStreak"},
   {id:"streak_365",cat:"consistency",icon:"🌅",title:"365 Days",desc:"Reach a full year checkout streak.",rarity:"MYTHIC",goal:365,metric:"bestStreak"},
+  {id:"tenure_90",cat:"consistency",icon:"📆",title:"A Quarter Year",desc:"90 days since your very first log — streak doesn't need to be unbroken.",rarity:"RARE",goal:90,metric:"daysSinceFirstLog"},
+  {id:"tenure_180",cat:"consistency",icon:"🌗",title:"Half A Year",desc:"180 days since your very first log.",rarity:"EPIC",goal:180,metric:"daysSinceFirstLog"},
+  {id:"tenure_365",cat:"consistency",icon:"🌌",title:"One Year On",desc:"365 days since your very first log — a full year of showing up, streak or no streak.",rarity:"MYTHIC",goal:365,metric:"daysSinceFirstLog"},
   {id:"checkout_25",cat:"consistency",icon:"🌙",title:"Day Closer",desc:"Check out 25 days.",rarity:"RARE",goal:25,metric:"checkouts"},
   {id:"checkout_100",cat:"consistency",icon:"📘",title:"Hundred Days Logged",desc:"Check out 100 days.",rarity:"LEGEND",goal:100,metric:"checkouts"},
 
@@ -580,11 +585,13 @@ function achievementMetrics(){
   let walkMiles=0,runMiles=0,checkouts=0,score70Days=0,score80Days=0,score90Days=0,totalPoints=0;
   let totalWeightLifted=0;
   const checkedDates=[];
+  let firstDayKey=null;
 
   const monday=mondayKeyFor(new Date());
   let weekWalkMiles=0,weekRunMiles=0;
 
   for(const [key,day] of Object.entries(state.days)){
+    if(firstDayKey===null||key<firstDayKey) firstDayKey=key;
     foodEntries += (day.foods||[]).length;
     scannedFoods += (day.foods||[]).filter(f=>f.source==="Open Food Facts").length;
 
@@ -643,11 +650,16 @@ function achievementMetrics(){
     if(prRecords.cardio[t].bestPaceMinPerKm!=null) prCount++;
   }
 
+  // Tenure — days since your very first-ever log, regardless of streaks.
+  // Deliberately more forgiving than bestStreak: a single missed day doesn't
+  // erase months of progress the way breaking a streak would.
+  const daysSinceFirstLog=firstDayKey?Math.floor((new Date(todayKey()+"T12:00:00")-new Date(firstDayKey+"T12:00:00"))/86400000):0;
+
   return {
     foodEntries,scannedFoods,onTargetDays,workouts,completedSets,walks,runs,
     walkMiles,runMiles,weekWalkMiles,weekRunMiles,weekMoveMiles:weekWalkMiles+weekRunMiles,
     checkouts,bestStreak,score70Days,score80Days,score90Days,totalPoints,
-    totalWeightLifted,routines,prCount
+    totalWeightLifted,routines,prCount,daysSinceFirstLog
   };
 }
 
@@ -891,6 +903,132 @@ function renderCardioTrend(){
     ? `Pace eased from ${fmtPace(firstPace)}/${unit} to ${fmtPace(lastPace)}/${unit} since ${firstDateNice}.`
     : `Holding steady at ${fmtPace(lastPace)}/${unit} since ${firstDateNice}.`;
 }
+/* v1.19.0 Weekly/Monthly Report — reuses mondayKeyFor() (the exact same
+   Monday-Sunday boundary already used by weekly achievements) and the same
+   totals()/scoreDay() functions as the rest of the app, so this can never
+   disagree with what's shown on Today, Trends, or the Day Report. */
+function weekSummary(mondayKey){
+  const target=Number(state.profile?.target||30);
+  let minutes=0,weightLifted=0,workouts=0,daysUnder=0;
+  const start=new Date(mondayKey+"T12:00:00");
+  for(let i=0;i<7;i++){
+    const d=new Date(start);d.setDate(d.getDate()+i);
+    const key=d.toISOString().slice(0,10);
+    const day=getDay(key),t=totals(day);
+    minutes+=t.mins;
+    for(const a of day.activities||[]){
+      if(a.type==="workout"){workouts++;weightLifted+=Number(a.totalWeight||0);}
+    }
+    if(day.foods?.length && t.sat<=target) daysUnder++;
+  }
+  return {mondayKey,minutes,weightLifted,workouts,daysUnder,daysTotal:7};
+}
+function weekLabel(mondayKey){
+  const start=new Date(mondayKey+"T12:00:00");
+  const end=new Date(start);end.setDate(end.getDate()+6);
+  const sameMonth=start.getMonth()===end.getMonth();
+  if(sameMonth){
+    const monthStr=start.toLocaleDateString(undefined,{month:"short"});
+    return `${monthStr} ${start.getDate()} – ${end.getDate()}`;
+  }
+  const startStr=start.toLocaleDateString(undefined,{day:"numeric",month:"short"});
+  const endStr=end.toLocaleDateString(undefined,{day:"numeric",month:"short"});
+  return `${startStr} – ${endStr}`;
+}
+function weeklyReportMessage(summary,name){
+  const ratio=summary.daysTotal?summary.daysUnder/summary.daysTotal:0;
+  const mins=Math.round(summary.minutes);
+  if(ratio>=0.85)return `Strong week, ${esc(name)} — <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under your saturated fat limit and <strong>${mins} minutes</strong> of movement. Every positive choice this week shapes tomorrow.`;
+  if(ratio>=0.5)return `Solid week, ${esc(name)}. <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under target and <strong>${mins} minutes</strong> on your feet — the positive choices you're making today shape your tomorrow.`;
+  return `A quieter week, ${esc(name)} — <strong>${mins} minutes</strong> of movement still went in the bank. Next week's a fresh ${summary.daysTotal} days.`;
+}
+function renderWeekReportCardHTML(summary,name){
+  return `
+    <div class="report-card">
+      <div class="report-badge">🗓️</div>
+      <h2 class="report-title">Your week in review</h2>
+      <p class="report-sub">${esc(weekLabel(summary.mondayKey))}</p>
+      <p class="report-message">${weeklyReportMessage(summary,name)}</p>
+      <div class="report-stat-grid">
+        <div class="report-stat-card cyan"><span>Movement</span><strong>${Math.round(summary.minutes)}</strong><small>minutes total</small></div>
+        <div class="report-stat-card green"><span>Weight lifted</span><strong>${fmt(summary.weightLifted)}</strong><small>kg total volume</small></div>
+        <div class="report-stat-card violet"><span>Workouts</span><strong>${summary.workouts}</strong><small>sessions completed</small></div>
+        <div class="report-stat-card"><span>On target</span><strong>${summary.daysUnder}/${summary.daysTotal}</strong><small>days under sat fat limit</small></div>
+      </div>
+    </div>`;
+}
+function renderMonthReportCardHTML(name){
+  const currentMonday=mondayKeyFor(new Date());
+  const weeks=[];
+  for(let i=3;i>=0;i--){
+    const d=new Date(currentMonday+"T12:00:00");d.setDate(d.getDate()-7*i);
+    weeks.push(weekSummary(mondayKeyFor(d)));
+  }
+  const totalMinutes=weeks.reduce((a,w)=>a+w.minutes,0);
+  const totalWeight=weeks.reduce((a,w)=>a+w.weightLifted,0);
+  const totalDaysUnder=weeks.reduce((a,w)=>a+w.daysUnder,0);
+  const maxMinutes=Math.max(1,...weeks.map(w=>w.minutes));
+  const bestWeek=weeks.reduce((best,w)=>w.minutes>best.minutes?w:best,weeks[0]);
+  const weekRows=weeks.map(w=>`
+    <div class="report-week-row">
+      <div class="wk-label">${esc(weekLabel(w.mondayKey))}</div>
+      <div class="wk-bar-track"><div class="wk-bar-fill" style="width:${Math.round(w.minutes/maxMinutes*100)}%"></div></div>
+      <div class="wk-value">${Math.round(w.minutes)} min</div>
+    </div>`).join("");
+  const message=`Across the last 4 weeks you've moved for <strong>${Math.round(totalMinutes)} minutes</strong> and stayed under target on <strong>${totalDaysUnder} of 28 days</strong>. Consistency compounds — nice work showing up, ${esc(name)}.`;
+  return `
+    <div class="report-card">
+      <div class="report-badge">📊</div>
+      <h2 class="report-title">Your month in review</h2>
+      <p class="report-sub">Last 4 weeks</p>
+      <p class="report-message">${message}</p>
+      <div class="report-stat-grid">
+        <div class="report-stat-card cyan"><span>Movement</span><strong>${Math.round(totalMinutes)}</strong><small>minutes total</small></div>
+        <div class="report-stat-card green"><span>Weight lifted</span><strong>${fmt(totalWeight)}</strong><small>kg total volume</small></div>
+        <div class="report-stat-card"><span>On target</span><strong>${totalDaysUnder}/28</strong><small>days under sat fat limit</small></div>
+        <div class="report-stat-card violet"><span>Best week</span><strong>${Math.round(bestWeek.minutes)}</strong><small>min, ${esc(weekLabel(bestWeek.mondayKey))}</small></div>
+      </div>
+      <div class="report-week-breakdown">${weekRows}</div>
+    </div>`;
+}
+let reportsRange="week";
+function renderReports(){
+  const name=state.profile?.name||"there";
+  $("reportContent").innerHTML=reportsRange==="week"
+    ? renderWeekReportCardHTML(weekSummary(mondayKeyFor(new Date())),name)
+    : renderMonthReportCardHTML(name);
+}
+qsa("[data-report-range]").forEach(btn=>btn.addEventListener("click",()=>{
+  qsa("[data-report-range]").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  reportsRange=btn.dataset.reportRange;
+  renderReports();
+}));
+
+/* Auto-popup: fires once, the first time the app is opened after a new
+   week has started, showing the just-completed week's report. This app
+   has no server/push capability, so this is the honest, realistic version
+   of "at the start of each week" — triggered by the next visit, not a true
+   background notification. */
+function checkWeeklyReportPopup(){
+  const currentMonday=mondayKeyFor(new Date());
+  const lastSeen=state.lastSeenWeeklyReportMonday;
+  if(lastSeen===currentMonday)return;
+  if(!lastSeen){
+    state.lastSeenWeeklyReportMonday=currentMonday;saveState();return;
+  }
+  const prevMondayDate=new Date(currentMonday+"T12:00:00");
+  prevMondayDate.setDate(prevMondayDate.getDate()-7);
+  const summary=weekSummary(mondayKeyFor(prevMondayDate));
+  state.lastSeenWeeklyReportMonday=currentMonday;saveState();
+  const hasData=summary.minutes>0||summary.workouts>0||summary.daysUnder>0;
+  if(hasData){
+    $("weeklyReportPopupContent").innerHTML=renderWeekReportCardHTML(summary,state.profile?.name||"there");
+    $("weeklyReportDialog").showModal();
+  }
+}
+$("weeklyReportPopupClose").addEventListener("click",()=>$("weeklyReportDialog").close());
+
 function renderTrends(){
   const hasAnyData=Object.keys(state.days||{}).length>0;
   $("trendsEmptyState").classList.toggle("hidden",hasAnyData);
@@ -904,15 +1042,19 @@ qsa(".range-btn").forEach(btn=>btn.addEventListener("click",()=>{
   qsa(".range-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
   trendsRange=Number(btn.dataset.range);renderTrendsSatScore();
 }));
-$("historyTabCalendar").addEventListener("click",()=>{
-  $("historyTabCalendar").classList.add("active");$("historyTabTrends").classList.remove("active");
-  $("historyCalendarView").classList.remove("hidden");$("historyTrendsView").classList.add("hidden");
-});
-$("historyTabTrends").addEventListener("click",()=>{
-  $("historyTabTrends").classList.add("active");$("historyTabCalendar").classList.remove("active");
-  $("historyTrendsView").classList.remove("hidden");$("historyCalendarView").classList.add("hidden");
-  renderTrends();
-});
+const historyTabs=[["historyTabCalendar","historyCalendarView"],["historyTabTrends","historyTrendsView"],["historyTabReports","historyReportsView"]];
+function switchHistoryTab(activeBtnId){
+  historyTabs.forEach(([btnId,viewId])=>{
+    const isActive=btnId===activeBtnId;
+    $(btnId).classList.toggle("active",isActive);
+    $(viewId).classList.toggle("hidden",!isActive);
+  });
+  if(activeBtnId==="historyTabTrends")renderTrends();
+  if(activeBtnId==="historyTabReports")renderReports();
+}
+$("historyTabCalendar").addEventListener("click",()=>switchHistoryTab("historyTabCalendar"));
+$("historyTabTrends").addEventListener("click",()=>switchHistoryTab("historyTabTrends"));
+$("historyTabReports").addEventListener("click",()=>switchHistoryTab("historyTabReports"));
 
 /* v1.4.0 full-screen Day Report — a "sports report" style recap of one
    whole day, built from the exact same data functions used everywhere

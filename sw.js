@@ -1,4 +1,4 @@
-const CACHE = "cholscore-v152";
+const CACHE = "cholscore-v153";
 
 const APP_SHELL = [
   "./",
@@ -8,6 +8,7 @@ const APP_SHELL = [
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
+  "./icon-512-maskable.png",
   "./apple-touch-icon.png",
   "./workout-victory-silhouette.png",
   "./walk-share-template.jpg",
