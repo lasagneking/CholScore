@@ -2595,14 +2595,13 @@ async function generateWorkoutShareImageBlob(){
   sctx.font="bold 52px sans-serif";
   const headlineLines=wrapCanvasText(sctx,`${cheer}, ${name}!`,W/2,0,900,60);
 
-  const circleCx=W/2,circleCy=440,circleR=230;
-  const headStartY=circleCy+circleR+80;
-  const subY=headStartY+50+headlineLines*60+16;
-  const cardY=subY+70;
-  const cardW=460,cardH=300,cardGap=30;
-  const bannerY=cardY+cardH+30,bannerH=110;
-  const footerY=bannerY+bannerH+70;
-  const H=footerY+60;
+  const circleCx=W/2,circleCy=390,circleR=175; // circleCy needs enough clearance for the star badge (circleCy-circleR) to sit below the fixed header text at y=148, not just chase a tighter ratio
+  const headStartY=circleCy+circleR+65;
+  const subY=headStartY+42+headlineLines*52+13;
+  const cardY=subY+45;
+  const cardW=460,cardH=230,cardGap=30;
+  const bannerY=cardY+cardH+20,bannerH=85;
+  const H=bannerY+bannerH+60;
 
   const canvas=document.createElement("canvas");canvas.width=W;canvas.height=H;
   const ctx=canvas.getContext("2d");
@@ -2674,20 +2673,20 @@ async function generateWorkoutShareImageBlob(){
     roundRectPath(ctx,x,y,cardW,cardH,20);ctx.fill();
     ctx.strokeStyle="rgba(204,119,255,.32)";ctx.lineWidth=2;
     roundRectPath(ctx,x,y,cardW,cardH,20);ctx.stroke();
-    const cx=x+cardW/2,iconY=y+55;
+    const cx=x+cardW/2,iconY=y+42;
     ctx.fillStyle="rgba(100,31,136,.6)";
-    ctx.beginPath();ctx.arc(cx,iconY,32,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(cx,iconY,27,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle="#ffd357";ctx.lineWidth=2.5;
-    ctx.beginPath();ctx.arc(cx,iconY,32,0,Math.PI*2);ctx.stroke();
-    ctx.fillStyle="#ffffff";ctx.font="30px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+    ctx.beginPath();ctx.arc(cx,iconY,27,0,Math.PI*2);ctx.stroke();
+    ctx.fillStyle="#ffffff";ctx.font="26px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
     ctx.fillText(icon,cx,iconY+2);
     ctx.textBaseline="alphabetic";
-    ctx.fillStyle="#cc75ff";ctx.font="bold 18px sans-serif";
-    ctx.fillText(label,cx,iconY+70);
-    ctx.fillStyle="#ffd13f";ctx.font="bold 48px sans-serif";
-    ctx.fillText(value,cx,iconY+130);
+    ctx.fillStyle="#cc75ff";ctx.font="bold 16px sans-serif";
+    ctx.fillText(label,cx,iconY+56);
+    ctx.fillStyle="#ffd13f";ctx.font="bold 42px sans-serif";
+    ctx.fillText(value,cx,iconY+104);
     ctx.strokeStyle="rgba(255,255,255,.12)";ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(x+20,y+cardH-55);ctx.lineTo(x+cardW-20,y+cardH-55);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x+20,y+cardH-42);ctx.lineTo(x+cardW-20,y+cardH-42);ctx.stroke();
     ctx.fillStyle="#f4f5f8";ctx.font="20px sans-serif";
     wrapCanvasText(ctx,caption,cx,y+cardH-25,cardW-40,26);
   }
@@ -2705,12 +2704,6 @@ async function generateWorkoutShareImageBlob(){
   ctx.fillText("Every rep brings you closer to",190,bannerY+45);
   ctx.fillStyle="#ffd44d";ctx.font="bold 26px sans-serif";
   ctx.fillText("a stronger, healthier you. ✨",190,bannerY+80);
-
-  ctx.textAlign="center";
-  ctx.fillStyle="#54d9ff";ctx.font="bold 32px sans-serif";
-  ctx.fillText("CHOLSCORE",W/2,footerY);
-  ctx.fillStyle="#7c8496";ctx.font="20px sans-serif";
-  ctx.fillText("Track your heart health, one day at a time",W/2,footerY+32);
 
   return new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
 }

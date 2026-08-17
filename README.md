@@ -1,4 +1,4 @@
-CholScore v1.17.0 - Shareable workout-complete image
+CholScore v1.17.1 - Tightened proportions, removed duplicate branding
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,29 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.17.1 tightened proportions, removed duplicate branding
+- Follow-up to v1.17.0: the image was 1080×1516 (ratio 0.712) against a reference
+  of 1215×1259 (ratio 0.965) — noticeably taller and more elongated than intended,
+  confirmed with real numbers rather than left as a vague impression.
+- Tightened the circle, stat cards, and spacing to bring it down to 1080×1207
+  (0.895). While doing this, rendering an actual proof caught a real bug the
+  numbers alone didn't show: shrinking the circle's vertical position pushed the
+  star badge up into the fixed header text, overlapping it. Fixed by giving the
+  circle enough clearance below the header instead of chasing the tightest
+  possible ratio at the cost of correctness.
+- Also reported: CholScore's name and tagline were appearing twice — once at the
+  top, once again at the bottom. Removed the duplicate footer entirely, ending the
+  image cleanly at the motivation banner instead. This also matches the checkout
+  share image, which only ever showed the branding once, and it further tightened
+  the ratio to 1080×1177 (0.918) — genuinely closer to the reference, not just
+  "close enough."
+- Re-verified the long-name and bodyweight-only edge cases against every one of
+  these layout changes, each confirmed with an actual rendered proof rather than
+  assumed to still work from the earlier numbers.
+- `index.html`, `styles.css`, `app.js`, and the image cache-busting query strings
+  bumped to `v149`.
+- service-worker cache version bumped to `cholscore-v149`.
 
 ## v1.17.0 shareable workout-complete image
 - Requested with a reference design: a "Share achievement" button on the
