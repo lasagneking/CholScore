@@ -2162,7 +2162,9 @@ function formatPace(minutes,displayDistance){
   return `${m}:${String(s).padStart(2,"0")}`;
 }
 const activityFeelWord={1:"rough",2:"a bit tough",3:"steady",4:"good",5:"great"};
+let lastActivityShareData=null;
 function showActivityCompleteCard(type,minutes,distanceKm,feel,prBadges=[]){
+  lastActivityShareData={type,minutes,distanceKm,prBadges};
   const isWalk=type==="walk",unit=distanceUnit();
   const displayDistance=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
   const pace=formatPace(minutes,displayDistance);
@@ -2185,6 +2187,37 @@ function showActivityCompleteCard(type,minutes,distanceKm,feel,prBadges=[]){
   $("activityCompleteDialog").showModal();
 }
 $("closeActivityComplete").addEventListener("click",()=>$("activityCompleteDialog").close());
+$("shareActivityBtn").addEventListener("click",async()=>{
+  if(!lastActivityShareData)return;
+  const{type,minutes,distanceKm,prBadges}=lastActivityShareData;
+  const unit=distanceUnit(),displayDistance=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
+  const text=`Just finished a ${type} on CholScore — ${displayDistance>0?`${displayDistance}${unit}, `:""}${formatActivityDuration(minutes)}. 💪`;
+  const btn=$("shareActivityBtn"),original=btn.textContent;
+  btn.textContent="Preparing image…";
+  try{
+    const blob=await generateActivityShareImageBlob(type,minutes,distanceKm,prBadges);
+    const file=new File([blob],`cholscore-${type}.png`,{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      btn.textContent=original;
+      await navigator.share({files:[file],title:"CholScore",text});
+    }else if(navigator.share){
+      btn.textContent=original;
+      await navigator.share({text});
+    }else{
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");a.href=url;a.download=`cholscore-${type}.png`;a.click();
+      URL.revokeObjectURL(url);
+      btn.textContent="Image saved ✨";setTimeout(()=>{btn.textContent=original;},1600);
+    }
+  }catch(err){
+    if(err?.name==="AbortError"){btn.textContent=original;return;}
+    try{
+      if(navigator.share){await navigator.share({text});}
+      else if(navigator.clipboard){await navigator.clipboard.writeText(text);btn.textContent="Copied to clipboard ✨";setTimeout(()=>{btn.textContent=original;},1600);}
+    }catch(err2){/* dismissed again — nothing more to do */}
+    btn.textContent=original;
+  }
+});
 
 $("exerciseForm").addEventListener("submit",e=>{
   e.preventDefault();
@@ -2704,6 +2737,49 @@ async function generateWorkoutShareImageBlob(){
   ctx.fillText("Every rep brings you closer to",190,bannerY+45);
   ctx.fillStyle="#ffd44d";ctx.font="bold 26px sans-serif";
   ctx.fillText("a stronger, healthier you. ✨",190,bannerY+80);
+
+  return new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+}
+/* v1.18.0 — shareable walk/run image. Unlike the checkout and workout share
+   images (built entirely from canvas primitives), this one uses a pre-built
+   template image as the full background — the card layout, icons, labels,
+   circle, and silhouette are already baked into walk-share-template.jpg /
+   run-share-template.jpg. This function only overlays the dynamic text:
+   headline, sub-message, and the three stat values + captions. Coordinates
+   below were measured directly from the reference example (pixel analysis
+   of where the text actually sits), not eyeballed. Card order follows what's
+   actually printed on the template — Duration, Distance, Pace — which is a
+   different order than the reference example image happened to show. */
+async function generateActivityShareImageBlob(type,minutes,distanceKm,prBadges){
+  const isWalk=type==="walk",unit=distanceUnit();
+  const name=state.profile?.name||"there";
+  const displayDistance=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
+  const pace=displayDistance>0?formatPace(minutes,displayDistance):"";
+  const hasPacePR=prBadges.some(b=>b.toLowerCase().includes("pace"));
+  const hasDistancePR=prBadges.some(b=>b.toLowerCase().includes("longest"));
+
+  const template=await loadImage(`${type}-share-template.jpg`).catch(()=>null);
+  const W=template?.width||1008,H=template?.height||1046;
+  const canvas=document.createElement("canvas");canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext("2d");
+  if(template)ctx.drawImage(template,0,0,W,H);
+
+  ctx.textAlign="center";
+  ctx.fillStyle="#ffffff";ctx.font="bold 34px sans-serif";
+  ctx.fillText(`Great work, ${name}!`,W/2,530);
+  ctx.font="bold 34px sans-serif";
+  ctx.fillText(hasPacePR||hasDistancePR?"You hit a new PR today! 💪":`Great ${isWalk?"walk":"run"} today! 💪`,W/2,574);
+
+  const cardX=[213,504,796]; // Duration, Distance, Pace — matches the template's actual printed label order
+  ctx.fillStyle="#ffd13f";ctx.font="bold 40px sans-serif";
+  ctx.fillText(formatActivityDuration(minutes),cardX[0],768);
+  ctx.fillText(displayDistance>0?`${displayDistance} ${unit}`:"—",cardX[1],768);
+  ctx.fillText(pace?`${pace}/${unit}`:"—",cardX[2],768);
+
+  ctx.fillStyle="#f4f5f8";ctx.font="22px sans-serif";
+  ctx.fillText("A major milestone! 🎉",cardX[0],826);
+  ctx.fillText(displayDistance>0?(hasDistancePR?"A new personal best!":"That's a lot of ground!"):"Every session counts",cardX[1],826);
+  ctx.fillText(pace?(hasPacePR?"A new personal best!":"Nice and steady."):"Log distance for pace",cardX[2],826);
 
   return new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
 }

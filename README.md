@@ -1,4 +1,4 @@
-CholScore v1.17.1 - Tightened proportions, removed duplicate branding
+CholScore v1.18.0 - Shareable walk/run images
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,40 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.18.0 shareable walk/run images
+- Requested with three reference images: a "Share achievement" button on the
+  walk/run completion card, using pre-built template images (supplied directly,
+  not built from scratch) as the background — only the dynamic text needed
+  positioning.
+- Caught a real discrepancy between the references before writing any position
+  code: the filled example showed card order Distance → Duration → Pace, but the
+  actual walk/run template images have the labels baked in as Duration →
+  Distance → Pace — the first two are swapped. Confirmed by cropping and
+  comparing the label rows directly rather than eyeballing it. Since the
+  template is the literal background being shipped, followed its printed order
+  — otherwise values would land under the wrong labels.
+- Measured every text position directly from the reference image via pixel
+  analysis (finding the actual bright-pixel bands for each line of text, and the
+  icon circle centres for horizontal alignment) rather than estimating from the
+  screenshot by eye: headline at y≈530/574, three card values at x=213/504/796,
+  y≈768, captions at y≈826.
+- Templates saved as `walk-share-template.jpg` / `run-share-template.jpg` — used
+  JPEG rather than PNG for the source images (~1MB → ~166KB each, checked
+  visually for artifacts around the sharp text and found none) since the final
+  shared image is re-encoded as PNG at export time regardless, so the
+  intermediate template doesn't need to be lossless.
+- Headline and captions adapt to what actually happened: "You hit a new PR
+  today!" only when `checkCardioPR()`'s badges actually mention a PR, "Nice and
+  steady." otherwise; a duration-only activity with no distance logged shows "—"
+  for distance/pace rather than a broken "0.0mi" or hiding the share option
+  entirely.
+- Verified against three rendered scenarios before shipping: the exact reference
+  scenario with a pace PR, a run with no PR at all, and a duration-only walk with
+  zero distance — all three read correctly.
+- Both new template images added to the service worker's precache list.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and the image cache-busting
+  query strings bumped to `v150`.
 
 ## v1.17.1 tightened proportions, removed duplicate branding
 - Follow-up to v1.17.0: the image was 1080×1516 (ratio 0.712) against a reference
