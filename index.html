@@ -26,7 +26,7 @@
        moment the page itself is loading; the splash covers the moment
        before that, while iOS is launching the app shell. -->
   <style>html,body{background:#090b10}</style>
-  <link rel="stylesheet" href="styles.css?v=155" />
+  <link rel="stylesheet" href="styles.css?v=156" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -372,7 +372,8 @@
 
         <div id="historyReportsView" class="hidden">
           <div class="range-row">
-            <button type="button" class="range-btn active" data-report-range="week">This week</button>
+            <button type="button" class="range-btn active" data-report-range="lastweek">Last week</button>
+            <button type="button" class="range-btn" data-report-range="week">This week</button>
             <button type="button" class="range-btn" data-report-range="month">Last 4 weeks</button>
           </div>
           <div id="reportContent"></div>
@@ -517,7 +518,7 @@
     <p id="finishWorkoutSummary" class="workout-celebration-message premium-subtitle"></p>
 
     <div class="premium-athlete premium-athlete-image" aria-hidden="true">
-      <img src="workout-victory-silhouette.png?v=155" alt="" />
+      <img src="workout-victory-silhouette.png?v=156" alt="" />
     </div>
 
     <div class="workout-result-grid premium-result-grid">
@@ -830,12 +831,6 @@
     </form>
   </dialog>
 
-  <dialog id="weeklyReportDialog" class="modal">
-    <div class="modal-head"><div><p class="eyebrow">WEEKLY REPORT</p><h3>Your week in review</h3></div><button type="button" data-close-dialog="weeklyReportDialog" aria-label="Close">×</button></div>
-    <div id="weeklyReportPopupContent"></div>
-    <button type="button" id="weeklyReportPopupClose" class="primary-btn" style="margin-top:16px">Nice one — onward!</button>
-  </dialog>
-
   <dialog id="scoreInfoDialog" class="modal">
     <div class="modal-head"><div><p class="eyebrow">CHOLSCORE</p><h3>What the labels mean</h3></div><button type="button" data-close-dialog="scoreInfoDialog" aria-label="Close">×</button></div>
     <p class="modal-note">Your daily score, and what it's called at each level.</p>
@@ -872,7 +867,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=155"></script>
+  <script src="app.js?v=156"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

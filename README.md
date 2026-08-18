@@ -1,4 +1,4 @@
-CholScore v1.19.2 - Fixed Day Report cardio table column misalignment
+CholScore v1.20.0 - On-demand Last Week tab, tense-aware and highlight-rich reports
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,39 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.20.0 on-demand Last Week tab, tense-aware and highlight-rich reports
+Rethought the Weekly/Monthly Report after stepping back to look at it properly:
+the once-a-week popup was replaced with an on-demand tab, since a report that's
+always sitting there to check whenever you want beats one that interrupts you
+once and is gone.
+
+- **New "Last week" tab, shown first** — Reports is now a 3-way toggle: Last
+  week / This week / Last 4 weeks. All available any time, no waiting for
+  Monday.
+- **Auto-popup removed entirely** — the dialog, its trigger check, and the
+  state field tracking which week you'd last seen are all gone. Confirmed zero
+  dangling references left behind rather than just deleting the obvious parts.
+- **Fixed a real tense bug, not just reworded copy**: "This week" was
+  previously scored out of a fixed 7 days even while the week was still in
+  progress, meaning Tuesday would show "1 of 7 days on target" — technically
+  true but reads like a failing grade for a week that's barely started. Now
+  uses days-elapsed as its own denominator, the title switches from "in
+  review" to "so far," and the message shifts to forward-looking present tense
+  ("3 days left to build on it") instead of a verdict on a week that hasn't
+  finished. The monthly view had the identical bug hardcoded as "of 28 days"
+  even when the current week was partial — fixed there too.
+- **Genuinely richer narrative**, not just longer: pulls in personal records
+  and reward points banked that week from the data already being tracked
+  elsewhere, and names your best single day when it's actually a standout
+  (CholScore 80+) rather than every time. These only appear when true, so an
+  ordinary week doesn't get a hollow "you hit 0 personal records."
+- Tested explicitly for never being negative: a genuinely quiet week and a
+  brand-new Monday with zero data both stay supportive without claiming
+  anything false. Proved this and everything else above with real rendered
+  screenshots from actual working code before shipping, not a static mockup.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v156`.
 
 ## v1.19.2 fixed Day Report cardio table column misalignment
 - Reported: Time/Dist/Pace columns in the Day Report's cardio table didn't

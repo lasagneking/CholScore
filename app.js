@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "155"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "156"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 const todayKey = () => new Date().toISOString().slice(0,10);
 
 const defaultState = {
@@ -10,8 +10,7 @@ const defaultState = {
   routines: [],
   activeWorkout: null,
   achievements: { firstFood:false, firstMove:false, onTarget:false, score80:false },
-  rewardBank: { spentPoints: 0, goal: null, history: [] },
-  lastSeenWeeklyReportMonday: null
+  rewardBank: { spentPoints: 0, goal: null, history: [] }
 };
 
 let state = loadState();
@@ -202,7 +201,6 @@ function init(){
     $("onboarding").classList.add("hidden");$("mainApp").classList.remove("hidden");
     ensureDay(); renderAll();
     if(state.activeWorkout) showActiveWorkoutBanner();
-    checkWeeklyReportPopup();
   }
 }
 
@@ -904,25 +902,51 @@ function renderCardioTrend(){
     ? `Pace eased from ${fmtPace(firstPace)}/${unit} to ${fmtPace(lastPace)}/${unit} since ${firstDateNice}.`
     : `Holding steady at ${fmtPace(lastPace)}/${unit} since ${firstDateNice}.`;
 }
-/* v1.19.0 Weekly/Monthly Report — reuses mondayKeyFor() (the exact same
+/* v1.20.0 Weekly/Monthly Report — reuses mondayKeyFor() (the exact same
    Monday-Sunday boundary already used by weekly achievements) and the same
    totals()/scoreDay() functions as the rest of the app, so this can never
-   disagree with what's shown on Today, Trends, or the Day Report. */
-function weekSummary(mondayKey){
+   disagree with what's shown on Today, Trends, or the Day Report.
+   Tense-aware: a week still in progress uses days-elapsed as its own
+   denominator (not a fixed 7, which would silently count days that haven't
+   happened yet as "not on target") and every message template has a
+   present-tense in-progress version and a past-tense completed version. */
+function weekSummary(mondayKey,records){
   const target=Number(state.profile?.target||30);
-  let minutes=0,weightLifted=0,workouts=0,daysUnder=0;
+  const today=todayKey();
   const start=new Date(mondayKey+"T12:00:00");
-  for(let i=0;i<7;i++){
-    const d=new Date(start);d.setDate(d.getDate()+i);
-    const key=d.toISOString().slice(0,10);
+  const endDate=new Date(start);endDate.setDate(endDate.getDate()+6);
+  const endKey=endDate.toISOString().slice(0,10);
+  const isCurrent=today>=mondayKey&&today<=endKey;
+  const dayKeys=[];
+  for(let i=0;i<7;i++){const d=new Date(start);d.setDate(d.getDate()+i);dayKeys.push(d.toISOString().slice(0,10));}
+  const daysElapsed=isCurrent?dayKeys.filter(k=>k<=today).length:7;
+
+  let minutes=0,weightLifted=0,workouts=0,daysUnder=0,rewardPoints=0,bestDay=null;
+  for(const key of dayKeys){
+    if(isCurrent&&key>today)continue; // don't count days of an in-progress week that haven't happened yet
     const day=getDay(key),t=totals(day);
     minutes+=t.mins;
     for(const a of day.activities||[]){
       if(a.type==="workout"){workouts++;weightLifted+=Number(a.totalWeight||0);}
     }
-    if(day.foods?.length && t.sat<=target) daysUnder++;
+    if(day.foods?.length&&t.sat<=target)daysUnder++;
+    rewardPoints+=dailyBankPoints(day);
+    if(day.checkedOut){
+      const score=Number(day.finalScore??scoreDay(day));
+      if(!bestDay||score>bestDay.score)bestDay={key,score};
+    }
   }
-  return {mondayKey,minutes,weightLifted,workouts,daysUnder,daysTotal:7};
+  let prCount=0;
+  if(records){
+    const allDates=[
+      ...Object.values(records.strength||{}).map(r=>r.date),
+      ...Object.values(records.timed||{}).map(r=>r.date),
+      records.cardio?.walk?.dateForDistance,records.cardio?.walk?.dateForPace,
+      records.cardio?.run?.dateForDistance,records.cardio?.run?.dateForPace,
+    ].filter(Boolean);
+    prCount=allDates.filter(d=>dayKeys.includes(d)).length;
+  }
+  return {mondayKey,endKey,isCurrent,minutes,weightLifted,workouts,daysUnder,daysTotal:daysElapsed,rewardPoints,bestDay,prCount};
 }
 function weekLabel(mondayKey){
   const start=new Date(mondayKey+"T12:00:00");
@@ -936,18 +960,38 @@ function weekLabel(mondayKey){
   const endStr=end.toLocaleDateString(undefined,{day:"numeric",month:"short"});
   return `${startStr} – ${endStr}`;
 }
+function weeklyHighlightClause(summary){
+  const clauses=[];
+  if(summary.prCount>0)clauses.push(`hit <strong>${summary.prCount} personal record${summary.prCount===1?"":"s"}</strong>`);
+  if(summary.rewardPoints>0)clauses.push(`banked <strong>${fmtInt(summary.rewardPoints)} reward point${summary.rewardPoints===1?"":"s"}</strong>`);
+  if(summary.bestDay&&summary.bestDay.score>=80){
+    const dayName=new Date(summary.bestDay.key+"T12:00:00").toLocaleDateString(undefined,{weekday:"long"});
+    clauses.push(`your best day was <strong>${dayName}</strong> at a CholScore of <strong>${summary.bestDay.score}</strong>`);
+  }
+  if(!clauses.length)return "";
+  return `, and you ${clauses.slice(0,2).join(", plus ")}`;
+}
 function weeklyReportMessage(summary,name){
   const ratio=summary.daysTotal?summary.daysUnder/summary.daysTotal:0;
   const mins=fmtInt(summary.minutes);
-  if(ratio>=0.85)return `Strong week, ${esc(name)} — <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under your saturated fat limit and <strong>${mins} minutes</strong> of movement. Every positive choice this week shapes tomorrow.`;
-  if(ratio>=0.5)return `Solid week, ${esc(name)}. <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under target and <strong>${mins} minutes</strong> on your feet — the positive choices you're making today shape your tomorrow.`;
-  return `A quieter week, ${esc(name)} — <strong>${mins} minutes</strong> of movement still went in the bank. Next week's a fresh ${summary.daysTotal} days.`;
+  const highlight=weeklyHighlightClause(summary);
+  const n=esc(name);
+  if(summary.isCurrent){
+    const daysLeft=7-summary.daysTotal;
+    const remainingClause=daysLeft>0?` — ${daysLeft} day${daysLeft===1?"":"s"} left to build on it`:"";
+    if(ratio>=0.85)return `Great momentum, ${n} — you're <strong>${summary.daysUnder} for ${summary.daysTotal}</strong> on your saturated fat target this week, with <strong>${mins} minutes</strong> of movement already banked${highlight}${remainingClause}.`;
+    if(ratio>=0.5)return `Solid progress so far, ${n}. <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under target and <strong>${mins} minutes</strong> of movement this week${highlight}${remainingClause}.`;
+    return `Every day this week is still an opportunity, ${n} — <strong>${mins} minutes</strong> of movement already in the bank${highlight}${remainingClause}.`;
+  }
+  if(ratio>=0.85)return `Strong week, ${n} — <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under your saturated fat limit and <strong>${mins} minutes</strong> of movement${highlight}. Every choice like that shapes what comes next.`;
+  if(ratio>=0.5)return `Solid week, ${n}. <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under target and <strong>${mins} minutes</strong> on your feet${highlight} — the choices you're making are paying off.`;
+  return `A quieter week, ${n} — <strong>${mins} minutes</strong> of movement still went in the bank${highlight}. A new week means a fresh ${summary.daysTotal} days to build on it.`;
 }
 function renderWeekReportCardHTML(summary,name){
   return `
     <div class="report-card">
       <div class="report-badge">🗓️</div>
-      <h2 class="report-title">Your week in review</h2>
+      <h2 class="report-title">${summary.isCurrent?"Your week so far":"Your week in review"}</h2>
       <p class="report-sub">${esc(weekLabel(summary.mondayKey))}</p>
       <p class="report-message">${weeklyReportMessage(summary,name)}</p>
       <div class="report-stat-grid">
@@ -958,25 +1002,32 @@ function renderWeekReportCardHTML(summary,name){
       </div>
     </div>`;
 }
-function renderMonthReportCardHTML(name){
+function renderMonthReportCardHTML(name,records){
   const currentMonday=mondayKeyFor(new Date());
   const weeks=[];
   for(let i=3;i>=0;i--){
     const d=new Date(currentMonday+"T12:00:00");d.setDate(d.getDate()-7*i);
-    weeks.push(weekSummary(mondayKeyFor(d)));
+    weeks.push(weekSummary(mondayKeyFor(d),records));
   }
   const totalMinutes=weeks.reduce((a,w)=>a+w.minutes,0);
   const totalWeight=weeks.reduce((a,w)=>a+w.weightLifted,0);
   const totalDaysUnder=weeks.reduce((a,w)=>a+w.daysUnder,0);
+  const totalDaysElapsed=weeks.reduce((a,w)=>a+w.daysTotal,0);
+  const totalPRs=weeks.reduce((a,w)=>a+w.prCount,0);
+  const totalPoints=weeks.reduce((a,w)=>a+w.rewardPoints,0);
   const maxMinutes=Math.max(1,...weeks.map(w=>w.minutes));
   const bestWeek=weeks.reduce((best,w)=>w.minutes>best.minutes?w:best,weeks[0]);
   const weekRows=weeks.map(w=>`
     <div class="report-week-row">
-      <div class="wk-label">${esc(weekLabel(w.mondayKey))}</div>
+      <div class="wk-label">${esc(weekLabel(w.mondayKey))}${w.isCurrent?" (so far)":""}</div>
       <div class="wk-bar-track"><div class="wk-bar-fill" style="width:${Math.round(w.minutes/maxMinutes*100)}%"></div></div>
       <div class="wk-value">${fmtInt(w.minutes)} min</div>
     </div>`).join("");
-  const message=`Across the last 4 weeks you've moved for <strong>${fmtInt(totalMinutes)} minutes</strong> and stayed under target on <strong>${totalDaysUnder} of 28 days</strong>. Consistency compounds — nice work showing up, ${esc(name)}.`;
+  const extras=[];
+  if(totalPRs>0)extras.push(`hit <strong>${totalPRs} personal record${totalPRs===1?"":"s"}</strong>`);
+  if(totalPoints>0)extras.push(`banked <strong>${fmtInt(totalPoints)} reward point${totalPoints===1?"":"s"}</strong>`);
+  const extraClause=extras.length?`, and you ${extras.slice(0,2).join(", plus ")}`:"";
+  const message=`Across the last 4 weeks you've moved for <strong>${fmtInt(totalMinutes)} minutes</strong> and stayed under target on <strong>${totalDaysUnder} of ${totalDaysElapsed} days</strong>${extraClause}. Consistency compounds — nice work showing up, ${esc(name)}.`;
   return `
     <div class="report-card">
       <div class="report-badge">📊</div>
@@ -986,18 +1037,25 @@ function renderMonthReportCardHTML(name){
       <div class="report-stat-grid">
         <div class="report-stat-card cyan"><span>Movement</span><strong>${fmtInt(totalMinutes)}</strong><small>minutes total</small></div>
         <div class="report-stat-card green"><span>Weight lifted</span><strong>${fmt(totalWeight)}</strong><small>kg total volume</small></div>
-        <div class="report-stat-card"><span>On target</span><strong>${totalDaysUnder}/28</strong><small>days under sat fat limit</small></div>
+        <div class="report-stat-card"><span>On target</span><strong>${totalDaysUnder}/${totalDaysElapsed}</strong><small>days under sat fat limit</small></div>
         <div class="report-stat-card violet"><span>Best week</span><strong>${fmtInt(bestWeek.minutes)}</strong><small>min, ${esc(weekLabel(bestWeek.mondayKey))}</small></div>
       </div>
       <div class="report-week-breakdown">${weekRows}</div>
     </div>`;
 }
-let reportsRange="week";
+let reportsRange="lastweek";
 function renderReports(){
   const name=state.profile?.name||"there";
-  $("reportContent").innerHTML=reportsRange==="week"
-    ? renderWeekReportCardHTML(weekSummary(mondayKeyFor(new Date())),name)
-    : renderMonthReportCardHTML(name);
+  const records=computePersonalRecords();
+  if(reportsRange==="lastweek"){
+    const lastMonday=new Date(mondayKeyFor(new Date())+"T12:00:00");
+    lastMonday.setDate(lastMonday.getDate()-7);
+    $("reportContent").innerHTML=renderWeekReportCardHTML(weekSummary(mondayKeyFor(lastMonday),records),name);
+  }else if(reportsRange==="week"){
+    $("reportContent").innerHTML=renderWeekReportCardHTML(weekSummary(mondayKeyFor(new Date()),records),name);
+  }else{
+    $("reportContent").innerHTML=renderMonthReportCardHTML(name,records);
+  }
 }
 qsa("[data-report-range]").forEach(btn=>btn.addEventListener("click",()=>{
   qsa("[data-report-range]").forEach(b=>b.classList.remove("active"));
@@ -1005,30 +1063,6 @@ qsa("[data-report-range]").forEach(btn=>btn.addEventListener("click",()=>{
   reportsRange=btn.dataset.reportRange;
   renderReports();
 }));
-
-/* Auto-popup: fires once, the first time the app is opened after a new
-   week has started, showing the just-completed week's report. This app
-   has no server/push capability, so this is the honest, realistic version
-   of "at the start of each week" — triggered by the next visit, not a true
-   background notification. */
-function checkWeeklyReportPopup(){
-  const currentMonday=mondayKeyFor(new Date());
-  const lastSeen=state.lastSeenWeeklyReportMonday;
-  if(lastSeen===currentMonday)return;
-  if(!lastSeen){
-    state.lastSeenWeeklyReportMonday=currentMonday;saveState();return;
-  }
-  const prevMondayDate=new Date(currentMonday+"T12:00:00");
-  prevMondayDate.setDate(prevMondayDate.getDate()-7);
-  const summary=weekSummary(mondayKeyFor(prevMondayDate));
-  state.lastSeenWeeklyReportMonday=currentMonday;saveState();
-  const hasData=summary.minutes>0||summary.workouts>0||summary.daysUnder>0;
-  if(hasData){
-    $("weeklyReportPopupContent").innerHTML=renderWeekReportCardHTML(summary,state.profile?.name||"there");
-    $("weeklyReportDialog").showModal();
-  }
-}
-$("weeklyReportPopupClose").addEventListener("click",()=>$("weeklyReportDialog").close());
 
 function renderTrends(){
   const hasAnyData=Object.keys(state.days||{}).length>0;
