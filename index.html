@@ -26,7 +26,7 @@
        moment the page itself is loading; the splash covers the moment
        before that, while iOS is launching the app shell. -->
   <style>html,body{background:#090b10}</style>
-  <link rel="stylesheet" href="styles.css?v=159" />
+  <link rel="stylesheet" href="styles.css?v=160" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -88,6 +88,13 @@
           </button>
         </div>
 
+        <label class="top-gap">Add a profile photo (optional)</label>
+        <div class="settings-photo-row">
+          <button type="button" id="onboardingAvatarPreview" class="profile-avatar" aria-label="Add photo"></button>
+          <button type="button" id="onboardingAddPhotoBtn" class="secondary-btn">Choose photo</button>
+        </div>
+        <input id="onboardingPhotoFile" type="file" accept="image/*" class="hidden" />
+
         <button id="finishSetup" class="primary-btn">Start CholScore</button>
       </div>
     </section>
@@ -98,7 +105,7 @@
           <p class="eyebrow">CHOLSCORE</p>
           <h2 id="greeting">Good evening</h2>
         </div>
-        <button id="profileBtn" class="profile-pill" aria-label="Profile">⚙︎</button>
+        <button id="profileBtn" class="profile-avatar" aria-label="Profile"></button>
       </header>
 
       <section id="todayView" class="view active">
@@ -518,7 +525,7 @@
     <p id="finishWorkoutSummary" class="workout-celebration-message premium-subtitle"></p>
 
     <div class="premium-athlete premium-athlete-image" aria-hidden="true">
-      <img src="workout-victory-silhouette.png?v=159" alt="" />
+      <img src="workout-victory-silhouette.png?v=160" alt="" />
     </div>
 
     <div class="workout-result-grid premium-result-grid">
@@ -840,6 +847,11 @@
   <dialog id="settingsDialog" class="modal">
     <form method="dialog">
       <div class="modal-head"><h3>Profile</h3><button type="button" data-close-dialog="settingsDialog" aria-label="Cancel">×</button></div>
+      <div class="settings-photo-row">
+        <button type="button" id="settingsAvatarPreview" class="profile-avatar" aria-label="Profile photo"></button>
+        <button type="button" id="settingsChangePhotoBtn" class="secondary-btn">Add photo</button>
+      </div>
+      <input id="settingsPhotoFile" type="file" accept="image/*" class="hidden" />
       <label>Name<input id="settingsName" /></label>
       <label>Daily saturated-fat target (g)<input id="settingsTarget" type="number" min="1" max="100" step="0.1" /></label>
       <label>Distance units
@@ -889,7 +901,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=159"></script>
+  <script src="app.js?v=160"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

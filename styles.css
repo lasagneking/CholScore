@@ -1695,3 +1695,22 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 .report-week-row .wk-bar-track{flex:1;height:8px;border-radius:999px;background:rgba(255,255,255,.06);overflow:hidden}
 .report-week-row .wk-bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--green),var(--cyan))}
 .report-week-row .wk-value{font-size:11.5px;color:var(--muted);width:60px;text-align:right;flex:none;font-variant-numeric:tabular-nums}
+
+/* v1.23.0 — profile photo avatar, replacing the plain gear icon. Two states:
+   a user-chosen photo (cropped to fill the circle), or initials on a subtle
+   gradient when none has been set yet — both keep the same 46px tap target
+   and both open Settings, matching the gear icon's existing behaviour. */
+.profile-avatar{
+  width:60px;height:60px;border-radius:50%;border:1px solid var(--line);
+  background:#151a24;color:#dce0e7;overflow:hidden;position:relative;
+  display:flex;align-items:center;justify-content:center;padding:0;flex:none;
+}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.profile-avatar .avatar-initials{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:20px;color:#0b0d12;
+  background:linear-gradient(135deg,var(--green),var(--cyan));
+}
+.settings-photo-row{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.settings-photo-row .profile-avatar{width:72px;height:72px}
+.settings-photo-row .avatar-initials{font-size:24px}

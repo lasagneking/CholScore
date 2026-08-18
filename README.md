@@ -1,4 +1,4 @@
-CholScore v1.22.0 - Vacation Mode for streak achievements
+CholScore v1.23.0 - Profile photo, replacing the plain gear icon
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,44 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.23.0 profile photo, replacing the plain gear icon
+- Requested and mocked up first: a user-chosen photo in the header, tapping it
+  still opens Settings exactly like the gear icon always has, selectable
+  during first-time setup or added later from Settings for existing users.
+- Sizing wasn't guessed — pushed on directly ("is that really big enough to
+  make out anything"), so before committing to a size I built a fairer test
+  than the first mockup's flat, artificially high-contrast placeholder: a
+  synthetic face with actual eyes/nose/mouth, compared at 46/56/64/72px side
+  by side at real 3x device resolution. Confirmed 46px was workable but tight,
+  and that a real photo would likely read worse than even that test given how
+  much softer real tonal contrast is — landed on 60px in the header (72px in
+  the larger Settings preview) with room to spare in the layout either way.
+- New default state for anyone without a photo set: initials on the app's own
+  green-to-cyan gradient, live-updating in onboarding as the name is typed,
+  rather than a generic placeholder silhouette — still feels personal before
+  a photo's ever been added.
+- Photos are resized and centre-cropped to a small square via canvas before
+  being stored — 240px, 2x the largest place it's shown, for retina sharpness
+  without saving whatever multi-megabyte original the camera actually
+  produced. Verified the real pipeline end-to-end in an actual browser (not
+  just reasoned about it): fed it a deliberately non-square 1200×1600 test
+  photo, decoded the real output, and confirmed it came back a true 240×240
+  square with no stretching or distortion, at roughly 2KB — comfortably small
+  for local storage.
+- Also tested the initials fallback across edge cases directly: correct
+  capitalisation, correct "?" fallback for an empty or missing name, a photo
+  correctly taking priority over initials when both exist, and confirmed the
+  name gets safely escaped rather than trusted raw, even against a
+  deliberately malicious input.
+- One thing flagged transparently rather than assumed: a large grey circle
+  visible in the original reference screenshot didn't match anything in the
+  actual codebase (the existing button there was a plain 42px gear icon in a
+  different row entirely from what it appeared to overlap) — built to the
+  clear intent of the request regardless, on the working theory that circle
+  was an unrelated artifact rather than a real app element.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v160`.
 
 ## v1.22.0 Vacation Mode for streak achievements
 Prompted by a genuinely good fairness question: is it right that illness or a

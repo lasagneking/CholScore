@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "159"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "160"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -29,6 +29,7 @@ const defaultState = {
 
 let state = loadState();
 let selectedTarget = 30;
+let onboardingPhoto = null;
 let selectedDistanceUnit = "mi";
 let selectedFeeling = 3;
 let finishFeeling = 3;
@@ -213,7 +214,7 @@ function init(){
     $("onboarding").classList.remove("hidden");$("mainApp").classList.add("hidden");
   }else{
     $("onboarding").classList.add("hidden");$("mainApp").classList.remove("hidden");
-    ensureDay(); renderAll();
+    ensureDay(); renderAll(); renderHeaderAvatar();
     if(state.activeWorkout) showActiveWorkoutBanner();
   }
 }
@@ -1315,10 +1316,25 @@ qsa(".unit-option").forEach(btn=>btn.addEventListener("click",()=>{
   selectedDistanceUnit=btn.dataset.unit;
 }));
 
+$("nameInput").addEventListener("input",()=>{
+  if(!onboardingPhoto)renderAvatarInto($("onboardingAvatarPreview"),null,$("nameInput").value);
+});
+$("onboardingAddPhotoBtn").addEventListener("click",()=>$("onboardingPhotoFile").click());
+$("onboardingPhotoFile").addEventListener("change",(e)=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  processAndStorePhoto(file,(dataUrl)=>{
+    onboardingPhoto=dataUrl;
+    renderAvatarInto($("onboardingAvatarPreview"),onboardingPhoto,$("nameInput").value);
+  });
+  e.target.value="";
+});
+renderAvatarInto($("onboardingAvatarPreview"),null,"");
+
 $("finishSetup").addEventListener("click",()=>{
   const name=$("nameInput").value.trim(),target=selectedTarget==="custom"?Number($("customTarget").value):Number(selectedTarget);
   if(!name||!target||target<=0)return alert("Please enter your name and choose a valid target.");
-  state.profile={name,target,distanceUnit:selectedDistanceUnit};saveState();init();
+  state.profile={name,target,distanceUnit:selectedDistanceUnit,photo:onboardingPhoto};saveState();init();
 });
 
 /* Navigation */
@@ -3093,7 +3109,18 @@ function renderScoreBandList(){
 }
 $("scoreInfoBtn").addEventListener("click",()=>{renderScoreBandList();$("scoreInfoDialog").showModal();});
 
-$("profileBtn").addEventListener("click",()=>{$("settingsName").value=state.profile.name;$("settingsTarget").value=state.profile.target;$("settingsUnits").value=distanceUnit();renderBackupStatus();renderVacationModeUI();$("settingsDialog").showModal();});
+$("profileBtn").addEventListener("click",()=>{$("settingsName").value=state.profile.name;$("settingsTarget").value=state.profile.target;$("settingsUnits").value=distanceUnit();renderBackupStatus();renderVacationModeUI();renderAvatarInto($("settingsAvatarPreview"),state.profile?.photo,state.profile?.name);$("settingsDialog").showModal();});
+$("settingsChangePhotoBtn").addEventListener("click",()=>$("settingsPhotoFile").click());
+$("settingsPhotoFile").addEventListener("change",(e)=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  processAndStorePhoto(file,(dataUrl)=>{
+    state.profile.photo=dataUrl;saveState();
+    renderHeaderAvatar();
+    renderAvatarInto($("settingsAvatarPreview"),state.profile.photo,state.profile.name);
+  });
+  e.target.value="";
+});
 $("saveSettings").addEventListener("click",()=>{const n=$("settingsName").value.trim(),t=Number($("settingsTarget").value),u=$("settingsUnits").value==="km"?"km":"mi";if(n&&t>0){state.profile={...state.profile,name:n,target:t,distanceUnit:u};saveState();renderAll();}});
 $("resetData").addEventListener("click",()=>{if(confirm("Reset all CholScore data on this device?")){localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(LEGACY_KEY);state=cloneDefault();$("settingsDialog").close();location.reload();}});
 
@@ -3114,6 +3141,43 @@ function backupStatusText(){
     if(days<14)return `Last backup: ${days} days ago.`;
     return `Last backup: ${days} days ago — probably worth doing another.`;
   }catch(err){return "You haven't backed up yet — export one to keep your data safe.";}
+}
+/* v1.23.0 profile photo. Resized and centre-cropped to a small square via
+   canvas before being stored as a JPEG data URL — 240px is 2x the largest
+   place it's displayed (72px in Settings) for retina sharpness, while
+   keeping the stored string small (a few KB) rather than saving whatever
+   multi-megabyte original the camera produced. */
+function processAndStorePhoto(file,onDone){
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const size=240;
+      const canvas=document.createElement("canvas");
+      canvas.width=size;canvas.height=size;
+      const ctx=canvas.getContext("2d");
+      const side=Math.min(img.width,img.height);
+      const sx=(img.width-side)/2,sy=(img.height-side)/2;
+      ctx.drawImage(img,sx,sy,side,side,0,0,size,size);
+      onDone(canvas.toDataURL("image/jpeg",0.85));
+    };
+    img.onerror=()=>{};
+    img.src=e.target.result;
+  };
+  reader.onerror=()=>{};
+  reader.readAsDataURL(file);
+}
+function renderAvatarInto(el,photo,name){
+  if(!el)return;
+  if(photo){
+    el.innerHTML=`<img src="${photo}" alt="" />`;
+  }else{
+    const initial=(name||"?").trim().charAt(0).toUpperCase()||"?";
+    el.innerHTML=`<div class="avatar-initials">${esc(initial)}</div>`;
+  }
+}
+function renderHeaderAvatar(){
+  renderAvatarInto($("profileBtn"),state.profile?.photo,state.profile?.name);
 }
 function renderBackupStatus(){const el=$("backupStatus");if(el)el.textContent=backupStatusText();}
 function markBackedUpNow(){localStorage.setItem(BACKUP_META_KEY,JSON.stringify({lastBackupAt:new Date().toISOString()}));renderBackupStatus();}
