@@ -1687,6 +1687,8 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 .report-stat-card.green strong{color:var(--green)}
 .report-stat-card.cyan strong{color:var(--cyan)}
 .report-stat-card.violet strong{color:var(--violet)}
+.report-stat-card.amber strong{color:var(--amber)}
+.report-stat-card.full-width{grid-column:1/-1}
 .report-week-breakdown{display:flex;flex-direction:column;gap:8px;margin-top:16px}
 .report-week-row{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:13px;background:#111620;border:1px solid var(--line)}
 .report-week-row .wk-label{font-size:12px;font-weight:700;width:78px;flex:none;color:#cfc9de}

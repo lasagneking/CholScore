@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "156"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "157"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 const todayKey = () => new Date().toISOString().slice(0,10);
 
 const defaultState = {
@@ -921,13 +921,14 @@ function weekSummary(mondayKey,records){
   for(let i=0;i<7;i++){const d=new Date(start);d.setDate(d.getDate()+i);dayKeys.push(d.toISOString().slice(0,10));}
   const daysElapsed=isCurrent?dayKeys.filter(k=>k<=today).length:7;
 
-  let minutes=0,weightLifted=0,workouts=0,daysUnder=0,rewardPoints=0,bestDay=null;
+  let minutes=0,weightLifted=0,workouts=0,daysUnder=0,rewardPoints=0,bestDay=null,distanceKm=0;
   for(const key of dayKeys){
     if(isCurrent&&key>today)continue; // don't count days of an in-progress week that haven't happened yet
     const day=getDay(key),t=totals(day);
     minutes+=t.mins;
     for(const a of day.activities||[]){
       if(a.type==="workout"){workouts++;weightLifted+=Number(a.totalWeight||0);}
+      else if(a.type==="walk"||a.type==="run"){distanceKm+=Number(a.distance||0);}
     }
     if(day.foods?.length&&t.sat<=target)daysUnder++;
     rewardPoints+=dailyBankPoints(day);
@@ -946,7 +947,7 @@ function weekSummary(mondayKey,records){
     ].filter(Boolean);
     prCount=allDates.filter(d=>dayKeys.includes(d)).length;
   }
-  return {mondayKey,endKey,isCurrent,minutes,weightLifted,workouts,daysUnder,daysTotal:daysElapsed,rewardPoints,bestDay,prCount};
+  return {mondayKey,endKey,isCurrent,minutes,weightLifted,workouts,daysUnder,daysTotal:daysElapsed,rewardPoints,bestDay,prCount,distanceKm};
 }
 function weekLabel(mondayKey){
   const start=new Date(mondayKey+"T12:00:00");
@@ -988,6 +989,8 @@ function weeklyReportMessage(summary,name){
   return `A quieter week, ${n} — <strong>${mins} minutes</strong> of movement still went in the bank${highlight}. A new week means a fresh ${summary.daysTotal} days to build on it.`;
 }
 function renderWeekReportCardHTML(summary,name){
+  const unit=distanceUnit();
+  const displayDistance=fmt(kmToDisplay(summary.distanceKm));
   return `
     <div class="report-card">
       <div class="report-badge">🗓️</div>
@@ -999,6 +1002,7 @@ function renderWeekReportCardHTML(summary,name){
         <div class="report-stat-card green"><span>Weight lifted</span><strong>${fmt(summary.weightLifted)}</strong><small>kg total volume</small></div>
         <div class="report-stat-card violet"><span>Workouts</span><strong>${summary.workouts}</strong><small>sessions completed</small></div>
         <div class="report-stat-card"><span>On target</span><strong>${summary.daysUnder}/${summary.daysTotal}</strong><small>days under sat fat limit</small></div>
+        <div class="report-stat-card amber full-width"><span>Total distance</span><strong>${displayDistance} ${unit}</strong><small>walked or run</small></div>
       </div>
     </div>`;
 }
@@ -1015,6 +1019,9 @@ function renderMonthReportCardHTML(name,records){
   const totalDaysElapsed=weeks.reduce((a,w)=>a+w.daysTotal,0);
   const totalPRs=weeks.reduce((a,w)=>a+w.prCount,0);
   const totalPoints=weeks.reduce((a,w)=>a+w.rewardPoints,0);
+  const totalDistanceKm=weeks.reduce((a,w)=>a+w.distanceKm,0);
+  const unit=distanceUnit();
+  const displayDistance=fmt(kmToDisplay(totalDistanceKm));
   const maxMinutes=Math.max(1,...weeks.map(w=>w.minutes));
   const bestWeek=weeks.reduce((best,w)=>w.minutes>best.minutes?w:best,weeks[0]);
   const weekRows=weeks.map(w=>`
@@ -1039,6 +1046,7 @@ function renderMonthReportCardHTML(name,records){
         <div class="report-stat-card green"><span>Weight lifted</span><strong>${fmt(totalWeight)}</strong><small>kg total volume</small></div>
         <div class="report-stat-card"><span>On target</span><strong>${totalDaysUnder}/${totalDaysElapsed}</strong><small>days under sat fat limit</small></div>
         <div class="report-stat-card violet"><span>Best week</span><strong>${fmtInt(bestWeek.minutes)}</strong><small>min, ${esc(weekLabel(bestWeek.mondayKey))}</small></div>
+        <div class="report-stat-card amber full-width"><span>Total distance</span><strong>${displayDistance} ${unit}</strong><small>walked or run</small></div>
       </div>
       <div class="report-week-breakdown">${weekRows}</div>
     </div>`;

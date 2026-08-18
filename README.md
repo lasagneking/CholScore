@@ -1,4 +1,4 @@
-CholScore v1.20.0 - On-demand Last Week tab, tense-aware and highlight-rich reports
+CholScore v1.20.1 - Added total distance to Weekly/Monthly Reports
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,25 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.20.1 added total distance to Weekly/Monthly Reports
+- Requested after approving v1.20.0: reports were missing total distance
+  walked/run.
+- Added combined walk+run distance tracking to `weekSummary()`, converted at
+  render time through the app's existing `kmToDisplay()`/`distanceUnit()`
+  functions so it correctly respects each user's mi/km preference — verified
+  both units directly rather than assumed, including catching a false alarm
+  in my own test check (a sloppy string match against " mi" that was actually
+  just matching the start of the word "minutes").
+- Added as a 5th stat card spanning the full width of the 2-column grid,
+  rather than leaving an awkward half-empty row — new `.full-width` and
+  `.amber` utility classes, reusing the existing `--amber` palette token
+  rather than referencing an undefined color.
+- Rendered real proof screenshots for both the weekly and monthly views with
+  mixed walk/run data before shipping, confirming the total sums correctly
+  across activity types and the new card sits cleanly below the existing grid.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v157`.
 
 ## v1.20.0 on-demand Last Week tab, tense-aware and highlight-rich reports
 Rethought the Weekly/Monthly Report after stepping back to look at it properly:
