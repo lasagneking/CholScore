@@ -1,4 +1,4 @@
-CholScore v1.21.0 - Fixed a foundational BST timezone bug in week/day boundaries
+CholScore v1.22.0 - Vacation Mode for streak achievements
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,45 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.22.0 Vacation Mode for streak achievements
+Prompted by a genuinely good fairness question: is it right that illness or a
+holiday can wipe out months of progress toward a streak-based achievement like
+the Mythic 365-day one? Agreed it's worth softening, on one condition raised
+directly: no free progress. Paused days protect the streak from breaking, but
+they never count toward it either — any missed time still has to be made up
+with real checked-out days afterward, matching the compromise landed on
+together rather than either extreme (a purist no-exceptions streak, or a
+loophole that trivializes it).
+
+- New "Vacation Mode" section in Settings — a simple on/off toggle, no date
+  range picker to fuss with. Turning it on lets you back-date the start up to
+  7 days, since if you're properly ill you might not open the app at all for
+  the first few days and would only think to flip it once you're back.
+- Deliberately no cap on how often it's used, per direct instruction — since
+  it only pauses the clock and never grants credit, there's no actual benefit
+  to overusing it, so no limit was needed to keep it honest.
+- Touches both places a streak gets calculated, not just the achievement:
+  `calculateStreak()` (the live streak counter shown elsewhere in the app) and
+  the `bestStreak` metric that every streak achievement — including the
+  Mythic one — is measured against. A paused day is invisible to both: it
+  can't break a run in progress, but it's also simply never counted as one of
+  the days needed to reach a goal.
+- Found and fixed a real bug in my own first implementation before it ever
+  shipped: my initial version let a skipped vacation day consume the "today
+  might not be checked out yet" leniency meant for the very next real day
+  examined, which would have subtly mis-counted the live streak. Caught this
+  by actually running the calculation, not by reading the code back.
+- Verified thoroughly with the exact scenario described — 10 real days, a
+  multi-day illness gap, then 8 more real days — confirming the streak
+  correctly bridges to 18 only when every single gap day is genuinely covered
+  by Vacation Mode, and correctly breaks and resets if even one gap day isn't
+  covered, which is the honesty check the whole feature depends on. Also hit
+  a bug in my own *test* along the way (a date range that was one day short of
+  the actual gap) and want to be upfront that it was a test-authoring mistake,
+  not a rerun of the same application bug.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v159`.
 
 ## v1.21.0 fixed a foundational BST timezone bug in week/day boundaries
 This turned out to be much bigger than the original report — a genuine,

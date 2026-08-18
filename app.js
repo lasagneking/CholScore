@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "158"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "159"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -22,7 +22,9 @@ const defaultState = {
   routines: [],
   activeWorkout: null,
   achievements: { firstFood:false, firstMove:false, onTarget:false, score80:false },
-  rewardBank: { spentPoints: 0, goal: null, history: [] }
+  rewardBank: { spentPoints: 0, goal: null, history: [] },
+  vacationMode: { active: false, since: null },
+  vacationHistory: []
 };
 
 let state = loadState();
@@ -643,7 +645,7 @@ function achievementMetrics(){
     const d=new Date(key+"T12:00:00");
     if(prev){
       const diff=Math.round((d-prev)/86400000);
-      current=diff===1?current+1:1;
+      current=(diff===1||(diff>1&&allDaysAreVacationBetween(prev,d)))?current+1:1;
     }else current=1;
     bestStreak=Math.max(bestStreak,current);
     prev=d;
@@ -766,9 +768,40 @@ function renderRewards(){
     </div>`;
   }).join("");
 }
+/* Vacation Mode — pausing protects a streak from breaking while genuinely
+   away or ill, without granting free progress toward it. A paused day is
+   simply excluded from the streak calculation entirely: it can't break an
+   existing run, but it also never counts as a completed day, so reaching a
+   streak goal still requires that many real checked-out days — any paused
+   time has to be made up afterward, not skipped. */
+function vacationRanges(){
+  const ranges=[...(state.vacationHistory||[])];
+  if(state.vacationMode?.active&&state.vacationMode.since)ranges.push({start:state.vacationMode.since,end:todayKey()});
+  return ranges;
+}
+function isVacationDay(key){
+  return vacationRanges().some(r=>key>=r.start&&key<=r.end);
+}
+function allDaysAreVacationBetween(prevDate,currentDate){
+  const d=new Date(prevDate);d.setDate(d.getDate()+1);
+  while(d<currentDate){
+    if(!isVacationDay(localDateKey(d)))return false;
+    d.setDate(d.getDate()+1);
+  }
+  return true;
+}
 function calculateStreak(){
-  let count=0,d=new Date();
-  for(let i=0;i<365;i++){const key=localDateKey(d),day=state.days[key];if(day?.checkedOut)count++;else if(i>0)break;d.setDate(d.getDate()-1);}
+  let count=0,d=new Date(),loopGuard=0,realDaysExamined=0;
+  while(loopGuard<400){
+    loopGuard++;
+    const key=localDateKey(d);
+    if(isVacationDay(key)){d.setDate(d.getDate()-1);continue;} // paused day — skip entirely, doesn't consume the "today might not be checked out yet" leniency below
+    const day=state.days[key];
+    if(day?.checkedOut)count++;
+    else if(realDaysExamined>0)break;
+    realDaysExamined++;
+    d.setDate(d.getDate()-1);
+  }
   return count;
 }
 function renderCalendar(){
@@ -3060,7 +3093,7 @@ function renderScoreBandList(){
 }
 $("scoreInfoBtn").addEventListener("click",()=>{renderScoreBandList();$("scoreInfoDialog").showModal();});
 
-$("profileBtn").addEventListener("click",()=>{$("settingsName").value=state.profile.name;$("settingsTarget").value=state.profile.target;$("settingsUnits").value=distanceUnit();renderBackupStatus();$("settingsDialog").showModal();});
+$("profileBtn").addEventListener("click",()=>{$("settingsName").value=state.profile.name;$("settingsTarget").value=state.profile.target;$("settingsUnits").value=distanceUnit();renderBackupStatus();renderVacationModeUI();$("settingsDialog").showModal();});
 $("saveSettings").addEventListener("click",()=>{const n=$("settingsName").value.trim(),t=Number($("settingsTarget").value),u=$("settingsUnits").value==="km"?"km":"mi";if(n&&t>0){state.profile={...state.profile,name:n,target:t,distanceUnit:u};saveState();renderAll();}});
 $("resetData").addEventListener("click",()=>{if(confirm("Reset all CholScore data on this device?")){localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(LEGACY_KEY);state=cloneDefault();$("settingsDialog").close();location.reload();}});
 
@@ -3084,6 +3117,29 @@ function backupStatusText(){
 }
 function renderBackupStatus(){const el=$("backupStatus");if(el)el.textContent=backupStatusText();}
 function markBackedUpNow(){localStorage.setItem(BACKUP_META_KEY,JSON.stringify({lastBackupAt:new Date().toISOString()}));renderBackupStatus();}
+function renderVacationModeUI(){
+  const active=!!state.vacationMode?.active;
+  $("vacationModeOffView").classList.toggle("hidden",active);
+  $("vacationModeOnView").classList.toggle("hidden",!active);
+  if(active){
+    const d=new Date(state.vacationMode.since+"T12:00:00");
+    $("vacationModeSinceText").textContent=d.toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"});
+  }
+}
+$("vacationModeOnBtn").addEventListener("click",()=>{
+  const daysBack=Number($("vacationBackdateSelect").value||0);
+  const d=new Date();d.setDate(d.getDate()-daysBack);
+  state.vacationMode={active:true,since:localDateKey(d)};
+  saveState();renderVacationModeUI();renderAll();
+});
+$("vacationModeOffBtn").addEventListener("click",()=>{
+  if(state.vacationMode?.since){
+    state.vacationHistory=state.vacationHistory||[];
+    state.vacationHistory.push({start:state.vacationMode.since,end:todayKey()});
+  }
+  state.vacationMode={active:false,since:null};
+  saveState();renderVacationModeUI();renderAll();
+});
 
 $("exportBackupBtn").addEventListener("click",async()=>{
   const payload={app:"CholScore",exportedAt:new Date().toISOString(),version:STORAGE_KEY,data:state};

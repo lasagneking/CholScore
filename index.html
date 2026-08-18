@@ -26,7 +26,7 @@
        moment the page itself is loading; the splash covers the moment
        before that, while iOS is launching the app shell. -->
   <style>html,body{background:#090b10}</style>
-  <link rel="stylesheet" href="styles.css?v=158" />
+  <link rel="stylesheet" href="styles.css?v=159" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -518,7 +518,7 @@
     <p id="finishWorkoutSummary" class="workout-celebration-message premium-subtitle"></p>
 
     <div class="premium-athlete premium-athlete-image" aria-hidden="true">
-      <img src="workout-victory-silhouette.png?v=158" alt="" />
+      <img src="workout-victory-silhouette.png?v=159" alt="" />
     </div>
 
     <div class="workout-result-grid premium-result-grid">
@@ -857,6 +857,28 @@
       <button id="importBackupBtn" type="button" class="secondary-btn backup-btn">⬆ Restore from backup</button>
       <input id="importBackupFile" type="file" accept="application/json,.json" class="hidden" />
 
+      <p class="eyebrow" style="margin-top:22px">VACATION MODE</p>
+      <p class="modal-note">Pausing protects your streak from breaking while you're genuinely away or unwell — but paused days don't count toward it either, so you'll naturally make up the time once you're back. No limit on how often you use this.</p>
+      <div id="vacationModeOffView">
+        <label>Started
+          <select id="vacationBackdateSelect">
+            <option value="0">Today</option>
+            <option value="1">Yesterday</option>
+            <option value="2">2 days ago</option>
+            <option value="3">3 days ago</option>
+            <option value="4">4 days ago</option>
+            <option value="5">5 days ago</option>
+            <option value="6">6 days ago</option>
+            <option value="7">7 days ago</option>
+          </select>
+        </label>
+        <button id="vacationModeOnBtn" type="button" class="secondary-btn">Turn on Vacation Mode</button>
+      </div>
+      <div id="vacationModeOnView" class="hidden">
+        <p class="modal-note">Vacation Mode is active — paused since <strong id="vacationModeSinceText"></strong>.</p>
+        <button id="vacationModeOffBtn" type="button" class="secondary-btn">Turn off Vacation Mode</button>
+      </div>
+
       <button id="resetData" type="button" class="danger-btn">Reset CholScore data</button>
     </form>
   </dialog>
@@ -867,7 +889,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=158"></script>
+  <script src="app.js?v=159"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
