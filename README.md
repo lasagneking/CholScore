@@ -1,4 +1,4 @@
-CholScore v1.23.0 - Profile photo, replacing the plain gear icon
+CholScore v1.23.1 - Fixed header overlapping the status bar on Dynamic Island iPhones
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,32 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.23.1 fixed header overlapping the status bar on Dynamic Island iPhones
+- Reported on an iPhone 17 Pro Max, working fine on Android: the new profile
+  photo overlapped the battery indicator.
+- Real cause, and not new: `.app-header` has always used a fixed `34px` top
+  padding rather than accounting for the device's actual safe area. `env(
+  safe-area-inset-top)` was already used correctly in five other places in
+  this app — the routine form, the live workout and scanner shells, a floating
+  banner, and dialog close buttons — but the one thing visible on literally
+  every screen never got the same treatment. A small 42px gear icon sitting
+  slightly into that zone was easy to miss; an actual photo with real visual
+  detail made it obvious immediately.
+- Fixed by adding the device's safe-area inset on top of the existing 34px
+  rather than replacing it — `calc(34px + env(safe-area-inset-top))` — so
+  devices with no notch or Dynamic Island (older iPhones, Android, desktop)
+  render identically to before, and only devices that actually need more
+  clearance get it.
+- Checked for the same pattern elsewhere rather than assuming this was the
+  only spot: found onboarding had the identical gap (fixed `70px`, no safe
+  area accounted for) and fixed it the same way. Checked the Day Report's
+  full-screen dialog too — its close button already handles this correctly on
+  its own, and the content beneath it wasn't showing any actual problem, so
+  left that one alone rather than making a speculative change with no
+  evidence behind it.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v161`.
 
 ## v1.23.0 profile photo, replacing the plain gear icon
 - Requested and mocked up first: a user-chosen photo in the header, tapping it

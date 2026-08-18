@@ -37,7 +37,7 @@ button,input,select{font:inherit}
 button{cursor:pointer}
 .hidden{display:none!important}
 #app{max-width:880px;margin:0 auto;min-height:100vh;padding-bottom:110px}
-.onboarding{padding:70px 22px 30px;text-align:center}
+.onboarding{padding:calc(70px + env(safe-area-inset-top)) 22px 30px;text-align:center}
 .brand-orb{
   width:86px;height:86px;border-radius:28px;margin:0 auto 22px;
   display:grid;place-items:center;font-size:42px;font-weight:900;
@@ -76,7 +76,7 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
 .secondary-btn{padding:12px 16px;background:#242b3a;color:var(--text)}
 .danger-btn{width:100%;padding:13px;background:rgba(255,107,122,.1);color:#ff9aa5;margin-top:10px}
 .backup-btn{width:100%;margin-top:8px}
-.app-header{padding:34px 20px 12px;display:flex;align-items:center;justify-content:space-between}
+.app-header{padding:calc(34px + env(safe-area-inset-top)) 20px 12px;display:flex;align-items:center;justify-content:space-between}
 .app-header h2,.section-title h2{margin:0;font-size:26px;letter-spacing:-.03em}
 .profile-pill{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:#151a24;color:#dce0e7}
 .view{display:none;padding:8px 20px 24px}
