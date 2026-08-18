@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "154"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "155"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 const todayKey = () => new Date().toISOString().slice(0,10);
 
 const defaultState = {
@@ -1103,13 +1103,13 @@ function repCardioSectionHTML(cardio,dayKey,records){
     const isPR=isDistPR||isPacePR;
     return `<div class="rep-cardio-row${isPR?" is-pr":""}">
       <div class="rep-cardio-icon">${icon}</div>
-      <div class="rep-cardio-name">${esc(label)}${isPR?'<span class="rep-pr-chip">🏆 PR</span>':""}</div>
-      <div class="rep-cardio-col"><strong>${formatActivityDuration(a.minutes)}</strong><small>duration</small></div>
-      <div class="rep-cardio-col"><strong>${displayDist>0?`${displayDist} ${unit}`:"—"}</strong><small>distance${isDistPR?" 🏆":""}</small></div>
-      <div class="rep-cardio-col"><strong>${pace||"—"}</strong><small>min/${unit}${isPacePR?" 🏆":""}</small></div>
+      <div class="rep-cardio-name"><span class="rep-cardio-name-text">${esc(label)}</span>${isPR?'<span class="rep-pr-chip">🏆 PR</span>':""}</div>
+      <div class="rep-cardio-col"><strong>${formatActivityDuration(a.minutes)}</strong></div>
+      <div class="rep-cardio-col"><strong>${displayDist>0?`${displayDist} ${unit}`:"—"}</strong>${isDistPR?'<small class="rep-pr-trophy">🏆</small>':""}</div>
+      <div class="rep-cardio-col"><strong>${pace||"—"}</strong>${isPacePR?'<small class="rep-pr-trophy">🏆</small>':""}</div>
     </div>`;
   }).join("");
-  return `<div class="rep-section reveal"><div class="rep-section-head"><div class="rep-section-bar"></div><h2>Cardio</h2></div><div class="rep-cardio-head"><span></span><span>Activity</span><span>Time</span><span>Dist</span><span>Pace</span></div>${rows}</div>`;
+  return `<div class="rep-section reveal"><div class="rep-section-head"><div class="rep-section-bar"></div><h2>Cardio</h2></div><div class="rep-cardio-head"><span></span><span>Activity</span><span>Time</span><span>Dist</span><span>Pace (min/${unit})</span></div>${rows}</div>`;
 }
 function repNutritionSectionHTML(day,target){
   const totalProtein=day.foods.reduce((a,b)=>a+Number(b.protein||0),0);

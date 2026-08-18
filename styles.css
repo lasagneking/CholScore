@@ -1446,16 +1446,18 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 .rep-exercise-value small{display:block;font-size:9.5px;color:#8a93a8;font-weight:600}
 
 .rep-cardio-row{
-  display:grid;grid-template-columns:28px 1fr auto auto auto;align-items:center;gap:12px;
+  display:grid;grid-template-columns:28px 1fr 52px 52px 76px;align-items:center;gap:12px;
   padding:13px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;
 }
 .rep-cardio-row:last-child{border-bottom:none}
 .rep-cardio-icon{font-size:16px}
-.rep-cardio-name{font-weight:700;color:#fff}
+.rep-cardio-name{font-weight:700;color:#fff;min-width:0;display:flex;align-items:center;gap:6px}
+.rep-cardio-name-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .rep-cardio-col{text-align:right;font-variant-numeric:tabular-nums}
 .rep-cardio-col strong{display:block;font-size:13.5px;color:#fff}
 .rep-cardio-col small{display:block;font-size:9px;color:#8a93a8;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-top:1px}
-.rep-cardio-head{display:grid;grid-template-columns:28px 1fr auto auto auto;gap:12px;font-size:9px;letter-spacing:.08em;color:#6d7688;font-weight:800;text-transform:uppercase;padding-bottom:8px}
+.rep-cardio-col small.rep-pr-trophy{font-size:13px;color:inherit;letter-spacing:normal;text-transform:none;margin-top:2px}
+.rep-cardio-head{display:grid;grid-template-columns:28px 1fr 52px 52px 76px;gap:12px;font-size:9px;letter-spacing:.08em;color:#6d7688;font-weight:800;text-transform:uppercase;padding-bottom:8px}
 .rep-cardio-head span:not(:first-child){text-align:right}
 
 .rep-protein-hero{
@@ -1528,17 +1530,27 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
    exercise/activity they belong to. Gold against the report's cyan theme
    for maximum contrast, matching the gold "record" language used
    everywhere else in the app (medals, PR badges, final-exercise variant). */
-.rep-exercise-row.is-pr,.rep-cardio-row.is-pr{
+.rep-exercise-row.is-pr{
   background:linear-gradient(90deg, rgba(255,196,53,.14), transparent 75%);
   border-left:3px solid #ffd166;margin-left:-22px;padding-left:19px;
 }
-@media(max-width:420px){.rep-exercise-row.is-pr,.rep-cardio-row.is-pr{margin-left:-18px;padding-left:15px}}
+/* Cardio rows use a fixed-width column grid where alignment across rows
+   matters (see .rep-cardio-row above) — the margin/padding "bleed" trick
+   above shifts a grid row's own box model, which very subtly misaligns its
+   column tracks against every other row's. An absolutely-positioned accent
+   bar can't affect grid sizing at all, since it's pure decoration layered on
+   top rather than a change to the row's own box. */
+.rep-cardio-row.is-pr{position:relative;background:linear-gradient(90deg, rgba(255,196,53,.14), transparent 75%)}
+.rep-cardio-row.is-pr::before{content:"";position:absolute;left:-22px;top:0;bottom:0;width:3px;background:#ffd166}
+@media(max-width:420px){.rep-cardio-row.is-pr::before{left:-18px}}
+@media(max-width:420px){.rep-exercise-row.is-pr{margin-left:-18px;padding-left:15px}}
 .rep-pr-chip{
-  display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;
+  display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;flex-shrink:0;
   background:rgba(255,196,53,.2);border:1px solid rgba(255,196,53,.55);color:#ffd875;
   font-size:9.5px;font-weight:900;letter-spacing:.03em;margin-left:8px;vertical-align:middle;
   white-space:nowrap;animation:repPrPulse 2s ease-in-out infinite;
 }
+.rep-cardio-name .rep-pr-chip{margin-left:0} /* spacing handled by the parent's flex gap instead */
 @keyframes repPrPulse{0%,100%{box-shadow:0 0 0 rgba(255,196,53,0)}50%{box-shadow:0 0 10px rgba(255,196,53,.5)}}
 @media(prefers-reduced-motion:reduce){.rep-pr-chip{animation:none;box-shadow:0 0 6px rgba(255,196,53,.3)}}
 

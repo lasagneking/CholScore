@@ -1,4 +1,4 @@
-CholScore v1.19.1 - Thousands separators on every large number, app-wide
+CholScore v1.19.2 - Fixed Day Report cardio table column misalignment
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,42 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.19.2 fixed Day Report cardio table column misalignment
+- Reported: Time/Dist/Pace columns in the Day Report's cardio table didn't
+  line up well row to row.
+- Real cause: each row was its own independent CSS Grid (`display:grid` on
+  every `.rep-cardio-row`), with the three value columns sized `auto`. Grid's
+  `auto` sizing is computed per-row from that row's own content, completely
+  independently of every other row — so "2h 1m" in one row and "1h" in
+  another genuinely produced different column widths, with nothing forcing
+  them to align. Fixed with fixed pixel widths shared identically across
+  every row and the header, then proved it with actual pixel measurements via
+  a headless browser rather than eyeballing a screenshot — every row's column
+  right-edges landed at the exact same x-coordinate afterward.
+- Found and fixed a second, subtler instance of the same underlying category
+  of bug while verifying the first fix: the PR-highlighted row was still
+  landing 5px off from every other row. Traced it to CSS Grid's default
+  `min-width:auto` behavior — the "🏆 PR" chip badge made that row's name
+  column need more minimum space than normal rows, so the whole row grew
+  wider to fit it, which shifted every column to its right. Restructured the
+  name column into its own flex layout (chip protected with `flex-shrink:0`,
+  text given `min-width:0` and ellipsis) so the badge can never force the row
+  wider — verified this holds at three realistic device widths (375/390/440px)
+  and doesn't clip the activity name into invisibility on a real phone the way
+  an artificially narrow first test round showed.
+- While in there: removed the per-row "duration"/"distance"/"min/mi" captions
+  since the header already labels the columns — but checked first that the
+  distance/pace ones weren't purely redundant, since they also carried which
+  specific metric hit a PR via a trophy icon. Kept that as a dedicated
+  trophy-only indicator instead of deleting it outright. Moved the pace unit
+  into the header once (it's the same for every row in a report) rather than
+  losing it when the per-row captions came out.
+- Also re-verified the Exercise section's PR chip (which shares the same CSS
+  class) still renders correctly after these changes — confirmed with an
+  actual render, not assumed safe because the selectors looked separate.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v155`.
 
 ## v1.19.1 thousands separators on every large number, app-wide
 - Reported: weight volume numbers like "4050.0" and "11556.0" were hard to read
