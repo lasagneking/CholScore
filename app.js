@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "153"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "154"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 const todayKey = () => new Date().toISOString().slice(0,10);
 
 const defaultState = {
@@ -140,7 +140,8 @@ function achievementDistanceValue(km){
   return kmToDisplay(km);
 }
 
-function fmt(n){return Number(n||0).toFixed(1);}
+function fmt(n){return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});}
+function fmtInt(n){return Math.round(Number(n||0)).toLocaleString();}
 function feelEmoji(n){return ["","😣","😕","😐","🙂","😄"][Number(n)||3];}
 function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function greeting(){const h=new Date().getHours();return h<12?"Good morning":h<18?"Good afternoon":"Good evening";}
@@ -261,7 +262,7 @@ function renderToday(){
   $("greeting").textContent=`${greeting()}, ${state.profile.name}`;
   $("heroMessage").textContent=score>=80?"You're absolutely flying today.":score>=55?"Nice work — keep the momentum going.":"Every positive choice moves you forward.";
   $("satUsed").textContent=`${fmt(t.sat)}g`;$("satRemaining").textContent=`${fmt(Math.max(0,target-t.sat))}g`;
-  $("moveMinutes").textContent=Math.round(t.mins);$("activityCount").textContent=t.activities;
+  $("moveMinutes").textContent=fmtInt(t.mins);$("activityCount").textContent=t.activities;
   $("dailyScore").textContent=score;$("scoreLabel").textContent=scoreLabel(score);
   $("satRing").style.setProperty("--pct",Math.min(100,t.sat/target*100));
   $("moveRing").style.setProperty("--pct",Math.min(100,t.mins/45*100));
@@ -287,13 +288,13 @@ function renderToday(){
 
 function renderRewardBankCard(){
   const balance=availableBankPoints(),goal=state.rewardBank?.goal;
-  if($("bankPoints")) $("bankPoints").textContent=balance;
+  if($("bankPoints")) $("bankPoints").textContent=fmtInt(balance);
   const goalText=$("bankGoalText"),goalBar=$("bankGoalBar"),goalBarFill=$("bankGoalBarFill");
   if(!goalText) return;
   if(goal){
     const remaining=Math.max(0,goal.target-balance);
     const pct=Math.min(100,Math.round(balance/goal.target*100));
-    goalText.textContent=remaining>0?`${remaining} points to go — ${goal.name} ${goal.icon}`:`Ready to cash out — ${goal.name} ${goal.icon}`;
+    goalText.textContent=remaining>0?`${fmtInt(remaining)} points to go — ${goal.name} ${goal.icon}`:`Ready to cash out — ${goal.name} ${goal.icon}`;
     goalBar.classList.remove("hidden");
     goalBarFill.style.width=`${pct}%`;
   }else{
@@ -447,7 +448,7 @@ function bestEverScore(){
 }
 function renderExercise(){
   const day=getDay(),t=totals(day);
-  $("exerciseMinutes").textContent=Math.round(t.mins);$("exerciseBar").style.width=`${Math.min(100,t.mins/45*100)}%`;
+  $("exerciseMinutes").textContent=fmtInt(t.mins);$("exerciseBar").style.width=`${Math.min(100,t.mins/45*100)}%`;
   if($("distanceUnitLabel")) $("distanceUnitLabel").textContent=distanceUnit();
   renderProteinToday(day);
   renderRoutines();
@@ -719,7 +720,7 @@ function renderRewards(){
     :`${achievementDefs.length-unlocked.length} still waiting to be unlocked.`;
 
   const totalPoints=metrics.totalPoints;
-  $("pointsStat").textContent=Math.round(totalPoints);
+  $("pointsStat").textContent=fmtInt(totalPoints);
   $("bestStat").textContent=Math.round(bestEverScore());
   $("streakStat").textContent=calculateStreak();
 
@@ -739,8 +740,8 @@ function renderRewards(){
     const value=Number(metrics[a.metric]||0);
     const done=value>=a.goal;
     const progress=Math.max(0,Math.min(100,value/a.goal*100));
-    const displayVal=a.metric.toLowerCase().includes("miles")?value.toFixed(1):Math.floor(value);
-    const goalVal=a.goal;
+    const displayVal=a.metric.toLowerCase().includes("miles")?value.toFixed(1):Math.floor(value).toLocaleString();
+    const goalVal=a.metric.toLowerCase().includes("miles")?a.goal:Number(a.goal).toLocaleString();
     const shown=achievementDisplay(a);
     return `<div class="achievement-card r-${a.rarity.toLowerCase()} ${done?"unlocked":"locked"}">
       <span class="achievement-rarity">${a.rarity}</span>
@@ -776,7 +777,7 @@ function showHistoryDay(key,btn){
   qsa(".day-cell").forEach(x=>x.classList.remove("selected"));btn.classList.add("selected");
   const day=getDay(key),t=totals(day),sc=day.finalScore??scoreDay(day),nice=new Date(key+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
   $("historyDetail").classList.remove("empty-state");
-  $("historyDetail").innerHTML=`<h3>${nice}</h3><div class="history-grid"><div><span>Sat fat</span><strong>${fmt(t.sat)}g</strong></div><div><span>Movement</span><strong>${Math.round(t.mins)} min</strong></div><div><span>CholScore</span><strong>${sc}</strong></div></div><p style="color:#9299aa;font-size:12px;margin-bottom:0">${day.foods.length} food entries · ${day.activities.length} activities${day.checkedOut?" · checked out":""}</p>`;
+  $("historyDetail").innerHTML=`<h3>${nice}</h3><div class="history-grid"><div><span>Sat fat</span><strong>${fmt(t.sat)}g</strong></div><div><span>Movement</span><strong>${fmtInt(t.mins)} min</strong></div><div><span>CholScore</span><strong>${sc}</strong></div></div><p style="color:#9299aa;font-size:12px;margin-bottom:0">${day.foods.length} food entries · ${day.activities.length} activities${day.checkedOut?" · checked out":""}</p>`;
 }
 
 /* v1.8.0 Trends — Calendar/Trends toggle on the History tab. Hand-rolled
@@ -937,7 +938,7 @@ function weekLabel(mondayKey){
 }
 function weeklyReportMessage(summary,name){
   const ratio=summary.daysTotal?summary.daysUnder/summary.daysTotal:0;
-  const mins=Math.round(summary.minutes);
+  const mins=fmtInt(summary.minutes);
   if(ratio>=0.85)return `Strong week, ${esc(name)} — <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under your saturated fat limit and <strong>${mins} minutes</strong> of movement. Every positive choice this week shapes tomorrow.`;
   if(ratio>=0.5)return `Solid week, ${esc(name)}. <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under target and <strong>${mins} minutes</strong> on your feet — the positive choices you're making today shape your tomorrow.`;
   return `A quieter week, ${esc(name)} — <strong>${mins} minutes</strong> of movement still went in the bank. Next week's a fresh ${summary.daysTotal} days.`;
@@ -950,7 +951,7 @@ function renderWeekReportCardHTML(summary,name){
       <p class="report-sub">${esc(weekLabel(summary.mondayKey))}</p>
       <p class="report-message">${weeklyReportMessage(summary,name)}</p>
       <div class="report-stat-grid">
-        <div class="report-stat-card cyan"><span>Movement</span><strong>${Math.round(summary.minutes)}</strong><small>minutes total</small></div>
+        <div class="report-stat-card cyan"><span>Movement</span><strong>${fmtInt(summary.minutes)}</strong><small>minutes total</small></div>
         <div class="report-stat-card green"><span>Weight lifted</span><strong>${fmt(summary.weightLifted)}</strong><small>kg total volume</small></div>
         <div class="report-stat-card violet"><span>Workouts</span><strong>${summary.workouts}</strong><small>sessions completed</small></div>
         <div class="report-stat-card"><span>On target</span><strong>${summary.daysUnder}/${summary.daysTotal}</strong><small>days under sat fat limit</small></div>
@@ -973,9 +974,9 @@ function renderMonthReportCardHTML(name){
     <div class="report-week-row">
       <div class="wk-label">${esc(weekLabel(w.mondayKey))}</div>
       <div class="wk-bar-track"><div class="wk-bar-fill" style="width:${Math.round(w.minutes/maxMinutes*100)}%"></div></div>
-      <div class="wk-value">${Math.round(w.minutes)} min</div>
+      <div class="wk-value">${fmtInt(w.minutes)} min</div>
     </div>`).join("");
-  const message=`Across the last 4 weeks you've moved for <strong>${Math.round(totalMinutes)} minutes</strong> and stayed under target on <strong>${totalDaysUnder} of 28 days</strong>. Consistency compounds — nice work showing up, ${esc(name)}.`;
+  const message=`Across the last 4 weeks you've moved for <strong>${fmtInt(totalMinutes)} minutes</strong> and stayed under target on <strong>${totalDaysUnder} of 28 days</strong>. Consistency compounds — nice work showing up, ${esc(name)}.`;
   return `
     <div class="report-card">
       <div class="report-badge">📊</div>
@@ -983,10 +984,10 @@ function renderMonthReportCardHTML(name){
       <p class="report-sub">Last 4 weeks</p>
       <p class="report-message">${message}</p>
       <div class="report-stat-grid">
-        <div class="report-stat-card cyan"><span>Movement</span><strong>${Math.round(totalMinutes)}</strong><small>minutes total</small></div>
+        <div class="report-stat-card cyan"><span>Movement</span><strong>${fmtInt(totalMinutes)}</strong><small>minutes total</small></div>
         <div class="report-stat-card green"><span>Weight lifted</span><strong>${fmt(totalWeight)}</strong><small>kg total volume</small></div>
         <div class="report-stat-card"><span>On target</span><strong>${totalDaysUnder}/28</strong><small>days under sat fat limit</small></div>
-        <div class="report-stat-card violet"><span>Best week</span><strong>${Math.round(bestWeek.minutes)}</strong><small>min, ${esc(weekLabel(bestWeek.mondayKey))}</small></div>
+        <div class="report-stat-card violet"><span>Best week</span><strong>${fmtInt(bestWeek.minutes)}</strong><small>min, ${esc(weekLabel(bestWeek.mondayKey))}</small></div>
       </div>
       <div class="report-week-breakdown">${weekRows}</div>
     </div>`;
@@ -1163,7 +1164,7 @@ function showDayReport(key){
         </div>
         <div class="rep-mini-stats">
           <div><span>Sat fat</span><strong>${fmt(t.sat)}g</strong></div>
-          <div><span>Movement</span><strong>${Math.round(t.mins)} min</strong></div>
+          <div><span>Movement</span><strong>${fmtInt(t.mins)} min</strong></div>
           <div><span>Checked out</span><strong>${day.checkedOut?"Yes":"No"}</strong></div>
         </div>
       </div>
@@ -1173,7 +1174,7 @@ function showDayReport(key){
       <div class="rep-section-head"><div class="rep-section-bar"></div><h2>Today's Rings</h2></div>
       <div class="rep-rings">
         <div class="rep-ring-card"><div class="rep-ring-wrap"><svg viewBox="0 0 78 78"><circle class="rep-ring-track" cx="39" cy="39" r="32"/><circle class="rep-ring-fill" id="repRingFat" cx="39" cy="39" r="32" stroke="var(--rep-accent)" stroke-dasharray="201.06" stroke-dashoffset="201.06"/></svg><div class="rep-ring-num">${fmt(t.sat)}g</div></div><div class="rep-ring-label">Sat fat</div></div>
-        <div class="rep-ring-card"><div class="rep-ring-wrap"><svg viewBox="0 0 78 78"><circle class="rep-ring-track" cx="39" cy="39" r="32"/><circle class="rep-ring-fill" id="repRingMins" cx="39" cy="39" r="32" stroke="var(--cyan)" stroke-dasharray="201.06" stroke-dashoffset="201.06"/></svg><div class="rep-ring-num">${Math.round(t.mins)}</div></div><div class="rep-ring-label">Minutes</div></div>
+        <div class="rep-ring-card"><div class="rep-ring-wrap"><svg viewBox="0 0 78 78"><circle class="rep-ring-track" cx="39" cy="39" r="32"/><circle class="rep-ring-fill" id="repRingMins" cx="39" cy="39" r="32" stroke="var(--cyan)" stroke-dasharray="201.06" stroke-dashoffset="201.06"/></svg><div class="rep-ring-num">${fmtInt(t.mins)}</div></div><div class="rep-ring-label">Minutes</div></div>
         <div class="rep-ring-card"><div class="rep-ring-wrap"><svg viewBox="0 0 78 78"><circle class="rep-ring-track" cx="39" cy="39" r="32"/><circle class="rep-ring-fill" id="repRingScore" cx="39" cy="39" r="32" stroke="var(--violet)" stroke-dasharray="201.06" stroke-dashoffset="201.06"/></svg><div class="rep-ring-num">${score}</div></div><div class="rep-ring-label">Score</div></div>
       </div>
     </div>
@@ -2464,7 +2465,7 @@ $("checkoutBtn").addEventListener("click",()=>{
   const satClause=sat<=target
     ?`You stayed within your <strong>${fmt(target)}g saturated fat limit</strong> (${fmt(sat)}g consumed)`
     :`You logged <strong>${fmt(sat)}g of saturated fat</strong> today`;
-  const moveClause=mins>0?` and exercised for <strong>${Math.round(mins)} minute${Math.round(mins)===1?"":"s"}</strong>`:"";
+  const moveClause=mins>0?` and exercised for <strong>${fmtInt(mins)} minute${Math.round(mins)===1?"":"s"}</strong>`:"";
   $("checkoutText").innerHTML=`${satClause}${moveClause}, earning you a super score of <strong>${score}</strong>.`;
 
   const todayPoints=dailyBankPoints(day),bankBalance=availableBankPoints(),goal=state.rewardBank?.goal;
@@ -2473,10 +2474,10 @@ $("checkoutBtn").addEventListener("click",()=>{
     const remaining=Math.max(0,goal.target-bankBalance);
     noteEl.classList.remove("hidden");
     noteEl.classList.toggle("reached",remaining<=0);
-    const earnedClause=todayPoints>0?`<strong>+${todayPoints} point${todayPoints===1?"":"s"}</strong> banked today`:"No points banked today";
+    const earnedClause=todayPoints>0?`<strong>+${fmtInt(todayPoints)} point${todayPoints===1?"":"s"}</strong> banked today`:"No points banked today";
     noteEl.innerHTML=remaining<=0
       ?`🎉 <span>${earnedClause} — goal reached! <strong>${esc(goal.name)}</strong> is yours whenever you cash out.</span>`
-      :`${goal.icon} <span>${earnedClause}. ${remaining} point${remaining===1?"":"s"} away from <strong>${esc(goal.name)}</strong> — keep going.</span>`;
+      :`${goal.icon} <span>${earnedClause}. ${fmtInt(remaining)} point${remaining===1?"":"s"} away from <strong>${esc(goal.name)}</strong> — keep going.</span>`;
   }else{
     noteEl.classList.add("hidden");
   }
@@ -2484,7 +2485,7 @@ $("checkoutBtn").addEventListener("click",()=>{
 
   const satPct=Math.min(1,sat/target),minsPct=Math.min(1,mins/45),scorePct=Math.min(1,score/100);
   $("checkoutRingSatNum").innerHTML=`${fmt(sat)}<small>g</small>`;
-  $("checkoutRingMinsNum").innerHTML=`${Math.round(mins)}<small>min</small>`;
+  $("checkoutRingMinsNum").innerHTML=`${fmtInt(mins)}<small>min</small>`;
   $("checkoutRingScoreNum").textContent=score;
   $("checkoutRingSat").style.stroke=sat>target?"var(--amber)":"url(#checkoutGradGreen)";
 
@@ -2532,13 +2533,13 @@ $("rbIconTrigger").addEventListener("click",()=>$("rbIconPicker").classList.togg
 
 function openRewardBankDialog(){
   const balance=availableBankPoints(),goal=state.rewardBank?.goal;
-  $("rbBalance").textContent=balance;
+  $("rbBalance").textContent=fmtInt(balance);
 
   const todayPoints=dailyBankPoints(getDay());
   if(getDay().checkedOut){
     $("rbTodayRow").classList.remove("hidden");
     $("rbTodayLabel").textContent="Today so far";
-    $("rbTodayValue").textContent=`+${todayPoints} today`;
+    $("rbTodayValue").textContent=`+${fmtInt(todayPoints)} today`;
   }else{
     $("rbTodayRow").classList.add("hidden");
   }
@@ -2549,12 +2550,12 @@ function openRewardBankDialog(){
     const pct=Math.min(100,Math.round(balance/goal.target*100));
     const remaining=Math.max(0,goal.target-balance);
     $("rbGoalTitle").textContent=`${goal.icon} ${goal.name}`;
-    $("rbGoalFraction").textContent=`${Math.min(balance,goal.target)} / ${goal.target}`;
+    $("rbGoalFraction").textContent=`${fmtInt(Math.min(balance,goal.target))} / ${fmtInt(goal.target)}`;
     $("rbGoalBarFill").style.width=`${pct}%`;
-    $("rbGoalNote").textContent=remaining>0?`${remaining} point${remaining===1?"":"s"} to go — keep it up.`:"Goal reached! Cash out whenever you're ready.";
+    $("rbGoalNote").textContent=remaining>0?`${fmtInt(remaining)} point${remaining===1?"":"s"} to go — keep it up.`:"Goal reached! Cash out whenever you're ready.";
     const cashoutBtn=$("rbCashoutBtn");
     cashoutBtn.disabled=remaining>0;
-    cashoutBtn.textContent=remaining>0?`Cash out (need ${remaining} more)`:`Cash out ${goal.target} points`;
+    cashoutBtn.textContent=remaining>0?`Cash out (need ${fmtInt(remaining)} more)`:`Cash out ${fmtInt(goal.target)} points`;
   }else{
     $("rbGoalView").classList.add("hidden");
     $("rbGoalForm").classList.remove("hidden");
@@ -2657,11 +2658,11 @@ async function generateShareImageBlob(){
   const satOverTarget=sat>target;
   const satColor=satOverTarget?"#ff8a65":"#55f0a7"; // over target reads as a warning colour, not a misleadingly "complete" green ring
   const satClause=sat<=target?`stayed within their ${fmt(target)}g saturated fat limit (${fmt(sat)}g consumed)`:`logged ${fmt(sat)}g of saturated fat`;
-  const moveClause=mins>0?` and exercised for ${Math.round(mins)} minute${Math.round(mins)===1?"":"s"}`:"";
+  const moveClause=mins>0?` and exercised for ${fmtInt(mins)} minute${Math.round(mins)===1?"":"s"}`:"";
   const bodyText=`${name} ${satClause}${moveClause}, earning a super score of ${score}.`;
 
   const remaining=goal?Math.max(0,goal.target-availableBankPoints()):0;
-  const goalText=goal?(remaining>0?`+${todayPoints} points banked — ${remaining} away from ${goal.name}`:`+${todayPoints} points banked — ${goal.name} unlocked!`):"";
+  const goalText=goal?(remaining>0?`+${fmtInt(todayPoints)} points banked — ${fmtInt(remaining)} away from ${goal.name}`:`+${fmtInt(todayPoints)} points banked — ${goal.name} unlocked!`):"";
 
   const W=1080;
   // Dry-run layout pass on a scratch canvas, purely to measure how tall the
@@ -2723,7 +2724,7 @@ async function generateShareImageBlob(){
   }
 
   drawShareRing(ctx,220,ringY,110,satOverTarget?1:sat/Math.max(1,target),satColor,`${fmt(sat)}g`,"SAT FAT");
-  drawShareRing(ctx,540,ringY,110,Math.min(1,mins/45),"#54d9ff",`${Math.round(mins)}`,"MINUTES");
+  drawShareRing(ctx,540,ringY,110,Math.min(1,mins/45),"#54d9ff",`${fmtInt(mins)}`,"MINUTES");
   drawShareRing(ctx,860,ringY,110,Math.min(1,score/100),"#a879ff",`${score}`,"SCORE");
 
   ctx.textAlign="center";ctx.fillStyle="#6b7284";ctx.font="26px sans-serif";
@@ -2960,7 +2961,7 @@ $("shareWorkoutBtn").addEventListener("click",async()=>{
 });
 $("shareCheckout").addEventListener("click",async()=>{
   const day=getDay(),score=scoreDay(day),{sat,mins}=totals(day);
-  const text=`My CholScore today: ${score}/100 — ${fmt(sat)}g saturated fat, ${Math.round(mins)} minutes of activity. 💪`;
+  const text=`My CholScore today: ${score}/100 — ${fmt(sat)}g saturated fat, ${fmtInt(mins)} minutes of activity. 💪`;
   const btn=$("shareCheckout"),original=btn.textContent;
   btn.textContent="Preparing image…";
   try{

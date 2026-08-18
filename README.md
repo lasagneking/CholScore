@@ -1,4 +1,4 @@
-CholScore v1.19.0 - Weekly/Monthly Reports, maskable icon, tenure achievements
+CholScore v1.19.1 - Thousands separators on every large number, app-wide
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,34 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.19.1 thousands separators on every large number, app-wide
+- Reported: weight volume numbers like "4050.0" and "11556.0" were hard to read
+  at a glance with no thousands separator, and asked for a full audit of number
+  formatting across the app, not just the two spots shown.
+- Upgraded `fmt()` (the shared weight/volume formatter used nearly everywhere)
+  to use locale-aware comma formatting instead of a plain `.toFixed(1)` — fixes
+  exercise volume, PR displays, and the new Weekly/Monthly Report's weight
+  stats all at once, from a single source. Small values are completely
+  unaffected (`21.5` stays `21.5`, only genuinely large numbers gain commas).
+- Added `fmtInt()` for whole-number displays that shouldn't carry a decimal —
+  minutes and points — and went through the app systematically applying it
+  rather than stopping at the two reported screenshots: Today's movement ring,
+  the Exercise tab's minute counter, the Day Report's ring number, the History
+  calendar detail panel, the checkout dialog and its shared image, the workout
+  share image, the Reward Bank balance and goal text (both the card and the
+  full dialog), and the Weekly/Monthly Report throughout.
+- One deliberate exception, checked carefully rather than blanket-applied:
+  achievement progress numbers (Ten Ton Club, Point Collector, etc.) keep their
+  original floor-based rounding rather than switching to fmtInt's round-based
+  behaviour — flooring a value like 9,999.7kg toward a 10,000kg goal correctly
+  still shows "9,999", not a misleading "10,000" that would imply the
+  achievement's already complete.
+- Verified the exact numbers from the reported screenshots directly — 4050,
+  456, 330, 1350, 11556, 1270, and 2349 — all format correctly, alongside
+  confirming small values like 21.5 and 12 are untouched.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v154`.
 
 ## v1.19.0 Weekly/Monthly Reports, maskable icon, tenure achievements
 Three loose ends from a step-back review of the whole project, all finished
