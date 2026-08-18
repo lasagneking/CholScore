@@ -1,8 +1,20 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "157"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
-const todayKey = () => new Date().toISOString().slice(0,10);
+const APP_VERSION = "158"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+/* Always use this instead of date.toISOString().slice(0,10) for turning a
+   Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
+   silently shifts the date by a day for anyone in a positive UTC offset
+   (e.g. the UK during BST) — most dangerously in mondayKeyFor(), which forces
+   the calculation to local midnight before converting, making it wrong at
+   EVERY hour of the day, not just near a real midnight boundary. This reads
+   the year/month/day directly from local time, so it's never wrong. */
+function localDateKey(dateLike=new Date()){
+  const d=new Date(dateLike);
+  const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,"0"),dd=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${dd}`;
+}
+const todayKey = () => localDateKey();
 
 const defaultState = {
   profile: null,
@@ -209,7 +221,7 @@ function mondayKeyFor(dateLike=new Date()){
   d.setHours(0,0,0,0);
   const day=(d.getDay()+6)%7;
   d.setDate(d.getDate()-day);
-  return d.toISOString().slice(0,10);
+  return localDateKey(d);
 }
 
 /* v1.13.0 Reward Bank — points are banked purely from saturated fat headroom
@@ -756,7 +768,7 @@ function renderRewards(){
 }
 function calculateStreak(){
   let count=0,d=new Date();
-  for(let i=0;i<365;i++){const key=d.toISOString().slice(0,10),day=state.days[key];if(day?.checkedOut)count++;else if(i>0)break;d.setDate(d.getDate()-1);}
+  for(let i=0;i<365;i++){const key=localDateKey(d),day=state.days[key];if(day?.checkedOut)count++;else if(i>0)break;d.setDate(d.getDate()-1);}
   return count;
 }
 function renderCalendar(){
@@ -788,7 +800,7 @@ let trendsRange=30,trendsExercise=null,trendsCardioType=null;
 
 function lastNDaysKeys(n){
   const out=[],today=new Date();
-  for(let i=n-1;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);out.push(d.toISOString().slice(0,10));}
+  for(let i=n-1;i>=0;i--){const d=new Date(today);d.setDate(d.getDate()-i);out.push(localDateKey(d));}
   return out;
 }
 function buildExerciseSeries(){
@@ -915,10 +927,10 @@ function weekSummary(mondayKey,records){
   const today=todayKey();
   const start=new Date(mondayKey+"T12:00:00");
   const endDate=new Date(start);endDate.setDate(endDate.getDate()+6);
-  const endKey=endDate.toISOString().slice(0,10);
+  const endKey=localDateKey(endDate);
   const isCurrent=today>=mondayKey&&today<=endKey;
   const dayKeys=[];
-  for(let i=0;i<7;i++){const d=new Date(start);d.setDate(d.getDate()+i);dayKeys.push(d.toISOString().slice(0,10));}
+  for(let i=0;i<7;i++){const d=new Date(start);d.setDate(d.getDate()+i);dayKeys.push(localDateKey(d));}
   const daysElapsed=isCurrent?dayKeys.filter(k=>k<=today).length:7;
 
   let minutes=0,weightLifted=0,workouts=0,daysUnder=0,rewardPoints=0,bestDay=null,distanceKm=0;
@@ -3075,7 +3087,7 @@ function markBackedUpNow(){localStorage.setItem(BACKUP_META_KEY,JSON.stringify({
 
 $("exportBackupBtn").addEventListener("click",async()=>{
   const payload={app:"CholScore",exportedAt:new Date().toISOString(),version:STORAGE_KEY,data:state};
-  const filename=`cholscore-backup-${new Date().toISOString().slice(0,10)}.json`;
+  const filename=`cholscore-backup-${localDateKey()}.json`;
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
 
   // A file that only ever lands in this phone's Downloads/Files app isn't a real

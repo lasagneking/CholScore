@@ -1,4 +1,4 @@
-CholScore v1.20.1 - Added total distance to Weekly/Monthly Reports
+CholScore v1.21.0 - Fixed a foundational BST timezone bug in week/day boundaries
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,51 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.21.0 fixed a foundational BST timezone bug in week/day boundaries
+This turned out to be much bigger than the original report — a genuine,
+long-standing bug affecting week and day boundaries throughout the whole app
+for anyone in a positive UTC offset timezone (the UK during BST specifically,
+which is in effect right now), not something specific to the Reports feature.
+
+- Reported: "Last 4 weeks" showed less total distance than "This week" alone —
+  mathematically only possible if the aggregate was missing data. Ruled out a
+  timing/staleness explanation directly (confirmed it persisted across a full
+  app restart on a real device), which meant it was a genuine calculation bug,
+  not two screenshots taken at different moments.
+- Traced it to its actual root, not just patched the symptom: `mondayKeyFor()`
+  forces its calculation to *local* midnight, then converts to a UTC string
+  via `.toISOString()`. Local midnight in BST (UTC+1) is 23:00 UTC the
+  *previous* day — so the returned date was wrong by one day, and verified
+  directly this happens at literally every hour, not just near a real
+  midnight boundary.
+- The monthly report's loop made this worse by re-applying `mondayKeyFor()` a
+  second time to its own already-wrong output. Since that string didn't
+  actually land on a real Monday, the second application snapped it backward
+  again — compounding a 1-day bug into what looked like an entire missing
+  week. Reproduced this exact compounding mechanism directly against the
+  screenshots sent (`Jul 19 / Jul 26 / Aug 2 / Aug 9` — precisely the four
+  wrong weeks shown) before writing a single line of the fix.
+- Checked how widespread the underlying pattern was rather than fix just the
+  one function: found the identical `.toISOString().slice(0,10)` idiom in
+  seven places total, including `todayKey()` — used everywhere in the app to
+  decide which calendar day food and exercise get logged under — and the
+  streak calculator. Fixed all seven with one shared, properly timezone-safe
+  `localDateKey()` helper (reads year/month/day directly from local time,
+  never converts through UTC) rather than patching each spot slightly
+  differently.
+- Verified the fix directly against the exact scenarios that exposed the bug:
+  `mondayKeyFor()` now returns the correct Monday at every hour of the day,
+  the monthly loop now correctly lands on the real current week instead of
+  compounding backward, and the narrower midnight-boundary window that
+  `todayKey()` was separately exposed to is also confirmed correct.
+- Worth knowing: this only fixes date-key computation going forward. Anything
+  logged in the narrow ~1-hour window right after local midnight before this
+  fix may have been filed under the previous day — a much smaller and
+  narrower concern than the week-boundary bug, and nothing to actively fix
+  retroactively, but flagging it for transparency.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v158`.
 
 ## v1.20.1 added total distance to Weekly/Monthly Reports
 - Requested after approving v1.20.0: reports were missing total distance
