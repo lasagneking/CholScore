@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "164"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "165"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -2082,6 +2082,21 @@ function promptLiveWeight(){
   saveState();
   renderLiveExercises();
 }
+function promptExerciseNote(){
+  const w=state.activeWorkout;if(!w)return;
+  const ei=w.currentExerciseIndex||0,e=w.exercises[ei];if(!e)return;
+  const val=prompt("Exercise note (form cue, reminder, etc.):",e.notes||"");
+  if(val===null)return; // cancelled
+  const trimmed=val.trim();
+  e.notes=trimmed;
+  // Also save back to the routine's own exercise definition, not just this
+  // session — so a note jotted mid-workout is there next time too, rather
+  // than needing a separate trip into editing the routine afterward.
+  const sourceEx=routineExerciseForWorkoutExercise(w,e);
+  if(sourceEx)sourceEx.notes=trimmed;
+  saveState();
+  renderLiveExercises();
+}
 function renderLiveExercises(){
   const w=state.activeWorkout;if(!w)return;ensureWorkoutShape(w);
   const ei=w.currentExerciseIndex||0,e=w.exercises[ei];
@@ -2136,7 +2151,10 @@ function renderLiveExercises(){
       <div class="guided-set-list">${setMarkup}</div>
       <p class="enter-hint">${e.timed?"Tap Start for a 3–2–1 countdown. The stopwatch runs until you press Stop.":"Enter your reps, then press Enter / Done to tick off each set."}</p>
       <button id="completeCurrentExerciseBtn" class="complete-exercise-btn" ${allSetsComplete(e)?"":"disabled"}>Complete exercise</button>
+      <button type="button" id="editExerciseNoteBtn" class="exercise-note-btn">✎ ${e.notes?"Edit":"Add"} exercise note</button>
     </div>`;
+
+  $("editExerciseNoteBtn")?.addEventListener("click",promptExerciseNote);
 
   $("liveWeightDown")?.addEventListener("click",()=>adjustLiveWeight(-2.5));
   $("liveWeightUp")?.addEventListener("click",()=>adjustLiveWeight(2.5));
@@ -2406,14 +2424,6 @@ $("cancelWorkoutBtn").addEventListener("click",()=>{
   if($("finishFeelingDialog").open) $("finishFeelingDialog").close();
   if($("workoutDialog").open) $("workoutDialog").close();
   renderAll();
-});
-$("addRandomExerciseBtn").addEventListener("click",()=>{$("randomExerciseName").value="";$("randomExerciseSets").value=3;$("randomExerciseReps").value=10;$("randomExerciseWeight").value="";$("randomExerciseNotes").value="";$("randomExerciseDialog").showModal();});
-$("randomExerciseForm").addEventListener("submit",e=>{
-  e.preventDefault();if(!state.activeWorkout)return;
-  const name=$("randomExerciseName").value.trim(),sets=Number($("randomExerciseSets").value),reps=Number($("randomExerciseReps").value),weight=Number($("randomExerciseWeight").value||0),notes=$("randomExerciseNotes").value.trim();
-  if(!name||sets<1||reps<1)return;
-  state.activeWorkout.exercises.push({id:id(),name,targetReps:reps,weight,notes,timed:false,random:true,exerciseComplete:false,sets:Array.from({length:sets},()=>({actual:"",timedSeconds:0,timerStartedAt:null,completed:false}))});
-  saveState();$("randomExerciseDialog").close();renderLiveExercises();
 });
 qsa("[data-finish-feel]").forEach(btn=>btn.addEventListener("click",()=>{
   finishFeeling=Number(btn.dataset.finishFeel);qsa("[data-finish-feel]").forEach(x=>x.classList.toggle("selected",x===btn));

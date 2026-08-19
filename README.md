@@ -1,4 +1,4 @@
-CholScore v1.24.0 - 100 achievements, up from 56
+CholScore v1.25.0 - Removed random-exercise button, added in-workout note editing
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,34 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.25.0 removed random-exercise button, added in-workout note editing
+Both from direct tester feedback.
+
+- **Removed "Add a random exercise"** from the live workout screen entirely —
+  button, its whole dialog, the submit handler, and its now-unused CSS.
+  Deliberately left the "added today" badge display logic in place rather
+  than ripping it out too, since any exercise already saved with that flag
+  from before this change should still render correctly — removing the
+  *ability to create new ones* doesn't require breaking the display of old
+  ones.
+- **Exercise notes can now be added or edited mid-workout**, not just when
+  editing a routine beforehand — a small "✎ Add/Edit exercise note" link at
+  the bottom of each exercise card, using the same lightweight `prompt()`
+  pattern already established for the in-workout weight adjuster, rather than
+  building a whole new dialog for it.
+- The actual point of the feature: a note added mid-workout is saved back to
+  the routine's own exercise definition, not just this session — so it's
+  there next time too, rather than needing a separate trip into editing the
+  routine afterward. Tested this directly rather than assumed it: confirmed
+  both the live session and the routine itself update correctly, confirmed
+  cancelling the prompt changes neither, confirmed a whitespace-only note
+  correctly clears rather than saving as a phantom space, and confirmed an
+  exercise with no matching routine source (e.g. old data) still updates the
+  live session safely without touching a routine it can't find, rather than
+  crashing.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v165`.
 
 ## v1.24.0 100 achievements, up from 56
 - Requested via an uploaded spreadsheet listing all 100 achievements, with the

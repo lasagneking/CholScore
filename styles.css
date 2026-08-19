@@ -334,10 +334,9 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
   text-align:center;font-size:18px;font-weight:850;padding:11px 6px;margin-top:5px;
   background:#0b1017;border-radius:12px
 }
-.random-exercise-btn,.finish-workout-btn{
+.finish-workout-btn{
   width:100%;padding:15px;border-radius:16px;font-weight:900;margin-top:13px
 }
-.random-exercise-btn{border:1px dashed rgba(84,217,255,.35);background:rgba(84,217,255,.06);color:#bcefff}
 .cancel-workout-btn{
   width:100%;padding:13px 15px;border-radius:16px;margin-top:10px;font-weight:850;
   border:1px solid rgba(255,115,115,.22);background:rgba(255,92,92,.055);color:#e6a7a7
@@ -986,6 +985,11 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
   background:linear-gradient(135deg,var(--green),var(--cyan));color:#07130e;box-shadow:0 12px 30px rgba(85,240,167,.09)
 }
 .complete-exercise-btn:disabled{opacity:.28;box-shadow:none}
+.exercise-note-btn{
+  display:block;width:100%;text-align:center;background:none;border:none;
+  color:#c9c2db;font-size:13.5px;font-weight:600;padding:14px 0 2px;text-decoration:underline;
+  text-underline-offset:3px;
+}
 .exercise-complete-modal{
   width:min(95vw,520px);padding:0;overflow:hidden;border-radius:30px;
   position:fixed;inset:0;margin:auto;height:auto;max-height:94dvh;
