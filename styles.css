@@ -14,6 +14,14 @@
   --radius:24px;
 }
 *{box-sizing:border-box}
+/* Native <dialog> elements can receive the browser's own default focus
+   outline when opened via showModal() (per spec, focus moves to the dialog
+   itself or its first focusable descendant) — nothing in this app's design
+   ever accounted for that, since every dialog defines its own border and
+   glow intentionally. Left unset, on a dialog that's nearly full-screen
+   (most of these are position:fixed;inset:0) that default outline traces
+   the whole screen edge, which is what this fixes. */
+dialog{outline:none}
 html{background:var(--bg)}
 body{
   margin:0;

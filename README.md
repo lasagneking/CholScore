@@ -1,4 +1,4 @@
-CholScore v1.23.2 - Fixed the same Dynamic Island overlap on all celebration screens
+CholScore v1.23.3 - Removed unintended blue focus outline on dialogs (needs device confirmation)
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,40 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.23.3 removed unintended blue focus outline on dialogs (needs device confirmation)
+- Reported: a blue border tracing the full screen edge on the Exercise
+  Complete screen specifically, reproducible every time, not present on
+  similar screens, and confirmed not related to any phone setting.
+- First guess (an iOS accessibility feature like Guided Access) was wrong and
+  said so directly rather than defended it — the border didn't match anything
+  in the app's own CSS, but "not in my code" isn't the same as "not caused by
+  my code," and that distinction got missed the first time.
+- Investigated properly on the second pass: found that none of the app's ~18
+  dialogs ever suppress the browser's default focus outline — `outline:none`
+  exists in exactly two places in the whole stylesheet, both on form inputs,
+  never on a dialog. Confirmed directly (not assumed) that `showModal()`
+  genuinely moves focus onto the dialog element itself by checking
+  `document.activeElement`.
+- Couldn't fully reproduce the visible bug in this sandbox's testing browser
+  (Chromium), and said so rather than claiming false certainty — Chromium's
+  `:focus-visible` implementation specifically suppresses that default
+  outline for non-keyboard-triggered focus, while Safari has historically been
+  less consistent about that exact distinction, which is a known, documented
+  cross-browser gap and a plausible, well-reasoned explanation rather than a
+  fresh guess. Attempted to install a real WebKit browser engine specifically
+  to test this directly rather than continue reasoning about it secondhand;
+  blocked by this sandbox's own network restrictions, not something to paper
+  over.
+- Fix: one shared `dialog{outline:none}` rule covering every dialog in the app
+  at once, rather than guessing which specific one needs it. Safe to ship
+  regardless of the exact mechanism — removing an unintended default outline
+  can't break anything else.
+- Flagged honestly rather than marked resolved: shipped for real-device
+  testing specifically because Safari-specific behavior couldn't be verified
+  directly from here.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v163`.
 
 ## v1.23.2 fixed the same Dynamic Island overlap on all celebration screens
 - Reported on the Workout Complete screen specifically — the star badge at the
