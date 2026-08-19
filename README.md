@@ -1,4 +1,4 @@
-CholScore v1.23.3 - Removed unintended blue focus outline on dialogs (needs device confirmation)
+CholScore v1.24.0 - 100 achievements, up from 56
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,46 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.24.0 100 achievements, up from 56
+- Requested via an uploaded spreadsheet listing all 100 achievements, with the
+  44 new ones highlighted — verified programmatically that the highlighted
+  rows matched exactly against what's new versus the existing 56 (down to the
+  achievement, not just the count) before writing a single line, rather than
+  assuming the spreadsheet and the live app agreed.
+- 41 of the 44 new achievements mapped directly onto metrics that already
+  existed (points, on-target days, workout count, sets, food entries,
+  scanned foods, personal records, lifetime weight, lifetime distance,
+  combined weekly distance) — just new threshold tiers. Checked every new
+  threshold against every existing one per metric first to rule out an
+  accidental duplicate goal.
+- 3 new metrics added for real: weekly workout count, the number of distinct
+  calendar weeks with at least one workout (`52 Week Warrior` — 52 different
+  weeks, not 52 consecutive), and combined lifetime walk+run distance. All
+  three tested directly with realistic multi-week data before shipping.
+- Distance-based achievements needed no separate km/mile text at all — the
+  existing display system already swaps "mile(s)" for "kilometre(s)" in both
+  the title and description automatically, purely from the metric name
+  containing "miles". Verified this directly against several of the new
+  achievements in both unit settings, including one with the word "mile"
+  appearing twice in its own flavour text, and one where the swap correctly
+  changes the title itself ("Forty Mile Week" → "Forty Kilometre Week").
+- Every new achievement categorised to match the app's existing section
+  conventions exactly (checked precedent first rather than guessed) — so they
+  file correctly under the existing Food/Workout/Walking/Running/This
+  Week/Consistency/CholScore tabs already in the Achievement Collection
+  screen, not a new sectioning system.
+- Icons chosen with reasonable judgement per the achievement's theme,
+  explicitly starting points rather than final choices — happy to revisit
+  any that don't feel right once seen in the app.
+- Confirmed zero duplicate IDs or titles across all 100, and confirmed every
+  achievement-count display in the app (progress ring, category summary,
+  "X still waiting to be unlocked") reads its total directly from the
+  achievement list's own length rather than a hardcoded number, so nothing
+  else needed updating to reflect the new total.
+- Final distribution: 25 Common, 25 Rare, 20 Epic, 18 Legend, 12 Mythic.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v164`.
 
 ## v1.23.3 removed unintended blue focus outline on dialogs (needs device confirmation)
 - Reported: a blue border tracing the full screen edge on the Exercise

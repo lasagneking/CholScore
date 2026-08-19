@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "162"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "164"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -587,6 +587,50 @@ const achievementDefs = [
   {id:"score_90x5",cat:"score",icon:"🏆",title:"High Five",desc:"Finish 5 days with CholScore 90+.",rarity:"LEGEND",goal:5,metric:"score90Days"},
   {id:"points_500",cat:"score",icon:"✨",title:"500 Club",desc:"Bank 500 total CholPoints.",rarity:"RARE",goal:500,metric:"totalPoints"},
   {id:"points_2500",cat:"score",icon:"🌌",title:"Point Collector",desc:"Bank 2,500 total CholPoints.",rarity:"LEGEND",goal:2500,metric:"totalPoints"},
+  {id:"points_100",cat:"score",icon:"🌟",title:"Point Pocket",desc:"Bank 100 total CholPoints.",rarity:"COMMON",goal:100,metric:"totalPoints"},
+  {id:"food_ontarget_3",cat:"food",icon:"🎯",title:"Target Trio",desc:"Check out within target on 3 days.",rarity:"COMMON",goal:3,metric:"onTargetDays"},
+  {id:"workout_sets_25",cat:"workout",icon:"🧱",title:"Set Starter",desc:"Log 25 completed workout sets.",rarity:"COMMON",goal:25,metric:"completedSets"},
+  {id:"weekly_workouts_3",cat:"weekly",icon:"📅",title:"Workout Week",desc:"Complete 3 workouts between Monday and Sunday.",rarity:"COMMON",goal:3,metric:"weekWorkouts"},
+  {id:"food_25",cat:"food",icon:"🍽️",title:"Food Regular",desc:"Log 25 food entries.",rarity:"COMMON",goal:25,metric:"foodEntries"},
+  {id:"food_scan_5",cat:"food",icon:"📷",title:"Scanner Starter",desc:"Add 5 foods by barcode.",rarity:"COMMON",goal:5,metric:"scannedFoods"},
+  {id:"consistency_checkouts_10",cat:"consistency",icon:"📘",title:"Ten Days Logged",desc:"Check out 10 days.",rarity:"COMMON",goal:10,metric:"checkouts"},
+  {id:"points_1000",cat:"score",icon:"⭐",title:"Thousand Club",desc:"Bank 1,000 total CholPoints.",rarity:"RARE",goal:1000,metric:"totalPoints"},
+  {id:"food_ontarget_10",cat:"food",icon:"🎯",title:"Target Ten",desc:"Check out within target on 10 days.",rarity:"RARE",goal:10,metric:"onTargetDays"},
+  {id:"workout_pr_10",cat:"workout",icon:"🏹",title:"PR Hunter",desc:"Set 10 personal records.",rarity:"RARE",goal:10,metric:"prCount"},
+  {id:"walking_50",cat:"walking",icon:"🚶",title:"Half Century Walker",desc:"Walk 50 miles in total.",rarity:"RARE",goal:50,metric:"walkMiles"},
+  {id:"running_50",cat:"running",icon:"🏃",title:"Half Century Runner",desc:"Run 50 miles in total.",rarity:"RARE",goal:50,metric:"runMiles"},
+  {id:"workout_50",cat:"workout",icon:"🏋️",title:"Workout Fifty",desc:"Complete 50 workouts.",rarity:"RARE",goal:50,metric:"workouts"},
+  {id:"workout_sets_250",cat:"workout",icon:"🧱",title:"Set Builder",desc:"Log 250 completed workout sets.",rarity:"RARE",goal:250,metric:"completedSets"},
+  {id:"food_scan_50",cat:"food",icon:"📸",title:"Scanner Fifty",desc:"Add 50 foods by barcode.",rarity:"RARE",goal:50,metric:"scannedFoods"},
+  {id:"food_100",cat:"food",icon:"🍱",title:"Food Century",desc:"Log 100 food entries.",rarity:"EPIC",goal:100,metric:"foodEntries"},
+  {id:"food_ontarget_30",cat:"food",icon:"🎯",title:"Target Month",desc:"Check out within target on 30 days.",rarity:"EPIC",goal:30,metric:"onTargetDays"},
+  {id:"workout_pr_25",cat:"workout",icon:"🏆",title:"PR Collector",desc:"Set 25 personal records.",rarity:"EPIC",goal:25,metric:"prCount"},
+  {id:"workout_weight_50000",cat:"workout",icon:"🏗️",title:"Fifty Ton Club",desc:"Lift 50,000kg total, lifetime.",rarity:"EPIC",goal:50000,metric:"totalWeightLifted"},
+  {id:"workout_150",cat:"workout",icon:"🔥",title:"Workout 150",desc:"Complete 150 workouts.",rarity:"EPIC",goal:150,metric:"workouts"},
+  {id:"workout_sets_1000",cat:"workout",icon:"🧱",title:"Set Thousand",desc:"Log 1,000 completed workout sets.",rarity:"EPIC",goal:1000,metric:"completedSets"},
+  {id:"food_scan_100",cat:"food",icon:"📸",title:"Scanner Century",desc:"Add 100 foods by barcode.",rarity:"EPIC",goal:100,metric:"scannedFoods"},
+  {id:"food_500",cat:"food",icon:"🍱",title:"Food Five Hundred",desc:"Log 500 food entries.",rarity:"EPIC",goal:500,metric:"foodEntries"},
+  {id:"weekly_move_40",cat:"weekly",icon:"🚀",title:"Forty Mile Week",desc:"Walk and/or run 40 miles this week.",rarity:"EPIC",goal:40,metric:"weekMoveMiles"},
+  {id:"workout_weight_250000",cat:"workout",icon:"🏗️",title:"Quarter Million Club",desc:"Lift 250,000kg total, lifetime.",rarity:"EPIC",goal:250000,metric:"totalWeightLifted"},
+  {id:"walking_500",cat:"walking",icon:"🥾",title:"Walk 500",desc:"Walk 500 miles in total.",rarity:"LEGEND",goal:500,metric:"walkMiles"},
+  {id:"running_500",cat:"running",icon:"🏅",title:"Run 500",desc:"Run 500 miles in total.",rarity:"LEGEND",goal:500,metric:"runMiles"},
+  {id:"workout_250",cat:"workout",icon:"🔥",title:"Workout 250",desc:"Complete 250 workouts.",rarity:"LEGEND",goal:250,metric:"workouts"},
+  {id:"workout_sets_2500",cat:"workout",icon:"🧱",title:"Set 2,500",desc:"Log 2,500 completed workout sets.",rarity:"LEGEND",goal:2500,metric:"completedSets"},
+  {id:"workout_pr_75",cat:"workout",icon:"🏆",title:"PR Master",desc:"Set 75 personal records.",rarity:"LEGEND",goal:75,metric:"prCount"},
+  {id:"food_ontarget_100",cat:"food",icon:"🎯",title:"Target Century",desc:"Check out within target on 100 days.",rarity:"LEGEND",goal:100,metric:"onTargetDays"},
+  {id:"points_10000",cat:"score",icon:"💎",title:"Ten Thousand Club",desc:"Bank 10,000 total CholPoints.",rarity:"LEGEND",goal:10000,metric:"totalPoints"},
+  {id:"score_90_25",cat:"score",icon:"🌟",title:"Ninety Club",desc:"Finish 25 days with CholScore 90+.",rarity:"LEGEND",goal:25,metric:"score90Days"},
+  {id:"workout_weight_500000",cat:"workout",icon:"🏗️",title:"Half Million Club",desc:"Lift 500,000kg total, lifetime.",rarity:"LEGEND",goal:500000,metric:"totalWeightLifted"},
+  {id:"weekly_move_50",cat:"weekly",icon:"🚀",title:"Ultra Week",desc:"Walk and/or run 50 miles between Monday and Sunday.",rarity:"LEGEND",goal:50,metric:"weekMoveMiles"},
+  {id:"walking_1000",cat:"walking",icon:"🌌",title:"Walk 1,000",desc:"Walk 1,000 miles in total — enough miles to make every pair of trainers nervous.",rarity:"MYTHIC",goal:1000,metric:"walkMiles"},
+  {id:"running_1000",cat:"running",icon:"🌌",title:"Run 1,000",desc:"Run 1,000 miles in total — four figures earned one mile at a time.",rarity:"MYTHIC",goal:1000,metric:"runMiles"},
+  {id:"workout_500",cat:"workout",icon:"🌌",title:"Workout 500",desc:"Complete 500 workouts — showing up has officially become a superpower.",rarity:"MYTHIC",goal:500,metric:"workouts"},
+  {id:"workout_sets_5000",cat:"workout",icon:"🌌",title:"Set 5,000",desc:"Log 5,000 completed workout sets.",rarity:"MYTHIC",goal:5000,metric:"completedSets"},
+  {id:"food_ontarget_250",cat:"food",icon:"🌌",title:"Target 250",desc:"Check out within target on 250 days.",rarity:"MYTHIC",goal:250,metric:"onTargetDays"},
+  {id:"workout_weight_1000000",cat:"workout",icon:"🌌",title:"Million Kilo Club",desc:"Lift 1,000,000kg total, lifetime — one thousand tonnes of work.",rarity:"MYTHIC",goal:1000000,metric:"totalWeightLifted"},
+  {id:"points_25000",cat:"score",icon:"🌌",title:"Twenty Five Thousand Club",desc:"Bank 25,000 total CholPoints.",rarity:"MYTHIC",goal:25000,metric:"totalPoints"},
+  {id:"consistency_52weeks",cat:"consistency",icon:"🌌",title:"52 Week Warrior",desc:"Complete at least one workout in 52 different calendar weeks.",rarity:"MYTHIC",goal:52,metric:"distinctWorkoutWeeks"},
+  {id:"consistency_move_2500",cat:"consistency",icon:"🌌",title:"Round The World Starter",desc:"Walk and/or run 2,500 miles in total — a serious chunk of planet Earth under your feet.",rarity:"MYTHIC",goal:2500,metric:"totalMoveMiles"},
 ];
 
 const rewardCategories = [
@@ -602,7 +646,8 @@ function achievementMetrics(){
   let firstDayKey=null;
 
   const monday=mondayKeyFor(new Date());
-  let weekWalkMiles=0,weekRunMiles=0;
+  let weekWalkMiles=0,weekRunMiles=0,weekWorkouts=0;
+  const workoutWeeksSeen=new Set();
 
   for(const [key,day] of Object.entries(state.days)){
     if(firstDayKey===null||key<firstDayKey) firstDayKey=key;
@@ -614,6 +659,8 @@ function achievementMetrics(){
         workouts++;
         completedSets += Number(a.completedSets||0);
         totalWeightLifted += Number(a.totalWeight||0); // already computed once via workoutVolume() at save time
+        if(key>=monday) weekWorkouts++;
+        workoutWeeksSeen.add(mondayKeyFor(new Date(key+"T12:00:00")));
       }else if(a.type==="walk"){
         walks++;
         const dist=achievementDistanceValue(Number(a.distance||0));
@@ -673,7 +720,8 @@ function achievementMetrics(){
     foodEntries,scannedFoods,onTargetDays,workouts,completedSets,walks,runs,
     walkMiles,runMiles,weekWalkMiles,weekRunMiles,weekMoveMiles:weekWalkMiles+weekRunMiles,
     checkouts,bestStreak,score70Days,score80Days,score90Days,totalPoints,
-    totalWeightLifted,routines,prCount,daysSinceFirstLog
+    totalWeightLifted,routines,prCount,daysSinceFirstLog,
+    weekWorkouts,distinctWorkoutWeeks:workoutWeeksSeen.size,totalMoveMiles:walkMiles+runMiles
   };
 }
 
