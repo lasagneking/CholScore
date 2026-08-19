@@ -1,4 +1,4 @@
-CholScore v1.23.1 - Fixed header overlapping the status bar on Dynamic Island iPhones
+CholScore v1.23.2 - Fixed the same Dynamic Island overlap on all celebration screens
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,29 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.23.2 fixed the same Dynamic Island overlap on all celebration screens
+- Reported on the Workout Complete screen specifically — the star badge at the
+  top getting caught in the Dynamic Island, same symptom as the header fix
+  from the previous release.
+- Given that fix turned out to be a pattern (two separate spots had the exact
+  same gap last time), swept the rest of the app properly rather than patching
+  only the one screen reported: found the identical fixed-padding-with-no-
+  safe-area-inset issue in five more places across three related celebration
+  screens — `.premium-workout-result` (the one reported, with fixes needed at
+  *three* separate breakpoints, not just one), `.acm-content` (the walk/run
+  completion screen), and `.ecm-content` (the single-exercise completion
+  screen) — each with their own base rule and mobile breakpoint override that
+  both needed the same fix.
+- Also checked the daily checkout celebration screen specifically, since it's
+  the same category of screen — confirmed it already correctly uses
+  `top:max(14px, env(safe-area-inset-top))` and needed no change.
+- Same fix throughout: add the device's actual safe-area inset on top of the
+  existing padding rather than replace it, so phones with no notch or Dynamic
+  Island render identically to before and only the devices that actually need
+  more clearance get it.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v162`.
 
 ## v1.23.1 fixed header overlapping the status bar on Dynamic Island iPhones
 - Reported on an iPhone 17 Pro Max, working fine on Android: the new profile
