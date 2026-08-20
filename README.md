@@ -1,4 +1,4 @@
-CholScore v1.25.0 - Removed random-exercise button, added in-workout note editing
+CholScore v1.26.0 - PR achievements now require a genuine improvement, not a first attempt
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,42 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.26.0 PR achievements now require a genuine improvement, not a first attempt
+Raised directly after watching it happen in practice — a first-ever workout
+naturally makes every exercise attempted an automatic "personal record" (there's
+nothing yet to compare it against), which meant the whole PR achievement
+ladder could be earned in a single session without ever actually beating
+anything.
+
+- Considered the suggested fix (gate PR achievements until the 2nd workout
+  onwards) but pushed for something that fixes the actual root cause instead:
+  that rule would still let a brand new exercise get a "free" PR the first
+  time it's ever tried, no matter which workout number it happens on. Fixed
+  it at the source instead.
+- New `countGenuinePRs()` walks every logged attempt in chronological order,
+  per exercise and per cardio metric, and only counts an entry if it
+  genuinely beat a prior one — the first-ever attempt at anything establishes
+  a baseline, not a counted PR. Applies the same way to strength weight,
+  timed-exercise duration, and walk/run distance and pace individually.
+- Deliberately left the in-the-moment "New PR!" celebration during a workout
+  untouched — celebrating a first-ever recorded attempt live is still a nice,
+  harmless moment. It's specifically the achievement's implied "you've earned
+  this by beating your own record" claim that a first attempt can't honestly
+  satisfy, so only the achievement-counting metric changed.
+- Tested directly against the exact real scenario that surfaced this: one
+  workout, five brand-new exercises, now correctly gives a PR count of 0, not
+  5. Also tested that genuine improvements still count correctly, including
+  a case with three progressively heavier attempts at the same exercise, and
+  cardio distance/pace improving together on the same walk.
+- Flagged an important consequence before shipping rather than let it be a
+  surprise: because achievements are evaluated live rather than permanently
+  saved once unlocked, this can cause an already-unlocked PR achievement to
+  disappear next time the app opens. Given the deliberate choice here — earn
+  it properly rather than keep one that wasn't genuinely earned — shipped as
+  a straightforward fix with no separate permanent-unlock system added.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v166`.
 
 ## v1.25.0 removed random-exercise button, added in-workout note editing
 Both from direct tester feedback.

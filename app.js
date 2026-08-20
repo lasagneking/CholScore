@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "165"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "166"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -700,16 +700,14 @@ function achievementMetrics(){
   }
 
   const routines=(state.routines||[]).length;
-  // reuses the exact same PR computation the Rewards tab's Personal Records
-  // list and the Day Report's gold PR flags already use — one PR "slot" per
-  // exercise name with a recorded best, plus up to 4 more for walk/run
-  // distance and pace, so this can never disagree with what's shown elsewhere.
-  const prRecords=computePersonalRecords();
-  let prCount=Object.keys(prRecords.strength).length+Object.keys(prRecords.timed).length;
-  for(const t of ["walk","run"]){
-    if(prRecords.cardio[t].longestKm>0) prCount++;
-    if(prRecords.cardio[t].bestPaceMinPerKm!=null) prCount++;
-  }
+  // Deliberately NOT computePersonalRecords() here — that just tracks each
+  // exercise's current best, so it can't distinguish a genuine improvement
+  // from a first-ever attempt (which is automatically "your best" purely
+  // because nothing existed yet to compare it against). countGenuinePRs()
+  // only counts an attempt that beat a prior one, so a brand new user's
+  // first workout can't instantly unlock the PR achievements just by trying
+  // several exercises for the first time.
+  const prCount=countGenuinePRs();
 
   // Tenure — days since your very first-ever log, regardless of streaks.
   // Deliberately more forgiving than bestStreak: a single missed day doesn't
@@ -2238,6 +2236,52 @@ function stopTimedSet(ei,si){
    exercises only land in state.days once the whole workout is saved; a
    walk/run is checked before it's pushed), so "is this a new PR" is a
    simple direct comparison — no self-exclusion needed. */
+function countGenuinePRs(){
+  const strengthHistory={},timedHistory={};
+  const walkDist=[],walkPace=[],runDist=[],runPace=[];
+
+  const dayKeys=Object.keys(state.days||{}).sort();
+  for(const dayKey of dayKeys){
+    const day=state.days[dayKey];
+    for(const act of day.activities||[]){
+      if(act.type==="workout"){
+        for(const ex of act.exercises||[]){
+          const name=String(ex.name||"").trim();if(!name)continue;
+          if(ex.timed){
+            const best=(ex.sets||[]).reduce((m,s)=>Math.max(m,Number(s.timedSeconds||s.actual||0)),0);
+            if(best>0)(timedHistory[name]=timedHistory[name]||[]).push(best);
+          }else{
+            const weight=exerciseHeaviestWeight(ex);
+            if(weight>0)(strengthHistory[name]=strengthHistory[name]||[]).push(weight);
+          }
+        }
+      }else if(act.type==="walk"||act.type==="run"){
+        const distanceKm=Number(act.distance||0),minutes=Number(act.minutes||0);
+        (act.type==="walk"?walkDist:runDist).push(...(distanceKm>0?[distanceKm]:[]));
+        if(distanceKm>0&&minutes>0)(act.type==="walk"?walkPace:runPace).push(minutes/distanceKm);
+      }
+    }
+  }
+
+  function countImprovements(values,higherIsBetter){
+    if(values.length<2)return 0; // need a baseline attempt before anything can improve on it
+    let running=values[0],improvements=0;
+    for(let i=1;i<values.length;i++){
+      const better=higherIsBetter?values[i]>running:values[i]<running;
+      if(better){improvements++;running=values[i];}
+    }
+    return improvements;
+  }
+
+  let count=0;
+  for(const name in strengthHistory)count+=countImprovements(strengthHistory[name],true);
+  for(const name in timedHistory)count+=countImprovements(timedHistory[name],true);
+  count+=countImprovements(walkDist,true);
+  count+=countImprovements(walkPace,false); // lower pace = faster = better
+  count+=countImprovements(runDist,true);
+  count+=countImprovements(runPace,false);
+  return count;
+}
 function computePersonalRecords(){
   const strength={},timed={};
   const cardio={
