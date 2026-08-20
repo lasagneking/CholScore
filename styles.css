@@ -131,8 +131,8 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
 .progress-ring.move{background:conic-gradient(var(--cyan) calc(var(--pct)*1%),rgba(255,255,255,.08) 0);filter:drop-shadow(0 0 0 var(--glow-cyan))}
 .progress-ring.score{background:conic-gradient(var(--violet) calc(var(--pct)*1%),rgba(255,255,255,.08) 0);filter:drop-shadow(0 0 0 var(--glow-violet))}
 @keyframes ringPulse{
-  0%,100%{filter:drop-shadow(0 0 2px currentColor)}
-  50%{filter:drop-shadow(0 0 11px currentColor)}
+  0%,100%{filter:drop-shadow(0 0 2px currentColor) brightness(1);transform:scale(1)}
+  50%{filter:drop-shadow(0 0 16px currentColor) brightness(1.35);transform:scale(1.025)}
 }
 .progress-ring{color:var(--glow-green)}
 .progress-ring.move{color:var(--glow-cyan)}

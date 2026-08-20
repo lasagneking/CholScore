@@ -1,4 +1,4 @@
-CholScore v1.27.0 - Design refresh: real typography, colour system, glass cards, glowing rings
+CholScore v1.27.1 - Fixed the ring pulse actually being too subtle to notice
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,30 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.27.1 fixed the ring pulse actually being too subtle to notice
+Directly challenged, and rightly so — the v1.27.0 changelog claimed the rings
+"carry a genuine pulsing glow," but that was only ever verified as a single
+static screenshot looking correct, never actually confirmed as perceptible
+motion over time. Real gap in the testing, not a real fix.
+
+- Investigated properly rather than guess a second time: measured the
+  computed `filter` value directly at multiple points over the animation
+  cycle. Confirmed the animation genuinely was running — but it was only ever
+  animating shadow blur radius at a fixed, low 0.3 opacity, which is a real,
+  measurable change that's nowhere near dramatic enough to read as "pulsing"
+  in a quick glance on a real phone.
+- Fixed by chaining a `brightness()` pulse onto the same filter, so the ring
+  itself visibly breathes rather than just its shadow subtly widening, plus a
+  very slight scale for genuine motion.
+- Verified two ways this time, not one: re-measured the computed style
+  (brightness now genuinely swings roughly 1.08 → 1.33 over the cycle,
+  versus no brightness change at all before), and captured two real
+  screenshots at different points in the animation cycle side by side to
+  confirm the difference is actually visible to the eye — not just present
+  in a number, which is the bar that should have been used the first time.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v168`.
 
 ## v1.27.0 design refresh: real typography, colour system, glass cards, glowing rings
 Prompted directly by tester feedback — "looks like a default AI-made interface"
