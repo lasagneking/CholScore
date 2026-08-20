@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "170"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "174"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -24,7 +24,13 @@ const defaultState = {
   achievements: { firstFood:false, firstMove:false, onTarget:false, score80:false },
   rewardBank: { spentPoints: 0, goal: null, history: [] },
   vacationMode: { active: false, since: null },
-  vacationHistory: []
+  vacationHistory: [],
+  // Defaults to unlocked — there's no real purchase path yet (that needs
+  // Capacitor + StoreKit), so locking this by default would cut off ongoing
+  // daily use for no reason. Once real purchases exist, new installs should
+  // default to false instead; existing users who already paid stay unlocked
+  // via their own stored receipt/entitlement at that point, not this flag.
+  premium: { unlocked: true }
 };
 
 let state = loadState();
@@ -216,9 +222,85 @@ function init(){
     $("onboarding").classList.add("hidden");$("mainApp").classList.remove("hidden");
     ensureDay(); renderAll(); renderHeaderAvatar();
     if(state.activeWorkout) showActiveWorkoutBanner();
+    syncLocalNotifications();
+  }
+  hideNativeSplashScreen();
+}
+/* Only relevant when running as the native app — launchAutoHide is
+   deliberately off in capacitor.config.ts, so the branded splash stays
+   visible through cold launch until this fires, rather than handing off to
+   a blank moment while the WebView is still starting up. Safe no-op on the
+   plain web/PWA build, same pattern as syncLocalNotifications(). */
+function hideNativeSplashScreen(){
+  try{
+    const SplashScreen=window.Capacitor?.Plugins?.SplashScreen;
+    if(SplashScreen)SplashScreen.hide();
+  }catch(e){/* never let this block the app from showing */}
+}
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="visible"&&state.profile)syncLocalNotifications();
+});
+
+/* v1.30.0 local notifications. Deliberately local, not push — everything
+   in this app has always been client-side with no server and no accounts,
+   and push would mean standing up a backend purely to decide "should Lee
+   get a reminder tonight," which fights the app's whole architecture for
+   no real benefit local notifications don't already cover. Scheduled fresh
+   every time the app opens (cold launch or returning from background)
+   rather than once — a local notification set an hour ago can't know
+   whether you've since checked out, so recomputing the full set each time
+   is what keeps it honest rather than nagging about something already done.
+   Fixed IDs per notification "slot" (1001/1002) mean each type only
+   ever has one pending instance — cancelling everything before rescheduling
+   is what guarantees a stale one (e.g. yesterday's check-out reminder)
+   can never fire late. */
+async function syncLocalNotifications(){
+  try{
+    if(!window.Capacitor?.isNativePlatform())return; // plain web/PWA context — no-op, nothing to schedule
+    const LocalNotifications=window.Capacitor.Plugins?.LocalNotifications;
+    if(!LocalNotifications)return;
+
+    const perm=await LocalNotifications.checkPermissions();
+    if(perm.display!=="granted"){
+      const req=await LocalNotifications.requestPermissions();
+      if(req.display!=="granted")return; // declined — respect it, don't ask again this session
+    }
+
+    const pending=await LocalNotifications.getPending();
+    if(pending.notifications.length){
+      await LocalNotifications.cancel({notifications:pending.notifications.map(n=>({id:n.id}))});
+    }
+
+    const notifications=[];
+    const today=getDay();
+    const now=new Date();
+
+    // 1. Evening check-out reminder — 8pm, only if today isn't checked out yet
+    if(!today.checkedOut){
+      const at=new Date();at.setHours(20,0,0,0);
+      if(at>now){
+        notifications.push({id:1001,title:"Check out for today?",
+          body:"A couple of minutes now locks in today's CholScore.",schedule:{at}});
+      }
+    }
+
+    // 2. Streak-at-risk warning — 9:30pm, only with an active streak and nothing logged today
+    const metrics=achievementMetrics();
+    if(metrics.bestStreak>0&&!(today.foods?.length)&&!(today.activities?.length)){
+      const at=new Date();at.setHours(21,30,0,0);
+      if(at>now){
+        notifications.push({id:1002,title:"Your streak needs you",
+          body:"Log anything today to keep it going.",schedule:{at}});
+      }
+    }
+
+    if(notifications.length)await LocalNotifications.schedule({notifications});
+  }catch(e){
+    // Never let a notification-scheduling hiccup affect the actual app —
+    // this is a nice-to-have, not something core functionality depends on.
+    console.warn("syncLocalNotifications failed:",e);
   }
 }
-
 function mondayKeyFor(dateLike=new Date()){
   const d=new Date(dateLike);
   d.setHours(0,0,0,0);
@@ -1255,8 +1337,8 @@ function switchHistoryTab(activeBtnId){
   if(activeBtnId==="historyTabReports")renderReports();
 }
 $("historyTabCalendar").addEventListener("click",()=>switchHistoryTab("historyTabCalendar"));
-$("historyTabTrends").addEventListener("click",()=>switchHistoryTab("historyTabTrends"));
-$("historyTabReports").addEventListener("click",()=>switchHistoryTab("historyTabReports"));
+$("historyTabTrends").addEventListener("click",()=>{if(!isPremiumUnlocked()){showPaywall();return;}switchHistoryTab("historyTabTrends");});
+$("historyTabReports").addEventListener("click",()=>{if(!isPremiumUnlocked()){showPaywall();return;}switchHistoryTab("historyTabReports");});
 
 /* v1.4.0 full-screen Day Report — a "sports report" style recap of one
    whole day, built from the exact same data functions used everywhere
@@ -1344,6 +1426,7 @@ function repRewardSectionHTML(key){
     </div>`).join("");
 }
 function showDayReport(key){
+  if(!isPremiumUnlocked()){showPaywall();return;}
   const day=getDay(key),t=totals(day),target=Number(state.profile?.target||30);
   const score=day.finalScore??scoreDay(day);
   const dateObj=new Date(key+"T12:00:00");
@@ -1452,6 +1535,7 @@ $("finishSetup").addEventListener("click",()=>{
 
 /* Navigation */
 qsa(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{
+  if(btn.dataset.view==="rewardsView"&&!isPremiumUnlocked()){showPaywall();return;}
   qsa(".nav-btn").forEach(x=>x.classList.remove("active"));btn.classList.add("active");
   qsa(".view").forEach(x=>x.classList.remove("active"));$(btn.dataset.view).classList.add("active");renderAll();
 }));
@@ -2803,6 +2887,7 @@ function renderRewardIconGrid(){
 $("rbIconTrigger").addEventListener("click",()=>$("rbIconPicker").classList.toggle("open"));
 
 function openRewardBankDialog(){
+  if(!isPremiumUnlocked()){showPaywall();return;}
   const balance=availableBankPoints(),goal=state.rewardBank?.goal;
   $("rbBalance").textContent=fmtInt(balance);
 
@@ -3367,7 +3452,7 @@ function renderScoreBandList(){
 }
 $("scoreInfoBtn").addEventListener("click",()=>{renderScoreBandList();$("scoreInfoDialog").showModal();});
 
-$("profileBtn").addEventListener("click",()=>{$("settingsName").value=state.profile.name;$("settingsTarget").value=state.profile.target;$("settingsUnits").value=distanceUnit();renderBackupStatus();renderVacationModeUI();renderAvatarInto($("settingsAvatarPreview"),state.profile?.photo,state.profile?.name);$("settingsDialog").showModal();});
+$("profileBtn").addEventListener("click",()=>{$("settingsName").value=state.profile.name;$("settingsTarget").value=state.profile.target;$("settingsUnits").value=distanceUnit();renderBackupStatus();renderVacationModeUI();renderPremiumTestingUI();renderAvatarInto($("settingsAvatarPreview"),state.profile?.photo,state.profile?.name);$("settingsDialog").showModal();});
 $("settingsChangePhotoBtn").addEventListener("click",()=>$("settingsPhotoFile").click());
 $("settingsPhotoFile").addEventListener("change",(e)=>{
   const file=e.target.files[0];
@@ -3449,6 +3534,7 @@ function renderVacationModeUI(){
   }
 }
 $("vacationModeOnBtn").addEventListener("click",()=>{
+  if(!isPremiumUnlocked()){showPaywall();return;}
   const daysBack=Number($("vacationBackdateSelect").value||0);
   const d=new Date();d.setDate(d.getDate()-daysBack);
   state.vacationMode={active:true,since:localDateKey(d)};
@@ -3461,6 +3547,39 @@ $("vacationModeOffBtn").addEventListener("click",()=>{
   }
   state.vacationMode={active:false,since:null};
   saveState();renderVacationModeUI();renderAll();
+});
+
+/* v1.29.0 CholScore+ paywall. isPremiumUnlocked() is the one function every
+   gate in the app checks — when real purchases exist (Capacitor + StoreKit),
+   only this function's own internals need to change to check a real
+   entitlement/receipt instead of the state flag; every call site that gates
+   a feature stays exactly as it is. */
+function isPremiumUnlocked(){return !!state.premium?.unlocked;}
+function showPaywall(){$("paywallDialog").showModal();}
+qsa(".paywall-plan").forEach(btn=>btn.addEventListener("click",()=>{
+  qsa(".paywall-plan").forEach(b=>b.classList.remove("selected"));
+  btn.classList.add("selected");
+  $("paywallUnlockBtn").textContent=`Start with ${btn.dataset.plan==="annual"?"Annual":"Monthly"}`;
+}));
+$("paywallUnlockBtn").addEventListener("click",()=>{
+  // Placeholder until real StoreKit purchasing exists — simulates a
+  // successful purchase so the unlocked experience can be tested end to end.
+  state.premium={unlocked:true};saveState();
+  $("paywallDialog").close();
+  renderPremiumTestingUI();renderAll();
+});
+$("paywallDismissBtn").addEventListener("click",()=>$("paywallDialog").close());
+
+function renderPremiumTestingUI(){
+  const unlocked=isPremiumUnlocked();
+  $("premiumOffView").classList.toggle("hidden",unlocked);
+  $("premiumOnView").classList.toggle("hidden",!unlocked);
+}
+$("premiumTestUnlockBtn").addEventListener("click",()=>{
+  state.premium={unlocked:true};saveState();renderPremiumTestingUI();renderAll();
+});
+$("premiumTestLockBtn").addEventListener("click",()=>{
+  state.premium={unlocked:false};saveState();renderPremiumTestingUI();renderAll();
 });
 
 $("exportBackupBtn").addEventListener("click",async()=>{

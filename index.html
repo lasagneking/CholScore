@@ -25,7 +25,7 @@
        apple-touch-startup-image splash screens below: this covers the
        moment the page itself is loading; the splash covers the moment
        before that, while iOS is launching the app shell. -->
-  <style>html,body{background:#090b10}</style>
+  <style>html,body{background:#0A0A0F}</style>
   <!-- v1.27.0 design refresh: real webfonts, replacing the previous
        font-family declaration that silently fell back to each device's own
        system font since nothing was ever actually imported. The existing
@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=170" />
+  <link rel="stylesheet" href="styles.css?v=174" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -522,7 +522,7 @@
     <p id="finishWorkoutSummary" class="workout-celebration-message premium-subtitle"></p>
 
     <div class="premium-athlete premium-athlete-image" aria-hidden="true">
-      <img src="workout-victory-silhouette.png?v=170" alt="" />
+      <img src="workout-victory-silhouette.png?v=174" alt="" />
     </div>
 
     <div class="workout-result-grid premium-result-grid">
@@ -888,9 +888,72 @@
         <button id="vacationModeOffBtn" type="button" class="secondary-btn">Turn off Vacation Mode</button>
       </div>
 
+      <p class="eyebrow" style="margin-top:22px">CHOLSCORE+ (TESTING)</p>
+      <p class="modal-note">There's no real purchase flow yet — this is a manual switch so you can preview both the free and unlocked experience while that's being built.</p>
+      <div id="premiumOffView">
+        <p class="modal-note">Currently showing the <strong>free</strong> experience.</p>
+        <button id="premiumTestUnlockBtn" type="button" class="secondary-btn">Simulate unlock (testing)</button>
+      </div>
+      <div id="premiumOnView" class="hidden">
+        <p class="modal-note">Currently showing the <strong>unlocked</strong> experience.</p>
+        <button id="premiumTestLockBtn" type="button" class="secondary-btn">Simulate locked (testing)</button>
+      </div>
+
       <button id="resetData" type="button" class="danger-btn">Reset CholScore data</button>
     </form>
   </dialog>
+
+  <dialog id="paywallDialog" class="modal paywall-modal">
+    <div class="modal-head"><span></span><button type="button" data-close-dialog="paywallDialog" aria-label="Close">×</button></div>
+    <div class="paywall-badge">✨</div>
+    <h2 class="paywall-title">See the full picture</h2>
+    <p class="paywall-sub">You've built real momentum. CholScore+ unlocks the tools built for people who are already in it for the long run.</p>
+
+    <div class="paywall-feature-list">
+      <div class="paywall-feature">
+        <div class="paywall-feature-icon">🏆</div>
+        <div class="paywall-feature-text"><strong>All Achievements</strong><span>Common through Mythic — including the year-long streak</span></div>
+      </div>
+      <div class="paywall-feature">
+        <div class="paywall-feature-icon">🏦</div>
+        <div class="paywall-feature-text"><strong>Reward Bank</strong><span>Turn good days into points, and points into real rewards</span></div>
+      </div>
+      <div class="paywall-feature">
+        <div class="paywall-feature-icon">📈</div>
+        <div class="paywall-feature-text"><strong>Trends</strong><span>See your sat fat, score, strength and pace over time</span></div>
+      </div>
+      <div class="paywall-feature">
+        <div class="paywall-feature-icon">🗓️</div>
+        <div class="paywall-feature-text"><strong>Weekly &amp; Monthly Reports</strong><span>A proper recap of how your weeks are really going</span></div>
+      </div>
+      <div class="paywall-feature">
+        <div class="paywall-feature-icon">📋</div>
+        <div class="paywall-feature-text"><strong>Full Day Reports</strong><span>The detailed sports-report-style recap for any day</span></div>
+      </div>
+      <div class="paywall-feature">
+        <div class="paywall-feature-icon">🌴</div>
+        <div class="paywall-feature-text"><strong>Vacation Mode</strong><span>Protect your streak when life gets in the way</span></div>
+      </div>
+    </div>
+
+    <div class="paywall-plans">
+      <button type="button" class="paywall-plan" data-plan="monthly">
+        <div class="paywall-plan-name">Monthly</div>
+        <div class="paywall-plan-price">£5.99<small>/mo</small></div>
+      </button>
+      <button type="button" class="paywall-plan selected" data-plan="annual">
+        <div class="paywall-plan-badge">BEST VALUE</div>
+        <div class="paywall-plan-name">Annual</div>
+        <div class="paywall-plan-price">£34.99<small>/yr</small></div>
+        <div class="paywall-plan-note">Save 51% · £2.92/mo</div>
+      </button>
+    </div>
+
+    <button id="paywallUnlockBtn" class="primary-btn">Start with Annual</button>
+    <button type="button" id="paywallDismissBtn" class="paywall-dismiss">Not now, continue with Free</button>
+    <p class="paywall-footnote">Cancel anytime. Your daily tracking, food logging, and exercise stay free either way.</p>
+  </dialog>
+
 
   <dialog id="dayReportDialog" class="day-report-dialog">
     <button id="dayReportClose" class="rep-close" aria-label="Close report">✕</button>
@@ -898,7 +961,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=170"></script>
+  <script src="app.js?v=174"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

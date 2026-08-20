@@ -1764,7 +1764,7 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
   width:64px;height:64px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;font-size:28px;
   background:linear-gradient(135deg,rgba(85,240,167,.18),rgba(84,217,255,.12));border:1px solid rgba(85,240,167,.32);
 }
-.paywall-title{font-size:24px;font-weight:800;text-align:center;margin:0 0 8px}
+.paywall-title{font-size:24px;font-weight:800;text-align:center;margin:0 0 8px;font-family:var(--font-display)}
 .paywall-sub{font-size:14px;color:var(--muted);text-align:center;margin:0 0 26px;line-height:1.5}
 .paywall-feature-list{display:flex;flex-direction:column;gap:2px;margin-bottom:24px}
 .paywall-feature{display:flex;align-items:center;gap:14px;padding:13px 4px}
