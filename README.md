@@ -1,4 +1,4 @@
-CholScore v1.27.1 - Fixed the ring pulse actually being too subtle to notice
+CholScore v1.27.2 - Fixed ring pulse not animating at all on iPhone (Safari filter bug)
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,38 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.27.2 fixed ring pulse not animating at all on iPhone (Safari filter bug)
+Reported after testing on both a real Android and a real iPhone side by side:
+the breathing glow from v1.27.1 worked correctly on Android, showed nothing
+at all on iPhone.
+
+- Root cause: the pulse animated a chained `filter` (`drop-shadow()` plus
+  `brightness()`, referencing `currentColor` resolved from a CSS custom
+  property). Safari has a long, well-documented history of unreliably
+  animating exactly this category of multi-function filter chain — it isn't
+  a one-off bug, it's a known platform gap, which is why Chromium-based
+  Android handled it fine while iOS Safari silently did nothing.
+- Rebuilt the whole mechanism to avoid animated `filter` entirely. The glow
+  now lives on a separate blurred layer positioned behind the ring
+  (`z-index:-1`, confirmed directly rather than assumed), animating only
+  `opacity` and `transform: scale()` — the two properties every browser,
+  Safari included, has always animated consistently. Same visual effect,
+  fundamentally more reliable mechanism.
+- Verified the same way as the previous fix, not skipped this time: measured
+  the new layer's computed opacity and transform over the animation cycle to
+  confirm real movement, and captured two screenshots at different points in
+  the cycle side by side to confirm the difference is genuinely visible —
+  if anything more pronounced than the version that broke on iPhone.
+- Worth being honest about a real limitation: this sandbox has no way to run
+  actual Safari/WebKit to test against directly (tried again, still blocked
+  by this environment's own network restrictions, not something to paper
+  over). The fix is built on the specific properties that avoid Safari's
+  known filter-animation gap, and verified as genuinely correct wherever it
+  could be tested — but the real confirmation is on the actual iPhone this
+  was reported from.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v169`.
 
 ## v1.27.1 fixed the ring pulse actually being too subtle to notice
 Directly challenged, and rightly so — the v1.27.0 changelog claimed the rings
