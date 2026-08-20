@@ -1,17 +1,23 @@
 
 :root{
-  --bg:#090b10;
-  --panel:#121620;
-  --panel2:#171c28;
-  --text:#f7f8fb;
-  --muted:#9299aa;
-  --line:rgba(255,255,255,.08);
-  --green:#55f0a7;
-  --cyan:#54d9ff;
-  --violet:#a879ff;
-  --amber:#ffd166;
+  --bg:#0A0A0F;
+  --panel:#12131A;
+  --panel2:#171922;
+  --text:#F6F3EF;
+  --muted:#8D93A6;
+  --line:rgba(255,255,255,.09);
+  --green:#1CCFA9;
+  --cyan:#FF6452;
+  --violet:#6C5FFF;
+  --amber:#FFB454;
   --danger:#ff6b7a;
   --radius:24px;
+  --font-display:'Space Grotesk',ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --font-body:'Inter',ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --font-mono:'JetBrains Mono',ui-monospace,"SF Mono",Menlo,monospace;
+  --glow-green:rgba(28,207,169,.3);
+  --glow-cyan:rgba(255,100,82,.35);
+  --glow-violet:rgba(108,95,255,.28);
 }
 *{box-sizing:border-box}
 /* Native <dialog> elements can receive the browser's own default focus
@@ -25,14 +31,17 @@ dialog{outline:none}
 html{background:var(--bg)}
 body{
   margin:0;
-  font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-family:var(--font-body);
   color:var(--text);
   background:
-    radial-gradient(circle at 10% -10%,rgba(84,217,255,.18),transparent 30%),
-    radial-gradient(circle at 95% 15%,rgba(168,121,255,.13),transparent 28%),
+    radial-gradient(circle at 10% -10%,rgba(255,100,82,.14),transparent 30%),
+    radial-gradient(circle at 95% 15%,rgba(108,95,255,.11),transparent 28%),
     var(--bg);
+  background-attachment:fixed;
   min-height:100vh;
 }
+h1,h2,h3,h4{font-family:var(--font-display);letter-spacing:-.01em}
+.eyebrow{font-family:var(--font-body);font-weight:800}
 /* v1.7.2 — applied to <body> while any dialog is open, see the
    lockBodyScrollForDialogs() patch in app.js. position:fixed (rather than
    just overflow:hidden) is what's actually needed here — plain
@@ -56,9 +65,9 @@ button{cursor:pointer}
 .onboarding h1{font-size:44px;margin:0;letter-spacing:-.04em}
 .lead{color:#aeb5c4;font-size:18px;margin:8px 0 28px}
 .glass-card,.hero-card,.metric-card,.scan-card,.calendar-card,.history-detail,.rewards-hero{
-  background:linear-gradient(180deg,rgba(25,30,43,.9),rgba(14,17,25,.92));
-  border:1px solid var(--line);box-shadow:0 20px 80px rgba(0,0,0,.28);
-  border-radius:var(--radius)
+  background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.02));
+  border:1px solid var(--line);box-shadow:0 20px 80px rgba(0,0,0,.35);
+  border-radius:var(--radius);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)
 }
 .setup-card{max-width:560px;margin:0 auto;padding:22px;text-align:left}
 label{display:block;color:#cbd0db;font-size:14px;font-weight:700;margin:10px 0}
@@ -80,7 +89,7 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
 .primary-btn,.secondary-btn,.checkout-btn,.mini-btn,.danger-btn{
   border:0;border-radius:16px;font-weight:850
 }
-.primary-btn{width:100%;padding:15px 18px;background:linear-gradient(135deg,var(--green),var(--cyan));color:#07130e;margin-top:18px}
+.primary-btn{width:100%;padding:15px 18px;background:linear-gradient(135deg,var(--green),var(--cyan));color:#07130e;margin-top:18px;font-family:var(--font-display);font-weight:700;box-shadow:0 10px 30px -8px var(--glow-cyan)}
 .secondary-btn{padding:12px 16px;background:#242b3a;color:var(--text)}
 .danger-btn{width:100%;padding:13px;background:rgba(255,107,122,.1);color:#ff9aa5;margin-top:10px}
 .backup-btn{width:100%;margin-top:8px}
@@ -92,7 +101,7 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
 .hero-card{padding:20px;overflow:hidden;position:relative}
 .hero-card:after{
   content:"";position:absolute;width:220px;height:220px;border-radius:50%;right:-120px;top:-120px;
-  background:radial-gradient(circle,rgba(84,217,255,.15),transparent 65%)
+  background:radial-gradient(circle,var(--glow-cyan),transparent 65%)
 }
 .hero-info-btn{
   position:absolute;top:16px;right:16px;z-index:2;width:30px;height:30px;border-radius:50%;
@@ -115,13 +124,23 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
   width:118px;height:118px;border-radius:50%;margin:0 auto 8px;
   display:grid;place-items:center;
   background:conic-gradient(var(--green) calc(var(--pct)*1%),rgba(255,255,255,.08) 0);
-  position:relative
+  position:relative;
+  animation:ringPulse 5.4s ease-in-out infinite;
+  filter:drop-shadow(0 0 0 var(--glow-green));
 }
-.progress-ring.move{background:conic-gradient(var(--cyan) calc(var(--pct)*1%),rgba(255,255,255,.08) 0)}
-.progress-ring.score{background:conic-gradient(var(--violet) calc(var(--pct)*1%),rgba(255,255,255,.08) 0)}
-.progress-ring:after{content:"";position:absolute;inset:9px;background:#121722;border-radius:50%}
+.progress-ring.move{background:conic-gradient(var(--cyan) calc(var(--pct)*1%),rgba(255,255,255,.08) 0);filter:drop-shadow(0 0 0 var(--glow-cyan))}
+.progress-ring.score{background:conic-gradient(var(--violet) calc(var(--pct)*1%),rgba(255,255,255,.08) 0);filter:drop-shadow(0 0 0 var(--glow-violet))}
+@keyframes ringPulse{
+  0%,100%{filter:drop-shadow(0 0 2px currentColor)}
+  50%{filter:drop-shadow(0 0 11px currentColor)}
+}
+.progress-ring{color:var(--glow-green)}
+.progress-ring.move{color:var(--glow-cyan)}
+.progress-ring.score{color:var(--glow-violet)}
+@media(prefers-reduced-motion:reduce){.progress-ring{animation:none}}
+.progress-ring:after{content:"";position:absolute;inset:8px;background:#12131A;border-radius:50%}
 .ring-inner{position:relative;z-index:1;display:flex;flex-direction:column}
-.ring-inner strong{font-size:23px;letter-spacing:-.04em}
+.ring-inner strong{font-size:23px;letter-spacing:-.02em;font-family:var(--font-mono)}
 .ring-inner span,.ring-card p{font-size:11px;color:var(--muted)}
 .ring-card p{margin:5px 0 0}
 .quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 22px}
@@ -225,10 +244,10 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
 }
 .nav-btn{background:none;border:0;color:#767e90;padding:8px 4px;border-radius:14px}
 .nav-btn span,.nav-btn small{display:block}.nav-btn span{font-size:18px;margin-bottom:2px}
-.nav-btn.active{background:#202737;color:white}
+.nav-btn.active{background:linear-gradient(135deg,rgba(255,100,82,.16),rgba(108,95,255,.14));color:var(--text)}
 .modal{
-  width:min(92vw,500px);border:1px solid rgba(255,255,255,.12);border-radius:24px;background:#121722;color:var(--text);
-  padding:20px;box-shadow:0 30px 100px rgba(0,0,0,.6)
+  width:min(92vw,500px);border:1px solid rgba(255,255,255,.12);border-radius:24px;background:linear-gradient(180deg,#15161F,#0D0E14);color:var(--text);
+  padding:20px;box-shadow:0 30px 100px rgba(0,0,0,.6);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)
 }
 .modal::backdrop{background:rgba(0,0,0,.7);backdrop-filter:blur(8px)}
 .modal-head{display:flex;justify-content:space-between;align-items:center}

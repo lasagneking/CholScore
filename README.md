@@ -1,4 +1,4 @@
-CholScore v1.26.0 - PR achievements now require a genuine improvement, not a first attempt
+CholScore v1.27.0 - Design refresh: real typography, colour system, glass cards, glowing rings
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,66 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.27.0 design refresh: real typography, colour system, glass cards, glowing rings
+Prompted directly by tester feedback — "looks like a default AI-made interface"
+— shown a real design reference for calibration, then built an original
+direction rather than copying it: CholScore's own identity, grounded in what
+this app is actually about (heart health), not borrowed wholesale from a
+glucose-monitor brand. Approved via four real mockup screens before any of
+this touched the live app.
+
+- **The single biggest fix wasn't visual at all**: the app specified "Inter"
+  as its font everywhere but never actually imported it anywhere, so every
+  device has silently been falling back to its own generic system font this
+  whole time. That alone was doing a lot of the work behind "looks default."
+  Now genuinely loads three real typefaces — Space Grotesk for headings and
+  hero numbers, Inter for body text, JetBrains Mono specifically for data
+  (weights, distances, times, scores) — via a proper Google Fonts import.
+- Checked whether this breaks the PWA's offline guarantee before shipping it,
+  rather than assuming it's fine: confirmed the existing service worker's
+  generic cache-first fallback already covers cross-origin font requests
+  automatically, since they fall through past the two special-cased branches
+  (core app files, Open Food Facts) into the same logic already used for
+  images. No sw.js changes needed.
+- **New colour system** — ember (warmth, the heart) and a deep teal (calm,
+  on-target) as a considered pair, plus a violet reserved for ambient glow
+  only, never used as a UI colour itself. Applied at the root token level
+  under the *original* variable names (`--green`, `--cyan`, `--violet`,
+  `--amber`) rather than renaming them, so the new palette cascades safely
+  everywhere already referencing them instead of risking a full rename across
+  ~1700 lines of CSS.
+- **Rings now carry a genuine pulsing glow**, layered onto the existing
+  conic-gradient mechanism rather than rewritten to SVG — safer, and didn't
+  require touching the JS that drives the fill percentage. Respects
+  `prefers-reduced-motion`.
+- Found one shared selector (`.glass-card, .hero-card, .metric-card,
+  .scan-card, .calendar-card, .history-detail, .rewards-hero`) already
+  covering most of the app's key surfaces — updating it once gave real
+  `backdrop-filter` glass blur to six-plus card types across multiple screens
+  at once, rather than needing dozens of individual edits.
+- Primary buttons and the bottom nav's active state picked up the new
+  gradient and a soft matching glow.
+- Caught and fixed a real calibration bug before shipping, not after: the
+  ambient background wash looked noticeably more intense — a strong red
+  tint — on the shorter Rewards screen than on Today or Exercise. Traced it
+  to reusing the ring-glow intensity values for a full-page gradient they
+  were never calibrated for, fixed it, and re-rendered to confirm rather than
+  assumed it was resolved.
+- Verified against the real live app throughout, not just isolated mockups —
+  rendered Today, Exercise, and Rewards directly from the actual `index.html`
+  and real app state at each step, catching issues (like the glow
+  calibration bug) that a simplified standalone test file wouldn't have
+  surfaced.
+- Deliberately scoped honestly rather than claimed full coverage: this pass
+  covers the global tokens, typography, rings, shared cards, buttons, and
+  nav — which cascades broadly across most of the app automatically, as
+  demonstrated on three full real screens. Individual dialogs (checkout,
+  workout complete, settings, onboarding, calendar, trends) inherit the new
+  colours and fonts already, but haven't each had their own bespoke pass yet
+  — a natural next step if wanted, not done here.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v167`.
 
 ## v1.26.0 PR achievements now require a genuine improvement, not a first attempt
 Raised directly after watching it happen in practice — a first-ever workout
