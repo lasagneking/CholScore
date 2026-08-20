@@ -196,7 +196,9 @@ input:focus,select:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px r
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--cyan));border-radius:999px;transition:.4s}
 .scan-card{padding:18px;margin-bottom:18px;display:flex;justify-content:space-between;gap:15px;align-items:center}
 .scan-card h3{margin:2px 0 5px}.scan-card p:last-child{color:var(--muted);font-size:12px;margin:0}
-.exercise-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 20px}
+.exercise-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0 10px}
+.oneoff-card{width:100%;display:flex;align-items:center;gap:14px;text-align:left;margin-bottom:20px}
+.oneoff-card span{margin-bottom:0!important;font-size:24px}
 .activity-type-card{
   padding:16px 10px;border-radius:18px;border:1px solid var(--line);background:#111620;color:var(--text);text-align:left
 }

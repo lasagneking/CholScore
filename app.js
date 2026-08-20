@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "169"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "170"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -293,7 +293,7 @@ function renderToday(){
         </div>
         <div class="log-value">${fmt(x.sat)}g<br><small>sat fat</small></div>
       </div>`
-    :`<div class="log-item"><div><strong>${x.type==="run"?"🏃":x.type==="walk"?"🚶":x.type==="workout"?"🏋️":"⚡"} ${esc(x.name)}</strong><small>${x.minutes} min${x.distance?` · ${distanceText(x.distance)}`:""}${x.type==="workout"&&x.exerciseCount?` · ${x.exerciseCount} exercises`:""}</small></div><div class="log-value">${feelEmoji(x.feel)}</div></div>`
+    :`<div class="log-item"><div><strong>${x.type==="workout"?"🏋️":cardioIcon(x.type)} ${esc(x.name)}</strong><small>${x.minutes} min${x.distance?` · ${distanceText(x.distance)}`:""}${x.type==="workout"&&x.exerciseCount?` · ${x.exerciseCount} exercises`:""}</small></div><div class="log-value">${feelEmoji(x.feel)}</div></div>`
   ).join(""):"Nothing logged yet. Your first win starts here.";
   wireFoodCards();
   renderRewardBankCard();
@@ -466,7 +466,7 @@ function renderExercise(){
   renderProteinToday(day);
   renderRoutines();
   showActiveWorkoutBanner();
-  $("exerciseList").innerHTML=day.activities.length?day.activities.slice().reverse().map(x=>`<div class="log-item activity-log-item"><div><strong>${x.type==="run"?"🏃":x.type==="walk"?"🚶":x.type==="workout"?"🏋️":"⚡"} ${esc(x.name)}</strong><small>${x.type==="workout"?`${x.exerciseCount||0} exercises · `:""}${x.minutes} min${x.distance?` · ${distanceText(x.distance)}`:""}</small></div><div class="activity-log-right"><div class="log-value">${feelEmoji(x.feel)}</div><button type="button" class="activity-delete-btn" data-activity-id="${esc(x.id||"")}" aria-label="Delete this activity">🗑</button></div></div>`).join(""):`<div class="empty-state">No completed activity today.</div>`;
+  $("exerciseList").innerHTML=day.activities.length?day.activities.slice().reverse().map(x=>`<div class="log-item activity-log-item"><div><strong>${x.type==="workout"?"🏋️":cardioIcon(x.type)} ${esc(x.name)}</strong><small>${x.type==="workout"?`${x.exerciseCount||0} exercises · `:""}${x.minutes} min${x.distance?` · ${distanceText(x.distance)}`:""}</small></div><div class="activity-log-right"><div class="log-value">${feelEmoji(x.feel)}</div><button type="button" class="activity-delete-btn" data-activity-id="${esc(x.id||"")}" aria-label="Delete this activity">🗑</button></div></div>`).join(""):`<div class="empty-state">No completed activity today.</div>`;
   wireActivityCards();
   renderPersonalRecords();
 }
@@ -517,6 +517,22 @@ function showActiveWorkoutBanner(){
   $("activeWorkoutElapsed").textContent=`${elapsedMinutes(state.activeWorkout.startedAt)} min elapsed`;
 }
 
+/* Single source of truth for every cardio activity type — icon, label, verb,
+   and accent colour. Everywhere that needs to know about an activity type
+   (the quick-log dialog, personal records, achievements, Trends, the Day
+   Report, share images) reads from this registry rather than repeating its
+   own hardcoded walk/run-only list, which is what made adding new types
+   safe to do in one pass rather than a dozen easy-to-miss edits. */
+const CARDIO_TYPES={
+  walk:{label:"Walk",verb:"walked",icon:"🚶",color:"#1CCFA9"},
+  run:{label:"Run",verb:"ran",icon:"🏃",color:"#FF6452"},
+  swim:{label:"Swim",verb:"swam",icon:"🏊",color:"#6C5FFF"},
+  cycle:{label:"Cycle",verb:"cycled",icon:"🚴",color:"#FFB454"},
+  hike:{label:"Hike",verb:"hiked",icon:"🥾",color:"#1CCFA9"},
+  row:{label:"Row",verb:"rowed",icon:"🚣",color:"#FF6452"},
+};
+function cardioIcon(type){return CARDIO_TYPES[type]?.icon||"⚡";}
+function cardioLabel(type){return CARDIO_TYPES[type]?.label||"Activity";}
 const achievementDefs = [
   // Food
   {id:"food_first",cat:"food",icon:"🍎",title:"First Bite",desc:"Log your first food.",rarity:"COMMON",goal:1,metric:"foodEntries"},
@@ -624,6 +640,50 @@ const achievementDefs = [
   {id:"weekly_move_50",cat:"weekly",icon:"🚀",title:"Ultra Week",desc:"Walk and/or run 50 miles between Monday and Sunday.",rarity:"LEGEND",goal:50,metric:"weekMoveMiles"},
   {id:"walking_1000",cat:"walking",icon:"🌌",title:"Walk 1,000",desc:"Walk 1,000 miles in total — enough miles to make every pair of trainers nervous.",rarity:"MYTHIC",goal:1000,metric:"walkMiles"},
   {id:"running_1000",cat:"running",icon:"🌌",title:"Run 1,000",desc:"Run 1,000 miles in total — four figures earned one mile at a time.",rarity:"MYTHIC",goal:1000,metric:"runMiles"},
+  {id:"swim_half",cat:"swimming",icon:"🌊",title:"First Splash",desc:"Swim 0.5 miles in total.",rarity:"COMMON",goal:0.5,metric:"swimMiles"},
+  {id:"swim_1mi",cat:"swimming",icon:"🏊",title:"Mile Swimmer",desc:"Swim 1 mile in total.",rarity:"COMMON",goal:1,metric:"swimMiles"},
+  {id:"swim_5mi",cat:"swimming",icon:"🐬",title:"Fin Finder",desc:"Swim 5 miles in total.",rarity:"RARE",goal:5,metric:"swimMiles"},
+  {id:"swim_10mi",cat:"swimming",icon:"🐋",title:"Deep End",desc:"Swim 10 miles in total.",rarity:"RARE",goal:10,metric:"swimMiles"},
+  {id:"swim_20mi",cat:"swimming",icon:"🌀",title:"Current Rider",desc:"Swim 20 miles in total.",rarity:"EPIC",goal:20,metric:"swimMiles"},
+  {id:"swim_50mi",cat:"swimming",icon:"🏝️",title:"Channel Chaser",desc:"Swim 50 miles in total.",rarity:"LEGEND",goal:50,metric:"swimMiles"},
+  {id:"swim_100mi",cat:"swimming",icon:"🧊",title:"Ice Breaker",desc:"Swim 100 miles in total.",rarity:"LEGEND",goal:100,metric:"swimMiles"},
+  {id:"swim_200mi",cat:"swimming",icon:"🌌",title:"Two Hundred Lengths of the Sun",desc:"Swim 200 miles in total.",rarity:"MYTHIC",goal:200,metric:"swimMiles"},
+  {id:"week_swim_1",cat:"weekly",icon:"📅",title:"Swim Week",desc:"Swim 1 mile between Monday and Sunday.",rarity:"COMMON",goal:1,metric:"weekSwimMiles"},
+  {id:"week_swim_3",cat:"weekly",icon:"🌊",title:"Triple Dip",desc:"Swim 3 miles between Monday and Sunday.",rarity:"RARE",goal:3,metric:"weekSwimMiles"},
+  {id:"week_swim_6",cat:"weekly",icon:"🏆",title:"Six Mile Splash",desc:"Swim 6 miles between Monday and Sunday.",rarity:"EPIC",goal:6,metric:"weekSwimMiles"},
+  {id:"cycle_5mi",cat:"cycling",icon:"🚲",title:"First Spin",desc:"Cycle 5 miles in total.",rarity:"COMMON",goal:5,metric:"cycleMiles"},
+  {id:"cycle_15mi",cat:"cycling",icon:"🛞",title:"Rolling Start",desc:"Cycle 15 miles in total.",rarity:"COMMON",goal:15,metric:"cycleMiles"},
+  {id:"cycle_50mi",cat:"cycling",icon:"🌄",title:"Half Century Ride",desc:"Cycle 50 miles in total.",rarity:"RARE",goal:50,metric:"cycleMiles"},
+  {id:"cycle_100mi",cat:"cycling",icon:"💯",title:"Century Rider",desc:"Cycle 100 miles in total.",rarity:"RARE",goal:100,metric:"cycleMiles"},
+  {id:"cycle_250mi",cat:"cycling",icon:"🏔️",title:"Hill Hunter",desc:"Cycle 250 miles in total.",rarity:"EPIC",goal:250,metric:"cycleMiles"},
+  {id:"cycle_500mi",cat:"cycling",icon:"🚀",title:"Long Haul Cyclist",desc:"Cycle 500 miles in total.",rarity:"LEGEND",goal:500,metric:"cycleMiles"},
+  {id:"cycle_1000mi",cat:"cycling",icon:"⚡",title:"Thousand Mile Club",desc:"Cycle 1,000 miles in total.",rarity:"LEGEND",goal:1000,metric:"cycleMiles"},
+  {id:"cycle_2500mi",cat:"cycling",icon:"🌌",title:"Cross Country",desc:"Cycle 2,500 miles in total.",rarity:"MYTHIC",goal:2500,metric:"cycleMiles"},
+  {id:"week_cycle_15",cat:"weekly",icon:"📅",title:"Cycle Week",desc:"Cycle 15 miles between Monday and Sunday.",rarity:"COMMON",goal:15,metric:"weekCycleMiles"},
+  {id:"week_cycle_30",cat:"weekly",icon:"🌤️",title:"Thirty Mile Ride Week",desc:"Cycle 30 miles between Monday and Sunday.",rarity:"RARE",goal:30,metric:"weekCycleMiles"},
+  {id:"week_cycle_60",cat:"weekly",icon:"🏅",title:"Sixty Mile Week",desc:"Cycle 60 miles between Monday and Sunday.",rarity:"EPIC",goal:60,metric:"weekCycleMiles"},
+  {id:"hike_1mi",cat:"hiking",icon:"🌲",title:"First Trail",desc:"Hike 1 mile in total.",rarity:"COMMON",goal:1,metric:"hikeMiles"},
+  {id:"hike_5mi",cat:"hiking",icon:"🥾",title:"Trailblazer",desc:"Hike 5 miles in total.",rarity:"COMMON",goal:5,metric:"hikeMiles"},
+  {id:"hike_20mi",cat:"hiking",icon:"🧭",title:"Ridge Walker",desc:"Hike 20 miles in total.",rarity:"RARE",goal:20,metric:"hikeMiles"},
+  {id:"hike_50mi",cat:"hiking",icon:"⛰️",title:"Summit Seeker",desc:"Hike 50 miles in total.",rarity:"RARE",goal:50,metric:"hikeMiles"},
+  {id:"hike_100mi",cat:"hiking",icon:"🏔️",title:"Peak Bagger",desc:"Hike 100 miles in total.",rarity:"EPIC",goal:100,metric:"hikeMiles"},
+  {id:"hike_200mi",cat:"hiking",icon:"🗻",title:"Mountain Wanderer",desc:"Hike 200 miles in total.",rarity:"LEGEND",goal:200,metric:"hikeMiles"},
+  {id:"hike_400mi",cat:"hiking",icon:"🌄",title:"Highland Legend",desc:"Hike 400 miles in total.",rarity:"LEGEND",goal:400,metric:"hikeMiles"},
+  {id:"hike_750mi",cat:"hiking",icon:"🌌",title:"Long Trail Master",desc:"Hike 750 miles in total.",rarity:"MYTHIC",goal:750,metric:"hikeMiles"},
+  {id:"week_hike_5",cat:"weekly",icon:"📅",title:"Hike Week",desc:"Hike 5 miles between Monday and Sunday.",rarity:"COMMON",goal:5,metric:"weekHikeMiles"},
+  {id:"week_hike_10",cat:"weekly",icon:"🌤️",title:"Ten Mile Trail Week",desc:"Hike 10 miles between Monday and Sunday.",rarity:"RARE",goal:10,metric:"weekHikeMiles"},
+  {id:"week_hike_15",cat:"weekly",icon:"🏅",title:"Fifteen Mile Ridge Week",desc:"Hike 15 miles between Monday and Sunday.",rarity:"EPIC",goal:15,metric:"weekHikeMiles"},
+  {id:"row_1mi",cat:"rowing",icon:"🚣",title:"First Stroke",desc:"Row 1 mile in total.",rarity:"COMMON",goal:1,metric:"rowMiles"},
+  {id:"row_5mi",cat:"rowing",icon:"💧",title:"Five Mile Pull",desc:"Row 5 miles in total.",rarity:"COMMON",goal:5,metric:"rowMiles"},
+  {id:"row_25mi",cat:"rowing",icon:"🌊",title:"Steady Stroke",desc:"Row 25 miles in total.",rarity:"RARE",goal:25,metric:"rowMiles"},
+  {id:"row_50mi",cat:"rowing",icon:"🏁",title:"Half Century Row",desc:"Row 50 miles in total.",rarity:"RARE",goal:50,metric:"rowMiles"},
+  {id:"row_100mi",cat:"rowing",icon:"💯",title:"Hundred Mile Rower",desc:"Row 100 miles in total.",rarity:"EPIC",goal:100,metric:"rowMiles"},
+  {id:"row_250mi",cat:"rowing",icon:"🔥",title:"Engine Room",desc:"Row 250 miles in total.",rarity:"LEGEND",goal:250,metric:"rowMiles"},
+  {id:"row_500mi",cat:"rowing",icon:"🚀",title:"Distance Rower",desc:"Row 500 miles in total.",rarity:"LEGEND",goal:500,metric:"rowMiles"},
+  {id:"row_1000mi",cat:"rowing",icon:"🌌",title:"Thousand Mile Rower",desc:"Row 1,000 miles in total.",rarity:"MYTHIC",goal:1000,metric:"rowMiles"},
+  {id:"week_row_5",cat:"weekly",icon:"📅",title:"Row Week",desc:"Row 5 miles between Monday and Sunday.",rarity:"COMMON",goal:5,metric:"weekRowMiles"},
+  {id:"week_row_10",cat:"weekly",icon:"🌤️",title:"Ten Mile Row Week",desc:"Row 10 miles between Monday and Sunday.",rarity:"RARE",goal:10,metric:"weekRowMiles"},
+  {id:"week_row_20",cat:"weekly",icon:"🏅",title:"Twenty Mile Row Week",desc:"Row 20 miles between Monday and Sunday.",rarity:"EPIC",goal:20,metric:"weekRowMiles"},
   {id:"workout_500",cat:"workout",icon:"🌌",title:"Workout 500",desc:"Complete 500 workouts — showing up has officially become a superpower.",rarity:"MYTHIC",goal:500,metric:"workouts"},
   {id:"workout_sets_5000",cat:"workout",icon:"🌌",title:"Set 5,000",desc:"Log 5,000 completed workout sets.",rarity:"MYTHIC",goal:5000,metric:"completedSets"},
   {id:"food_ontarget_250",cat:"food",icon:"🌌",title:"Target 250",desc:"Check out within target on 250 days.",rarity:"MYTHIC",goal:250,metric:"onTargetDays"},
@@ -635,19 +695,22 @@ const achievementDefs = [
 
 const rewardCategories = [
   ["all","All"],["food","Food"],["workout","Workout"],["walking","Walking"],
-  ["running","Running"],["weekly","This Week"],["consistency","Consistency"],["score","CholScore"]
+  ["running","Running"],["swimming","Swimming"],["cycling","Cycling"],["hiking","Hiking"],
+  ["rowing","Rowing"],["weekly","This Week"],["consistency","Consistency"],["score","CholScore"]
 ];
 
 function achievementMetrics(){
-  let foodEntries=0,scannedFoods=0,onTargetDays=0,workouts=0,completedSets=0,walks=0,runs=0;
-  let walkMiles=0,runMiles=0,checkouts=0,score70Days=0,score80Days=0,score90Days=0,totalPoints=0;
+  let foodEntries=0,scannedFoods=0,onTargetDays=0,workouts=0,completedSets=0;
+  let checkouts=0,score70Days=0,score80Days=0,score90Days=0,totalPoints=0;
   let totalWeightLifted=0;
   const checkedDates=[];
   let firstDayKey=null;
 
   const monday=mondayKeyFor(new Date());
-  let weekWalkMiles=0,weekRunMiles=0,weekWorkouts=0;
+  let weekWorkouts=0;
   const workoutWeeksSeen=new Set();
+  const cardioMiles={},weekCardioMiles={},cardioSessions={};
+  for(const t in CARDIO_TYPES){cardioMiles[t]=0;weekCardioMiles[t]=0;cardioSessions[t]=0;}
 
   for(const [key,day] of Object.entries(state.days)){
     if(firstDayKey===null||key<firstDayKey) firstDayKey=key;
@@ -661,16 +724,11 @@ function achievementMetrics(){
         totalWeightLifted += Number(a.totalWeight||0); // already computed once via workoutVolume() at save time
         if(key>=monday) weekWorkouts++;
         workoutWeeksSeen.add(mondayKeyFor(new Date(key+"T12:00:00")));
-      }else if(a.type==="walk"){
-        walks++;
+      }else if(cardioMiles[a.type]!==undefined){
+        cardioSessions[a.type]++;
         const dist=achievementDistanceValue(Number(a.distance||0));
-        walkMiles += dist;
-        if(key>=monday) weekWalkMiles += dist;
-      }else if(a.type==="run"){
-        runs++;
-        const dist=achievementDistanceValue(Number(a.distance||0));
-        runMiles += dist;
-        if(key>=monday) weekRunMiles += dist;
+        cardioMiles[a.type] += dist;
+        if(key>=monday) weekCardioMiles[a.type] += dist;
       }
     }
 
@@ -715,11 +773,18 @@ function achievementMetrics(){
   const daysSinceFirstLog=firstDayKey?Math.floor((new Date(todayKey()+"T12:00:00")-new Date(firstDayKey+"T12:00:00"))/86400000):0;
 
   return {
-    foodEntries,scannedFoods,onTargetDays,workouts,completedSets,walks,runs,
-    walkMiles,runMiles,weekWalkMiles,weekRunMiles,weekMoveMiles:weekWalkMiles+weekRunMiles,
+    foodEntries,scannedFoods,onTargetDays,workouts,completedSets,
+    walks:cardioSessions.walk,runs:cardioSessions.run,swims:cardioSessions.swim,
+    cycles:cardioSessions.cycle,hikes:cardioSessions.hike,rows:cardioSessions.row,
+    walkMiles:cardioMiles.walk,runMiles:cardioMiles.run,swimMiles:cardioMiles.swim,
+    cycleMiles:cardioMiles.cycle,hikeMiles:cardioMiles.hike,rowMiles:cardioMiles.row,
+    weekWalkMiles:weekCardioMiles.walk,weekRunMiles:weekCardioMiles.run,weekSwimMiles:weekCardioMiles.swim,
+    weekCycleMiles:weekCardioMiles.cycle,weekHikeMiles:weekCardioMiles.hike,weekRowMiles:weekCardioMiles.row,
+    weekMoveMiles:weekCardioMiles.walk+weekCardioMiles.run, // deliberately walk+run only — matches the achievements' own "walk and/or run" wording
+    totalMoveMiles:cardioMiles.walk+cardioMiles.run,
     checkouts,bestStreak,score70Days,score80Days,score90Days,totalPoints,
     totalWeightLifted,routines,prCount,daysSinceFirstLog,
-    weekWorkouts,distinctWorkoutWeeks:workoutWeeksSeen.size,totalMoveMiles:walkMiles+runMiles
+    weekWorkouts,distinctWorkoutWeeks:workoutWeeksSeen.size
   };
 }
 
@@ -752,7 +817,8 @@ function renderPersonalRecords(){
   Object.entries(recs.timed).sort((a,b)=>b[1].seconds-a[1].seconds).forEach(([name,r])=>{
     rows.push(`<div class="pr-row"><span class="pr-row-icon">⏱️</span><div class="pr-row-main"><strong>${esc(name)}</strong><small>Longest hold</small></div><div class="pr-row-value"><b>${formatExerciseSeconds(r.seconds)}</b><small>${fmtDate(r.date)}</small></div></div>`);
   });
-  [["walk","🚶","Walk"],["run","🏃","Run"]].forEach(([type,icon,label])=>{
+  for(const type in CARDIO_TYPES){
+    const icon=CARDIO_TYPES[type].icon,label=CARDIO_TYPES[type].label;
     const bucket=recs.cardio[type];
     if(bucket.longestKm>0){
       rows.push(`<div class="pr-row"><span class="pr-row-icon">${icon}</span><div class="pr-row-main"><strong>${label}</strong><small>Longest distance</small></div><div class="pr-row-value"><b>${kmToDisplay(bucket.longestKm).toFixed(1)} ${unit}</b><small>${fmtDate(bucket.dateForDistance)}</small></div></div>`);
@@ -762,7 +828,7 @@ function renderPersonalRecords(){
       const paceDisplay=formatPace(reconstructedMinutes,kmToDisplay(bucket.paceDistanceKm));
       if(paceDisplay)rows.push(`<div class="pr-row"><span class="pr-row-icon">${icon}</span><div class="pr-row-main"><strong>${label}</strong><small>Fastest pace</small></div><div class="pr-row-value"><b>${paceDisplay}/${unit}</b><small>${fmtDate(bucket.dateForPace)}</small></div></div>`);
     }
-  });
+  }
 
   $("prList").innerHTML=rows.length?rows.join(""):`<p class="pr-empty">Complete a weighted or timed exercise, or log a walk/run, to start setting personal records.</p>`;
 }
@@ -956,11 +1022,12 @@ function renderStrengthTrend(){
     : `Holding steady at ${fmtVal(last)} since ${firstDateNice}.`;
 }
 function buildCardioSeries(){
-  const map={walk:{points:[]},run:{points:[]}};
+  const map={};
+  for(const t in CARDIO_TYPES)map[t]={points:[]};
   for(const dayKey of Object.keys(state.days||{}).sort()){
     const day=state.days[dayKey];
     for(const act of day.activities||[]){
-      if(act.type!=="walk"&&act.type!=="run")continue;
+      if(!map[act.type])continue;
       const distanceKm=Number(act.distance||0),minutes=Number(act.minutes||0);
       if(distanceKm>0&&minutes>0)map[act.type].points.push({date:dayKey,paceDisplay:minutes/kmToDisplay(distanceKm)});
     }
@@ -969,12 +1036,12 @@ function buildCardioSeries(){
 }
 function renderCardioTrend(){
   const series=buildCardioSeries();
-  const types=["walk","run"].filter(t=>series[t].points.length>=2);
+  const types=Object.keys(CARDIO_TYPES).filter(t=>series[t].points.length>=2);
   const emptyEl=$("cardioEmptyState"),bodyEl=$("cardioTrendBody");
   if(!types.length){emptyEl.classList.remove("hidden");bodyEl.classList.add("hidden");return;}
   emptyEl.classList.add("hidden");bodyEl.classList.remove("hidden");
   if(!trendsCardioType||!types.includes(trendsCardioType))trendsCardioType=types[0];
-  $("cardioPicker").innerHTML=types.map(t=>`<button type="button" class="exercise-chip${t===trendsCardioType?" active":""}" data-type="${t}">${t==="run"?"🏃 Run":"🚶 Walk"}</button>`).join("");
+  $("cardioPicker").innerHTML=types.map(t=>`<button type="button" class="exercise-chip${t===trendsCardioType?" active":""}" data-type="${t}">${cardioIcon(t)} ${cardioLabel(t)}</button>`).join("");
   qsa(".exercise-chip",$("cardioPicker")).forEach(chip=>chip.addEventListener("click",()=>{trendsCardioType=chip.dataset.type;renderCardioTrend();}));
 
   const pts=series[trendsCardioType].points,unit=distanceUnit(),dateKeys=pts.map(p=>p.date);
@@ -1020,7 +1087,7 @@ function weekSummary(mondayKey,records){
     minutes+=t.mins;
     for(const a of day.activities||[]){
       if(a.type==="workout"){workouts++;weightLifted+=Number(a.totalWeight||0);}
-      else if(a.type==="walk"||a.type==="run"){distanceKm+=Number(a.distance||0);}
+      else if(CARDIO_TYPES[a.type]){distanceKm+=Number(a.distance||0);}
     }
     if(day.foods?.length&&t.sat<=target)daysUnder++;
     rewardPoints+=dailyBankPoints(day);
@@ -1094,7 +1161,7 @@ function renderWeekReportCardHTML(summary,name){
         <div class="report-stat-card green"><span>Weight lifted</span><strong>${fmt(summary.weightLifted)}</strong><small>kg total volume</small></div>
         <div class="report-stat-card violet"><span>Workouts</span><strong>${summary.workouts}</strong><small>sessions completed</small></div>
         <div class="report-stat-card"><span>On target</span><strong>${summary.daysUnder}/${summary.daysTotal}</strong><small>days under sat fat limit</small></div>
-        <div class="report-stat-card amber full-width"><span>Total distance</span><strong>${displayDistance} ${unit}</strong><small>walked or run</small></div>
+        <div class="report-stat-card amber full-width"><span>Total distance</span><strong>${displayDistance} ${unit}</strong><small>across all activities</small></div>
       </div>
     </div>`;
 }
@@ -1138,7 +1205,7 @@ function renderMonthReportCardHTML(name,records){
         <div class="report-stat-card green"><span>Weight lifted</span><strong>${fmt(totalWeight)}</strong><small>kg total volume</small></div>
         <div class="report-stat-card"><span>On target</span><strong>${totalDaysUnder}/${totalDaysElapsed}</strong><small>days under sat fat limit</small></div>
         <div class="report-stat-card violet"><span>Best week</span><strong>${fmtInt(bestWeek.minutes)}</strong><small>min, ${esc(weekLabel(bestWeek.mondayKey))}</small></div>
-        <div class="report-stat-card amber full-width"><span>Total distance</span><strong>${displayDistance} ${unit}</strong><small>walked or run</small></div>
+        <div class="report-stat-card amber full-width"><span>Total distance</span><strong>${displayDistance} ${unit}</strong><small>across all activities</small></div>
       </div>
       <div class="report-week-breakdown">${weekRows}</div>
     </div>`;
@@ -1225,10 +1292,10 @@ function repCardioSectionHTML(cardio,dayKey,records){
   if(!cardio.length)return `<div class="rep-section reveal"><div class="rep-section-head"><div class="rep-section-bar"></div><h2>Cardio</h2></div><p class="rep-empty">No cardio logged this day.</p></div>`;
   const unit=distanceUnit();
   const rows=cardio.map(a=>{
-    const icon=a.type==="run"?"🏃":a.type==="walk"?"🚶":"⚡";
+    const icon=cardioIcon(a.type);
     const displayDist=a.distance>0?Number(kmToDisplay(a.distance).toFixed(1)):0;
     const pace=displayDist>0?formatPace(a.minutes,displayDist):null;
-    const label=a.name||(a.type==="run"?"Run":a.type==="walk"?"Walk":"Activity");
+    const label=a.name||cardioLabel(a.type);
     const bucket=records?.cardio?.[a.type];
     const distanceKm=Number(a.distance||0);
     const isDistPR=!!(bucket&&bucket.dateForDistance===dayKey&&distanceKm>0&&bucket.longestKm===distanceKm);
@@ -2238,7 +2305,8 @@ function stopTimedSet(ei,si){
    simple direct comparison — no self-exclusion needed. */
 function countGenuinePRs(){
   const strengthHistory={},timedHistory={};
-  const walkDist=[],walkPace=[],runDist=[],runPace=[];
+  const cardioDist={},cardioPace={};
+  for(const t in CARDIO_TYPES){cardioDist[t]=[];cardioPace[t]=[];}
 
   const dayKeys=Object.keys(state.days||{}).sort();
   for(const dayKey of dayKeys){
@@ -2255,10 +2323,10 @@ function countGenuinePRs(){
             if(weight>0)(strengthHistory[name]=strengthHistory[name]||[]).push(weight);
           }
         }
-      }else if(act.type==="walk"||act.type==="run"){
+      }else if(cardioDist[act.type]){
         const distanceKm=Number(act.distance||0),minutes=Number(act.minutes||0);
-        (act.type==="walk"?walkDist:runDist).push(...(distanceKm>0?[distanceKm]:[]));
-        if(distanceKm>0&&minutes>0)(act.type==="walk"?walkPace:runPace).push(minutes/distanceKm);
+        if(distanceKm>0)cardioDist[act.type].push(distanceKm);
+        if(distanceKm>0&&minutes>0)cardioPace[act.type].push(minutes/distanceKm);
       }
     }
   }
@@ -2276,18 +2344,16 @@ function countGenuinePRs(){
   let count=0;
   for(const name in strengthHistory)count+=countImprovements(strengthHistory[name],true);
   for(const name in timedHistory)count+=countImprovements(timedHistory[name],true);
-  count+=countImprovements(walkDist,true);
-  count+=countImprovements(walkPace,false); // lower pace = faster = better
-  count+=countImprovements(runDist,true);
-  count+=countImprovements(runPace,false);
+  for(const t in CARDIO_TYPES){
+    count+=countImprovements(cardioDist[t],true);
+    count+=countImprovements(cardioPace[t],false); // lower pace = faster = better
+  }
   return count;
 }
 function computePersonalRecords(){
   const strength={},timed={};
-  const cardio={
-    walk:{bestPaceMinPerKm:null,paceDistanceKm:0,longestKm:0,dateForPace:null,dateForDistance:null},
-    run:{bestPaceMinPerKm:null,paceDistanceKm:0,longestKm:0,dateForPace:null,dateForDistance:null}
-  };
+  const cardio={};
+  for(const t in CARDIO_TYPES)cardio[t]={bestPaceMinPerKm:null,paceDistanceKm:0,longestKm:0,dateForPace:null,dateForDistance:null};
   for(const [dayKey,day] of Object.entries(state.days||{})){
     for(const act of day.activities||[]){
       if(act.type==="workout"){
@@ -2301,7 +2367,7 @@ function computePersonalRecords(){
             if(weight>0&&(!strength[name]||weight>strength[name].weight))strength[name]={weight,date:dayKey};
           }
         }
-      }else if(act.type==="walk"||act.type==="run"){
+      }else if(cardio[act.type]){
         const bucket=cardio[act.type];
         const distanceKm=Number(act.distance||0),minutes=Number(act.minutes||0);
         if(distanceKm>bucket.longestKm){bucket.longestKm=distanceKm;bucket.dateForDistance=dayKey;}
@@ -2329,9 +2395,9 @@ function checkExercisePR(ex){
   return[];
 }
 function checkCardioPR(type,minutes,distanceKm){
-  if(type!=="walk"&&type!=="run")return[];
+  if(!CARDIO_TYPES[type])return[];
   const prior=computePersonalRecords().cardio[type];
-  const unit=distanceUnit(),badges=[],label=type==="run"?"run":"walk";
+  const unit=distanceUnit(),badges=[],label=CARDIO_TYPES[type].label.toLowerCase();
   const displayDist=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
   if(distanceKm>0&&distanceKm>(prior.longestKm||0))badges.push(`New PR — longest ${label}: ${displayDist} ${unit}`);
   if(distanceKm>0&&minutes>0){
@@ -2490,7 +2556,7 @@ $("saveFinishedWorkout").addEventListener("click",()=>{
 /* Quick activities */
 qsa(".quick-activity").forEach(btn=>btn.addEventListener("click",()=>{
   $("activityType").value=btn.dataset.type;
-  $("activityName").value=btn.dataset.type==="walk"?"Walk":btn.dataset.type==="run"?"Run":"";
+  $("activityName").value=CARDIO_TYPES[btn.dataset.type]?.label||"";
   $("exerciseDialog").showModal();
 }));
 qsa("#quickFeelingRow button").forEach(btn=>btn.addEventListener("click",()=>{
@@ -2513,15 +2579,16 @@ function formatPace(minutes,displayDistance){
 const activityFeelWord={1:"rough",2:"a bit tough",3:"steady",4:"good",5:"great"};
 let lastActivityShareData=null;
 function showActivityCompleteCard(type,minutes,distanceKm,feel,prBadges=[]){
-  lastActivityShareData={type,minutes,distanceKm,prBadges};
-  const isWalk=type==="walk",unit=distanceUnit();
+  lastActivityShareData={type,minutes,distanceKm,feel,prBadges};
+  const meta=CARDIO_TYPES[type]||{label:"Activity",verb:"trained",icon:"⚡"};
+  const unit=distanceUnit();
   const displayDistance=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
   const pace=formatPace(minutes,displayDistance);
-  $("acmTypeBadge").textContent=isWalk?"🚶":"🏃";
-  $("acmEyebrow").textContent=isWalk?"WALK COMPLETE":"RUN COMPLETE";
+  $("acmTypeBadge").textContent=meta.icon;
+  $("acmEyebrow").textContent=`${meta.label.toUpperCase()} COMPLETE`;
   $("acmTitle").textContent=`Great work, ${state.profile.name}!`;
   renderPrBadges("acmPrBadges",prBadges);
-  const verb=isWalk?"walked":"ran";
+  const verb=meta.verb;
   $("acmMessage").innerHTML=displayDistance>0
     ? `You ${verb} <strong>${displayDistance} ${unit}</strong> in <strong>${formatActivityDuration(minutes)}</strong>${pace?` — averaging a <strong>${pace}/${unit}</strong> pace`:""}. Feeling ${activityFeelWord[feel]||"steady"} ${feelEmoji(feel)}`
     : `You ${verb} for <strong>${formatActivityDuration(minutes)}</strong> today. Nice work staying active. ${feelEmoji(feel)}`;
@@ -2538,13 +2605,13 @@ function showActivityCompleteCard(type,minutes,distanceKm,feel,prBadges=[]){
 $("closeActivityComplete").addEventListener("click",()=>$("activityCompleteDialog").close());
 $("shareActivityBtn").addEventListener("click",async()=>{
   if(!lastActivityShareData)return;
-  const{type,minutes,distanceKm,prBadges}=lastActivityShareData;
+  const{type,minutes,distanceKm,feel,prBadges}=lastActivityShareData;
   const unit=distanceUnit(),displayDistance=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
   const text=`Just finished a ${type} on CholScore — ${displayDistance>0?`${displayDistance}${unit}, `:""}${formatActivityDuration(minutes)}. 💪`;
   const btn=$("shareActivityBtn"),original=btn.textContent;
   btn.textContent="Preparing image…";
   try{
-    const blob=await generateActivityShareImageBlob(type,minutes,distanceKm,prBadges);
+    const blob=await generateActivityShareImageBlob(type,minutes,distanceKm,feel,prBadges);
     const file=new File([blob],`cholscore-${type}.png`,{type:"image/png"});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
       btn.textContent=original;
@@ -2577,8 +2644,7 @@ $("exerciseForm").addEventListener("submit",e=>{
   ensureDay().activities.push({id:id(),name,start,finish,type,minutes,distance,feel,created:Date.now()});
   state.achievements.firstMove=true;saveState();$("exerciseDialog").close();e.target.reset();selectedFeeling=3;
   qsa("#quickFeelingRow button").forEach(x=>x.classList.toggle("selected",x.dataset.feel==="3"));renderAll();
-  if(type==="walk"||type==="run") setTimeout(()=>showActivityCompleteCard(type,minutes,distance,feel,prBadges),70);
-  else setTimeout(()=>alert(`Great work, ${state.profile.name}! ${minutes} minutes completed. ${feelEmoji(feel)}`),70);
+  setTimeout(()=>showActivityCompleteCard(type,minutes,distance,feel,prBadges),70);
 });
 
 
@@ -3101,7 +3167,11 @@ async function generateWorkoutShareImageBlob(){
    of where the text actually sits), not eyeballed. Card order follows what's
    actually printed on the template — Duration, Distance, Pace — which is a
    different order than the reference example image happened to show. */
-async function generateActivityShareImageBlob(type,minutes,distanceKm,prBadges){
+async function generateActivityShareImageBlob(type,minutes,distanceKm,feel,prBadges){
+  if(type==="walk"||type==="run")return generatePhotoTemplateShareImageBlob(type,minutes,distanceKm,prBadges);
+  return generateCanvasCardShareImageBlob(type,minutes,distanceKm,feel,prBadges);
+}
+async function generatePhotoTemplateShareImageBlob(type,minutes,distanceKm,prBadges){
   const isWalk=type==="walk",unit=distanceUnit();
   const name=state.profile?.name||"there";
   const displayDistance=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
@@ -3131,6 +3201,92 @@ async function generateActivityShareImageBlob(type,minutes,distanceKm,prBadges){
   ctx.fillText("A major milestone! 🎉",cardX[0],826);
   ctx.fillText(displayDistance>0?(hasDistancePR?"A new personal best!":"That's a lot of ground!"):"Every session counts",cardX[1],826);
   ctx.fillText(pace?(hasPacePR?"A new personal best!":"Nice and steady."):"Log distance for pace",cardX[2],826);
+
+  return new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+}
+/* v1.28.0 — Swim/Cycle/Hike/Row/one-off share images. No pre-built photo
+   template exists for these (unlike walk/run's genuine template images), so
+   this draws the whole card on canvas instead, matching the app's own
+   premium redesign — gradient background in the activity's own registry
+   colour, a glowing icon badge, Space Grotesk for headlines, JetBrains Mono
+   for the stat numbers. Explicitly waits on document.fonts.ready first,
+   since canvas text doesn't wait for webfonts to finish loading on its own
+   — skipping that would risk silently drawing in the system-font fallback
+   on a first, fast share right after opening the app. */
+async function generateCanvasCardShareImageBlob(type,minutes,distanceKm,feel,prBadges){
+  try{await document.fonts.ready;}catch(e){/* proceed with whatever's loaded */}
+  const meta=CARDIO_TYPES[type]||{label:"Activity",verb:"trained",icon:"⚡",color:"#1CCFA9"};
+  const name=state.profile?.name||"there";
+  const unit=distanceUnit();
+  const displayDistance=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
+  const pace=displayDistance>0?formatPace(minutes,displayDistance):"";
+  const hasPacePR=prBadges.some(b=>b.toLowerCase().includes("pace"));
+  const hasDistancePR=prBadges.some(b=>b.toLowerCase().includes("longest"));
+
+  const W=1008,H=1046;
+  const canvas=document.createElement("canvas");canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext("2d");
+
+  // Base + ambient glow, matching the app's own background treatment
+  ctx.fillStyle="#0A0A0F";ctx.fillRect(0,0,W,H);
+  const glow1=ctx.createRadialGradient(W*0.85,H*0.08,0,W*0.85,H*0.08,W*0.55);
+  glow1.addColorStop(0,meta.color+"55");glow1.addColorStop(1,meta.color+"00");
+  ctx.fillStyle=glow1;ctx.fillRect(0,0,W,H);
+  const glow2=ctx.createRadialGradient(W*0.1,H*0.95,0,W*0.1,H*0.95,W*0.6);
+  glow2.addColorStop(0,"#6C5FFF40");glow2.addColorStop(1,"#6C5FFF00");
+  ctx.fillStyle=glow2;ctx.fillRect(0,0,W,H);
+
+  // Icon badge
+  ctx.save();
+  ctx.shadowColor=meta.color;ctx.shadowBlur=60;
+  ctx.beginPath();ctx.arc(W/2,270,110,0,Math.PI*2);
+  ctx.fillStyle=meta.color+"22";ctx.fill();
+  ctx.lineWidth=3;ctx.strokeStyle=meta.color;ctx.stroke();
+  ctx.restore();
+  ctx.font="120px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText(meta.icon,W/2,278);
+  ctx.textBaseline="alphabetic";
+
+  ctx.fillStyle="#8D93A6";ctx.font="700 26px 'Inter',sans-serif";
+  ctx.fillText(`${meta.label.toUpperCase()} COMPLETE`,W/2,448);
+
+  ctx.fillStyle="#F6F3EF";ctx.font="800 52px 'Space Grotesk',sans-serif";
+  ctx.fillText(`Great work, ${name}!`,W/2,522);
+  ctx.font="700 36px 'Space Grotesk',sans-serif";
+  ctx.fillStyle=meta.color;
+  ctx.fillText(hasPacePR||hasDistancePR?"You hit a new PR today! 💪":`Great ${meta.label.toLowerCase()} today! 💪`,W/2,574);
+
+  const hasDist=displayDistance>0;
+  const cards=hasDist?[
+    {label:"DURATION",value:formatActivityDuration(minutes)},
+    {label:"DISTANCE",value:`${displayDistance} ${unit}`},
+    {label:"PACE",value:pace?`${pace}/${unit}`:"—"},
+  ]:[
+    {label:"DURATION",value:formatActivityDuration(minutes)},
+    {label:"FEELING",value:feelEmoji(feel||3)},
+  ];
+  const cardY=700,cardH=220,cardW=(W-140-(cards.length-1)*24)/cards.length;
+  cards.forEach((c,i)=>{
+    const x=70+i*(cardW+24);
+    ctx.fillStyle="rgba(255,255,255,.045)";
+    roundRectPath(ctx,x,cardY,cardW,cardH,20);ctx.fill();
+    ctx.strokeStyle="rgba(255,255,255,.09)";ctx.lineWidth=1.5;
+    roundRectPath(ctx,x,cardY,cardW,cardH,20);ctx.stroke();
+    ctx.fillStyle="#8D93A6";ctx.font="700 20px 'Inter',sans-serif";ctx.textAlign="center";
+    ctx.fillText(c.label,x+cardW/2,cardY+56);
+    ctx.fillStyle="#F6F3EF";ctx.font="700 40px 'JetBrains Mono',monospace";
+    ctx.fillText(c.value,x+cardW/2,cardY+118);
+    let sub="Every session counts";
+    if(i===1&&hasDist)sub=hasDistancePR?"New personal best! 🏆":"Nice distance.";
+    if(i===2&&hasDist)sub=pace?(hasPacePR?"New personal best! 🏆":"Steady pace."):"Log distance for pace";
+    if(!hasDist&&i===0)sub="Time well spent";
+    if(!hasDist&&i===1)sub=(feel||3)>=4?"Feeling strong":(feel||3)<=2?"Showing up matters":"Steady effort";
+    ctx.fillStyle="#8D93A6";ctx.font="500 18px 'Inter',sans-serif";
+    ctx.fillText(sub,x+cardW/2,cardY+160);
+  });
+
+  ctx.fillStyle="#8D93A6";ctx.font="700 22px 'Space Grotesk',sans-serif";
+  ctx.fillText("CHOLSCORE",W/2,H-50);
 
   return new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
 }

@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=169" />
+  <link rel="stylesheet" href="styles.css?v=170" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -267,8 +267,12 @@
           <div class="exercise-actions">
             <button class="activity-type-card quick-activity" data-type="walk"><span>🚶</span><strong>Walk</strong><small>Log a walk</small></button>
             <button class="activity-type-card quick-activity" data-type="run"><span>🏃</span><strong>Run</strong><small>Log a run</small></button>
-            <button class="activity-type-card quick-activity" data-type="oneoff"><span>⚡</span><strong>One-off</strong><small>Log other exercise</small></button>
+            <button class="activity-type-card quick-activity" data-type="swim"><span>🏊</span><strong>Swim</strong><small>Log a swim</small></button>
+            <button class="activity-type-card quick-activity" data-type="cycle"><span>🚴</span><strong>Cycle</strong><small>Log a ride</small></button>
+            <button class="activity-type-card quick-activity" data-type="hike"><span>🥾</span><strong>Hike</strong><small>Log a hike</small></button>
+            <button class="activity-type-card quick-activity" data-type="row"><span>🚣</span><strong>Row</strong><small>Log a row</small></button>
           </div>
+          <button class="activity-type-card quick-activity oneoff-card" data-type="oneoff"><span>⚡</span><strong>One-off exercise</strong><small>Anything else — yoga, sports, a class</small></button>
         </section>
 
         <section class="section-block">
@@ -424,7 +428,7 @@
     <form method="dialog" id="exerciseForm">
       <div class="modal-head"><h3>Log quick activity</h3><button type="button" data-close-dialog="exerciseDialog" aria-label="Cancel">×</button></div>
       <label>Activity
-        <select id="activityType"><option value="walk">Walk</option><option value="run">Run</option><option value="oneoff">One-off exercise</option></select>
+        <select id="activityType"><option value="walk">Walk</option><option value="run">Run</option><option value="swim">Swim</option><option value="cycle">Cycle</option><option value="hike">Hike</option><option value="row">Row</option><option value="oneoff">One-off exercise</option></select>
       </label>
       <label>Name<input id="activityName" required placeholder="e.g. Evening walk" /></label>
       <div class="two-col">
@@ -518,7 +522,7 @@
     <p id="finishWorkoutSummary" class="workout-celebration-message premium-subtitle"></p>
 
     <div class="premium-athlete premium-athlete-image" aria-hidden="true">
-      <img src="workout-victory-silhouette.png?v=169" alt="" />
+      <img src="workout-victory-silhouette.png?v=170" alt="" />
     </div>
 
     <div class="workout-result-grid premium-result-grid">
@@ -894,7 +898,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=169"></script>
+  <script src="app.js?v=170"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

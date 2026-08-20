@@ -1,4 +1,4 @@
-CholScore v1.27.2 - Fixed ring pulse not animating at all on iPhone (Safari filter bug)
+CholScore v1.28.0 - Full support for Swim/Cycle/Hike/Row: PRs, achievements, share images
 
 # CholScore v0.8.5 — Cache + Delete Hotfix
 
@@ -38,6 +38,76 @@ No new features.
 - Cancelling discards only the unfinished workout; the saved routine remains unchanged.
 - Cancelled workouts are not written to History.
 - service-worker cache version bumped to `cholscore-v091`.
+
+## v1.28.0 full support for Swim/Cycle/Hike/Row: PRs, achievements, share images
+Requested as "full treatment" — the same depth of integration Walk and Run
+already had, not just four more dropdown options. Checked the scope honestly
+before starting: Walk/Run turned out to be wired into 18+ places (personal
+records, achievement metrics, Trends, the Day Report, custom share images),
+so this became a genuine architectural pass, not a quick addition.
+
+- **One canonical `CARDIO_TYPES` registry** (icon, label, verb, colour) added
+  as the single source of truth. Every place that needed to know about
+  activity types — the dialog, personal records, achievements, Trends, the
+  Day Report, share images — now reads from it instead of repeating its own
+  hardcoded walk/run list, which is what made this safe to do in one
+  coordinated pass rather than a dozen easy-to-miss edits.
+- Refactored the three core data functions (`computePersonalRecords()`,
+  `countGenuinePRs()`, `achievementMetrics()`) to loop generically over every
+  registered type. Caught a real mistake mid-refactor: an early pass
+  accidentally dropped the `walks`/`runs` session-count metrics entirely,
+  which would have silently broken two existing achievements. Fixed before
+  moving on.
+- **44 new achievements** for Swimming, Cycling, Hiking, and Rowing (11 tiers
+  each, matching Walk/Run's own structure) — 144 total, up from 100.
+  Thresholds are calibrated per activity rather than copied from Walk/Run
+  wholesale: a mile of swimming and a mile of cycling represent very
+  different effort, so cycling's tiers run much higher and swimming's much
+  lower. Caught and fixed a real duplicate title ("Thirty Mile Week"
+  collided with an existing achievement) before it shipped.
+- Deliberately kept `weekMoveMiles`/`totalMoveMiles` (the "Round The World
+  Starter" style achievements) walk+run only — their descriptions explicitly
+  say "walk and/or run," so folding cycling distance in there silently would
+  make an achievement claim something it doesn't actually check.
+- Quick Activity dialog: 6 cardio types in a balanced 2-row grid, with
+  One-off as a distinct full-width option below it (conceptually different —
+  no dedicated PR tracking) rather than a cramped 7-card row.
+- **Real PR detection verified two ways, not just "looks plausible"**: proved
+  a genuine improvement correctly triggers a PR badge, and separately proved
+  a slower/shorter attempt correctly triggers nothing — the harder and more
+  important case, since a false positive there would be a real trust
+  problem, not just a cosmetic one.
+- Found a second real gap while testing, not just the achievement
+  definitions themselves: the Rewards screen's category filter tabs turned
+  out to be a *separate* hardcoded list that never got the new categories
+  added. The achievements existed and were correctly tagged, but nothing let
+  you actually filter to see them. Fixed and confirmed the Swimming tab now
+  shows exactly its 8 achievements.
+- **New canvas-drawn share images** for Swim/Cycle/Hike/Row and One-off —
+  Walk/Run keep their existing photo-template files completely untouched.
+  No equivalent photo templates exist for the new types and none could be
+  created here, so this draws the whole card on canvas instead, matching the
+  app's own premium redesign: gradient background in the activity's own
+  registry colour, a glowing icon badge, Space Grotesk headline, JetBrains
+  Mono stat numbers. Generated and visually inspected real output for both a
+  cycling PR card and a zero-distance one-off card before calling it done.
+- Caught and fixed a real bug in this same work, not after: an early version
+  referenced `prBadges._feel`, which doesn't exist — `feel` was never
+  actually threaded through the share-image call chain. Traced it through
+  `showActivityCompleteCard` → the share button handler → both generator
+  functions and fixed it properly rather than papering over the symptom.
+- Also caught and fixed a repetitive-caption issue on the zero-distance share
+  card (both stat cards said the same generic line) — gave Duration and
+  Feeling their own distinct captions instead.
+- The Weekly/Monthly Report's "Total Distance" stat was still walk+run only
+  after all this — found it in a final sweep, expanded it to every activity
+  type (this one's just a UI label, not achievement wording with fixed
+  meaning, so no reason to leave swim/cycle/hike/row silently excluded from
+  a stat literally called "Total Distance"), and proved the fix directly: a
+  mixed week of walking, cycling, and swimming now correctly sums to exactly
+  24.5km rather than silently dropping two of the three activities.
+- `index.html`, `styles.css`, `app.js`, `sw.js`, and all cache-busting query
+  strings (including `APP_VERSION`) bumped to `v170`.
 
 ## v1.27.2 fixed ring pulse not animating at all on iPhone (Safari filter bug)
 Reported after testing on both a real Android and a real iPhone side by side:
