@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=174" />
+  <link rel="stylesheet" href="styles.css?v=175" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -272,7 +272,7 @@
             <button class="activity-type-card quick-activity" data-type="hike"><span>🥾</span><strong>Hike</strong><small>Log a hike</small></button>
             <button class="activity-type-card quick-activity" data-type="row"><span>🚣</span><strong>Row</strong><small>Log a row</small></button>
           </div>
-          <button class="activity-type-card quick-activity oneoff-card" data-type="oneoff"><span>⚡</span><strong>One-off exercise</strong><small>Anything else — yoga, sports, a class</small></button>
+          <button class="activity-type-card quick-activity oneoff-card" data-type="oneoff"><span>⚡</span><strong>One-off exercise</strong><small>Anything else, yoga, sports, a class</small></button>
         </section>
 
         <section class="section-block">
@@ -376,7 +376,7 @@
 
             <div class="trend-card">
               <div class="trend-head">
-                <div><h3>Cardio progress</h3><p>Pace per session — walk or run</p></div>
+                <div><h3>Cardio progress</h3><p>Pace per session, walk or run</p></div>
               </div>
               <div id="cardioEmptyState" class="empty-state hidden">Log the same activity type twice to see its trend.</div>
               <div id="cardioTrendBody">
@@ -461,8 +461,8 @@
       <h2 id="acmTitle">Great work!</h2>
       <p id="acmMessage"></p>
       <div id="acmStats" class="acm-stats"></div>
+      <button id="shareActivityBtn" type="button" class="checkout-share-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-3.9M8.6 13.5l6.8 3.9"/></svg>Share achievement</button>
       <button id="closeActivityComplete" class="primary-btn">Nice one!</button>
-      <button id="shareActivityBtn" type="button" class="checkout-share-btn">Share achievement</button>
     </div>
   </dialog>
 
@@ -522,7 +522,7 @@
     <p id="finishWorkoutSummary" class="workout-celebration-message premium-subtitle"></p>
 
     <div class="premium-athlete premium-athlete-image" aria-hidden="true">
-      <img src="workout-victory-silhouette.png?v=174" alt="" />
+      <img src="workout-victory-silhouette.png?v=175" alt="" />
     </div>
 
     <div class="workout-result-grid premium-result-grid">
@@ -552,8 +552,8 @@
         <button type="button" data-finish-feel="5">😄</button>
       </div>
     </div>
+    <button id="shareWorkoutBtn" type="button" class="checkout-share-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-3.9M8.6 13.5l6.8 3.9"/></svg>Share achievement</button>
     <button id="saveFinishedWorkout" class="premium-done-btn"><span>🎉</span><b>Done!</b><small>Save workout</small></button>
-    <button id="shareWorkoutBtn" type="button" class="checkout-share-btn">Share achievement</button>
   </dialog>
 
   
@@ -788,8 +788,8 @@
         </div>
       </div>
 
+      <button id="shareCheckout" type="button" class="checkout-share-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-3.9M8.6 13.5l6.8 3.9"/></svg>Share achievement</button>
       <button id="closeCheckout" class="primary-btn">Awesome, thanks!</button>
-      <button id="shareCheckout" type="button" class="checkout-share-btn">Share achievement</button>
     </div>
   </dialog>
 
@@ -817,7 +817,7 @@
     </div>
 
     <form id="rbGoalForm" class="goal-form hidden">
-      <p class="modal-note">Set something to work toward — 1 point for every gram you finish under target that day.</p>
+      <p class="modal-note">Set something to work toward. 1 point for every gram you finish under target that day.</p>
       <label>Icon</label>
       <div class="icon-picker" id="rbIconPicker">
         <button type="button" class="icon-picker-trigger" id="rbIconTrigger">
@@ -861,13 +861,13 @@
 
       <p class="eyebrow" style="margin-top:22px">BACKUP &amp; RESTORE</p>
       <p id="backupStatus" class="modal-note">You haven't backed up yet.</p>
-      <p class="modal-note">Export gives you a file — it only protects you if it ends up somewhere other than this phone: a cloud drive, email, or another device.</p>
+      <p class="modal-note">Export gives you a file. It only protects you if it ends up somewhere other than this phone: a cloud drive, email, or another device.</p>
       <button id="exportBackupBtn" type="button" class="secondary-btn backup-btn">⬇ Export backup</button>
       <button id="importBackupBtn" type="button" class="secondary-btn backup-btn">⬆ Restore from backup</button>
       <input id="importBackupFile" type="file" accept="application/json,.json" class="hidden" />
 
       <p class="eyebrow" style="margin-top:22px">VACATION MODE</p>
-      <p class="modal-note">Pausing protects your streak from breaking while you're genuinely away or unwell — but paused days don't count toward it either, so you'll naturally make up the time once you're back. No limit on how often you use this.</p>
+      <p class="modal-note">Pausing protects your streak from breaking while you're genuinely away or unwell, but paused days don't count toward it either, so you'll naturally make up the time once you're back. No limit on how often you use this.</p>
       <div id="vacationModeOffView">
         <label>Started
           <select id="vacationBackdateSelect">
@@ -884,12 +884,12 @@
         <button id="vacationModeOnBtn" type="button" class="secondary-btn">Turn on Vacation Mode</button>
       </div>
       <div id="vacationModeOnView" class="hidden">
-        <p class="modal-note">Vacation Mode is active — paused since <strong id="vacationModeSinceText"></strong>.</p>
+        <p class="modal-note">Vacation Mode is active, paused since <strong id="vacationModeSinceText"></strong>.</p>
         <button id="vacationModeOffBtn" type="button" class="secondary-btn">Turn off Vacation Mode</button>
       </div>
 
       <p class="eyebrow" style="margin-top:22px">CHOLSCORE+ (TESTING)</p>
-      <p class="modal-note">There's no real purchase flow yet — this is a manual switch so you can preview both the free and unlocked experience while that's being built.</p>
+      <p class="modal-note">There's no real purchase flow yet. This is a manual switch so you can preview both the free and unlocked experience while that's being built.</p>
       <div id="premiumOffView">
         <p class="modal-note">Currently showing the <strong>free</strong> experience.</p>
         <button id="premiumTestUnlockBtn" type="button" class="secondary-btn">Simulate unlock (testing)</button>
@@ -905,33 +905,33 @@
 
   <dialog id="paywallDialog" class="modal paywall-modal">
     <div class="modal-head"><span></span><button type="button" data-close-dialog="paywallDialog" aria-label="Close">×</button></div>
-    <div class="paywall-badge">✨</div>
+    <div class="paywall-badge"><img src="icon-512.png" alt="CholScore" /></div>
     <h2 class="paywall-title">See the full picture</h2>
     <p class="paywall-sub">You've built real momentum. CholScore+ unlocks the tools built for people who are already in it for the long run.</p>
 
     <div class="paywall-feature-list">
       <div class="paywall-feature">
-        <div class="paywall-feature-icon">🏆</div>
-        <div class="paywall-feature-text"><strong>All Achievements</strong><span>Common through Mythic — including the year-long streak</span></div>
+        <div class="paywall-feature-icon pf-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v4a4 4 0 0 1-8 0V4Z"/><path d="M8 5H5a2 2 0 0 0 2 4"/><path d="M16 5h3a2 2 0 0 1-2 4"/><path d="M12 12v3"/><path d="M9 19h6"/><path d="M10 16h4l.5 3h-5l.5-3Z"/></svg></div>
+        <div class="paywall-feature-text"><strong>All Achievements</strong><span>Common through Mythic, including the year-long streak</span></div>
       </div>
       <div class="paywall-feature">
-        <div class="paywall-feature-icon">🏦</div>
+        <div class="paywall-feature-icon pf-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V10"/><path d="M9 21V10"/><path d="M15 21V10"/><path d="M19 21V10"/><path d="M2 10l10-6 10 6"/></svg></div>
         <div class="paywall-feature-text"><strong>Reward Bank</strong><span>Turn good days into points, and points into real rewards</span></div>
       </div>
       <div class="paywall-feature">
-        <div class="paywall-feature-icon">📈</div>
+        <div class="paywall-feature-icon pf-violet"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg></div>
         <div class="paywall-feature-text"><strong>Trends</strong><span>See your sat fat, score, strength and pace over time</span></div>
       </div>
       <div class="paywall-feature">
-        <div class="paywall-feature-icon">🗓️</div>
+        <div class="paywall-feature-icon pf-cyan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 17h.01"/><path d="M12 17h.01"/></svg></div>
         <div class="paywall-feature-text"><strong>Weekly &amp; Monthly Reports</strong><span>A proper recap of how your weeks are really going</span></div>
       </div>
       <div class="paywall-feature">
-        <div class="paywall-feature-icon">📋</div>
+        <div class="paywall-feature-icon pf-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2.5"/><path d="M9 3.5h6a1 1 0 0 1 1 1V6H8V4.5a1 1 0 0 1 1-1Z"/><path d="M8.5 11h7"/><path d="M8.5 14.5h7"/><path d="M8.5 18h4.5"/></svg></div>
         <div class="paywall-feature-text"><strong>Full Day Reports</strong><span>The detailed sports-report-style recap for any day</span></div>
       </div>
       <div class="paywall-feature">
-        <div class="paywall-feature-icon">🌴</div>
+        <div class="paywall-feature-icon pf-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V10"/><path d="M12 10c-2-3-6-3-8-1 2 2 5 2.5 8 1Z"/><path d="M12 10c2-3 6-3 8-1-2 2-5 2.5-8 1Z"/><path d="M12 10c-.5-2.5.5-5 2.5-6"/><path d="M9 21h6"/></svg></div>
         <div class="paywall-feature-text"><strong>Vacation Mode</strong><span>Protect your streak when life gets in the way</span></div>
       </div>
     </div>
@@ -961,7 +961,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=174"></script>
+  <script src="app.js?v=175"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

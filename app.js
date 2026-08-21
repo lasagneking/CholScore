@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "174"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "175"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -224,7 +224,15 @@ function init(){
     if(state.activeWorkout) showActiveWorkoutBanner();
     syncLocalNotifications();
   }
-  hideNativeSplashScreen();
+  /* Splash dismissal is now handled entirely natively via launchShowDuration
+     in capacitor.config.ts (currently 2200ms + 350ms fade). Previously this
+     also fired a manual SplashScreen.hide() call from here — but with
+     launchAutoHide:true, that created a race between two independent
+     dismiss triggers (native timer vs this JS timer), and whichever fired
+     first won, which is what made the splash disappear inconsistently.
+     hideNativeSplashScreen() is left defined below in case a future need
+     for an explicit manual hide comes up, but it's deliberately not called
+     from init() anymore. */
 }
 /* Only relevant when running as the native app — launchAutoHide is
    deliberately off in capacitor.config.ts, so the branded splash stays
@@ -355,7 +363,7 @@ function renderAll(){renderToday();renderFood();renderExercise();renderRewards()
 function renderToday(){
   const day=getDay(),t=totals(day),score=scoreDay(day),target=Number(state.profile.target);
   $("greeting").textContent=`${greeting()}, ${state.profile.name}`;
-  $("heroMessage").textContent=score>=80?"You're absolutely flying today.":score>=55?"Nice work — keep the momentum going.":"Every positive choice moves you forward.";
+  $("heroMessage").textContent=score>=80?"You're absolutely flying today.":score>=55?"Nice work, keep the momentum going.":"Every positive choice moves you forward.";
   $("satUsed").textContent=`${fmt(t.sat)}g`;$("satRemaining").textContent=`${fmt(Math.max(0,target-t.sat))}g`;
   $("moveMinutes").textContent=fmtInt(t.mins);$("activityCount").textContent=t.activities;
   $("dailyScore").textContent=score;$("scoreLabel").textContent=scoreLabel(score);
@@ -389,7 +397,7 @@ function renderRewardBankCard(){
   if(goal){
     const remaining=Math.max(0,goal.target-balance);
     const pct=Math.min(100,Math.round(balance/goal.target*100));
-    goalText.textContent=remaining>0?`${fmtInt(remaining)} points to go — ${goal.name} ${goal.icon}`:`Ready to cash out — ${goal.name} ${goal.icon}`;
+    goalText.textContent=remaining>0?`${fmtInt(remaining)} points to go, ${goal.name} ${goal.icon}`:`Ready to cash out, ${goal.name} ${goal.icon}`;
     goalBar.classList.remove("hidden");
     goalBarFill.style.width=`${pct}%`;
   }else{
@@ -635,7 +643,7 @@ const achievementDefs = [
   {id:"pr_first",cat:"workout",icon:"🥇",title:"Personal Best",desc:"Set your first personal record.",rarity:"COMMON",goal:1,metric:"prCount"},
   {id:"pr_3",cat:"workout",icon:"📈",title:"On A Roll",desc:"Set 3 personal records.",rarity:"RARE",goal:3,metric:"prCount"},
   {id:"weight_10000",cat:"workout",icon:"🏋️‍♂️",title:"Ten Ton Club",desc:"Lift 10,000kg total, lifetime.",rarity:"RARE",goal:10000,metric:"totalWeightLifted"},
-  {id:"weight_100000",cat:"workout",icon:"🌌",title:"Hundred Ton Club",desc:"Lift 100,000kg total, lifetime — roughly a loaded shipping container.",rarity:"MYTHIC",goal:100000,metric:"totalWeightLifted"},
+  {id:"weight_100000",cat:"workout",icon:"🌌",title:"Hundred Ton Club",desc:"Lift 100,000kg total, lifetime, roughly a loaded shipping container.",rarity:"MYTHIC",goal:100000,metric:"totalWeightLifted"},
 
   // Walking
   {id:"walk_first",cat:"walking",icon:"🚶",title:"First Steps",desc:"Log your first walk.",rarity:"COMMON",goal:1,metric:"walks"},
@@ -672,9 +680,9 @@ const achievementDefs = [
   {id:"streak_60",cat:"consistency",icon:"🏔️",title:"Two Months Strong",desc:"Reach a 60-day checkout streak.",rarity:"EPIC",goal:60,metric:"bestStreak"},
   {id:"streak_100",cat:"consistency",icon:"🗿",title:"Century Streak",desc:"Reach a 100-day checkout streak.",rarity:"LEGEND",goal:100,metric:"bestStreak"},
   {id:"streak_365",cat:"consistency",icon:"🌅",title:"365 Days",desc:"Reach a full year checkout streak.",rarity:"MYTHIC",goal:365,metric:"bestStreak"},
-  {id:"tenure_90",cat:"consistency",icon:"📆",title:"A Quarter Year",desc:"90 days since your very first log — streak doesn't need to be unbroken.",rarity:"RARE",goal:90,metric:"daysSinceFirstLog"},
+  {id:"tenure_90",cat:"consistency",icon:"📆",title:"A Quarter Year",desc:"90 days since your very first log, streak doesn't need to be unbroken.",rarity:"RARE",goal:90,metric:"daysSinceFirstLog"},
   {id:"tenure_180",cat:"consistency",icon:"🌗",title:"Half A Year",desc:"180 days since your very first log.",rarity:"EPIC",goal:180,metric:"daysSinceFirstLog"},
-  {id:"tenure_365",cat:"consistency",icon:"🌌",title:"One Year On",desc:"365 days since your very first log — a full year of showing up, streak or no streak.",rarity:"MYTHIC",goal:365,metric:"daysSinceFirstLog"},
+  {id:"tenure_365",cat:"consistency",icon:"🌌",title:"One Year On",desc:"365 days since your very first log, a full year of showing up, streak or no streak.",rarity:"MYTHIC",goal:365,metric:"daysSinceFirstLog"},
   {id:"checkout_25",cat:"consistency",icon:"🌙",title:"Day Closer",desc:"Check out 25 days.",rarity:"RARE",goal:25,metric:"checkouts"},
   {id:"checkout_100",cat:"consistency",icon:"📘",title:"Hundred Days Logged",desc:"Check out 100 days.",rarity:"LEGEND",goal:100,metric:"checkouts"},
 
@@ -720,8 +728,8 @@ const achievementDefs = [
   {id:"score_90_25",cat:"score",icon:"🌟",title:"Ninety Club",desc:"Finish 25 days with CholScore 90+.",rarity:"LEGEND",goal:25,metric:"score90Days"},
   {id:"workout_weight_500000",cat:"workout",icon:"🏗️",title:"Half Million Club",desc:"Lift 500,000kg total, lifetime.",rarity:"LEGEND",goal:500000,metric:"totalWeightLifted"},
   {id:"weekly_move_50",cat:"weekly",icon:"🚀",title:"Ultra Week",desc:"Walk and/or run 50 miles between Monday and Sunday.",rarity:"LEGEND",goal:50,metric:"weekMoveMiles"},
-  {id:"walking_1000",cat:"walking",icon:"🌌",title:"Walk 1,000",desc:"Walk 1,000 miles in total — enough miles to make every pair of trainers nervous.",rarity:"MYTHIC",goal:1000,metric:"walkMiles"},
-  {id:"running_1000",cat:"running",icon:"🌌",title:"Run 1,000",desc:"Run 1,000 miles in total — four figures earned one mile at a time.",rarity:"MYTHIC",goal:1000,metric:"runMiles"},
+  {id:"walking_1000",cat:"walking",icon:"🌌",title:"Walk 1,000",desc:"Walk 1,000 miles in total, enough miles to make every pair of trainers nervous.",rarity:"MYTHIC",goal:1000,metric:"walkMiles"},
+  {id:"running_1000",cat:"running",icon:"🌌",title:"Run 1,000",desc:"Run 1,000 miles in total, four figures earned one mile at a time.",rarity:"MYTHIC",goal:1000,metric:"runMiles"},
   {id:"swim_half",cat:"swimming",icon:"🌊",title:"First Splash",desc:"Swim 0.5 miles in total.",rarity:"COMMON",goal:0.5,metric:"swimMiles"},
   {id:"swim_1mi",cat:"swimming",icon:"🏊",title:"Mile Swimmer",desc:"Swim 1 mile in total.",rarity:"COMMON",goal:1,metric:"swimMiles"},
   {id:"swim_5mi",cat:"swimming",icon:"🐬",title:"Fin Finder",desc:"Swim 5 miles in total.",rarity:"RARE",goal:5,metric:"swimMiles"},
@@ -766,13 +774,13 @@ const achievementDefs = [
   {id:"week_row_5",cat:"weekly",icon:"📅",title:"Row Week",desc:"Row 5 miles between Monday and Sunday.",rarity:"COMMON",goal:5,metric:"weekRowMiles"},
   {id:"week_row_10",cat:"weekly",icon:"🌤️",title:"Ten Mile Row Week",desc:"Row 10 miles between Monday and Sunday.",rarity:"RARE",goal:10,metric:"weekRowMiles"},
   {id:"week_row_20",cat:"weekly",icon:"🏅",title:"Twenty Mile Row Week",desc:"Row 20 miles between Monday and Sunday.",rarity:"EPIC",goal:20,metric:"weekRowMiles"},
-  {id:"workout_500",cat:"workout",icon:"🌌",title:"Workout 500",desc:"Complete 500 workouts — showing up has officially become a superpower.",rarity:"MYTHIC",goal:500,metric:"workouts"},
+  {id:"workout_500",cat:"workout",icon:"🌌",title:"Workout 500",desc:"Complete 500 workouts, showing up has officially become a superpower.",rarity:"MYTHIC",goal:500,metric:"workouts"},
   {id:"workout_sets_5000",cat:"workout",icon:"🌌",title:"Set 5,000",desc:"Log 5,000 completed workout sets.",rarity:"MYTHIC",goal:5000,metric:"completedSets"},
   {id:"food_ontarget_250",cat:"food",icon:"🌌",title:"Target 250",desc:"Check out within target on 250 days.",rarity:"MYTHIC",goal:250,metric:"onTargetDays"},
-  {id:"workout_weight_1000000",cat:"workout",icon:"🌌",title:"Million Kilo Club",desc:"Lift 1,000,000kg total, lifetime — one thousand tonnes of work.",rarity:"MYTHIC",goal:1000000,metric:"totalWeightLifted"},
+  {id:"workout_weight_1000000",cat:"workout",icon:"🌌",title:"Million Kilo Club",desc:"Lift 1,000,000kg total, lifetime, one thousand tonnes of work.",rarity:"MYTHIC",goal:1000000,metric:"totalWeightLifted"},
   {id:"points_25000",cat:"score",icon:"🌌",title:"Twenty Five Thousand Club",desc:"Bank 25,000 total CholPoints.",rarity:"MYTHIC",goal:25000,metric:"totalPoints"},
   {id:"consistency_52weeks",cat:"consistency",icon:"🌌",title:"52 Week Warrior",desc:"Complete at least one workout in 52 different calendar weeks.",rarity:"MYTHIC",goal:52,metric:"distinctWorkoutWeeks"},
-  {id:"consistency_move_2500",cat:"consistency",icon:"🌌",title:"Round The World Starter",desc:"Walk and/or run 2,500 miles in total — a serious chunk of planet Earth under your feet.",rarity:"MYTHIC",goal:2500,metric:"totalMoveMiles"},
+  {id:"consistency_move_2500",cat:"consistency",icon:"🌌",title:"Round The World Starter",desc:"Walk and/or run 2,500 miles in total, a serious chunk of planet Earth under your feet.",rarity:"MYTHIC",goal:2500,metric:"totalMoveMiles"},
 ];
 
 const rewardCategories = [
@@ -1100,7 +1108,7 @@ function renderStrengthTrend(){
   const fmtVal=v=>isTimed?formatExerciseSeconds(v):`${fmt(v)}kg`;
   const firstDateNice=new Date(dateKeys[0]+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"});
   $("strengthCalloutText").innerHTML=diff>0
-    ? `<b>+${isTimed?formatExerciseSeconds(diff):fmt(diff)+"kg"}</b> since ${firstDateNice} — up from ${fmtVal(first)} to ${fmtVal(last)}.`
+    ? `<b>+${isTimed?formatExerciseSeconds(diff):fmt(diff)+"kg"}</b> since ${firstDateNice}, up from ${fmtVal(first)} to ${fmtVal(last)}.`
     : `Holding steady at ${fmtVal(last)} since ${firstDateNice}.`;
 }
 function buildCardioSeries(){
@@ -1138,7 +1146,7 @@ function renderCardioTrend(){
   const firstPace=pts[0].paceDisplay,lastPace=pts[pts.length-1].paceDisplay,paceDiff=firstPace-lastPace;
   const firstDateNice=new Date(dateKeys[0]+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"});
   $("cardioCalloutText").innerHTML=paceDiff>0.01
-    ? `<b>${fmtPace(Math.abs(paceDiff))}/${unit} faster</b> since ${firstDateNice} — pace improved from ${fmtPace(firstPace)}/${unit} to ${fmtPace(lastPace)}/${unit}.`
+    ? `<b>${fmtPace(Math.abs(paceDiff))}/${unit} faster</b> since ${firstDateNice}, pace improved from ${fmtPace(firstPace)}/${unit} to ${fmtPace(lastPace)}/${unit}.`
     : paceDiff<-0.01
     ? `Pace eased from ${fmtPace(firstPace)}/${unit} to ${fmtPace(lastPace)}/${unit} since ${firstDateNice}.`
     : `Holding steady at ${fmtPace(lastPace)}/${unit} since ${firstDateNice}.`;
@@ -1151,20 +1159,32 @@ function renderCardioTrend(){
    denominator (not a fixed 7, which would silently count days that haven't
    happened yet as "not on target") and every message template has a
    present-tense in-progress version and a past-tense completed version. */
+function firstLogDateKey(){
+  let first=null;
+  for(const key in state.days){
+    if(first===null||key<first) first=key;
+  }
+  return first;
+}
 function weekSummary(mondayKey,records){
   const target=Number(state.profile?.target||30);
   const today=todayKey();
+  const firstLog=firstLogDateKey();
   const start=new Date(mondayKey+"T12:00:00");
   const endDate=new Date(start);endDate.setDate(endDate.getDate()+6);
   const endKey=localDateKey(endDate);
   const isCurrent=today>=mondayKey&&today<=endKey;
   const dayKeys=[];
   for(let i=0;i<7;i++){const d=new Date(start);d.setDate(d.getDate()+i);dayKeys.push(localDateKey(d));}
-  const daysElapsed=isCurrent?dayKeys.filter(k=>k<=today).length:7;
+  // Only count days that have actually happened AND fall on/after the user's
+  // very first logged day — otherwise a week entirely before someone started
+  // using CholScore gets counted as 7 "missed" days, which silently tanks
+  // their on-target ratio for a period they were never even tracking.
+  const eligibleKeys=dayKeys.filter(k=>k<=today&&(!firstLog||k>=firstLog));
+  const daysElapsed=eligibleKeys.length;
 
   let minutes=0,weightLifted=0,workouts=0,daysUnder=0,rewardPoints=0,bestDay=null,distanceKm=0;
-  for(const key of dayKeys){
-    if(isCurrent&&key>today)continue; // don't count days of an in-progress week that haven't happened yet
+  for(const key of eligibleKeys){
     const day=getDay(key),t=totals(day);
     minutes+=t.mins;
     for(const a of day.activities||[]){
@@ -1220,14 +1240,14 @@ function weeklyReportMessage(summary,name){
   const n=esc(name);
   if(summary.isCurrent){
     const daysLeft=7-summary.daysTotal;
-    const remainingClause=daysLeft>0?` — ${daysLeft} day${daysLeft===1?"":"s"} left to build on it`:"";
-    if(ratio>=0.85)return `Great momentum, ${n} — you're <strong>${summary.daysUnder} for ${summary.daysTotal}</strong> on your saturated fat target this week, with <strong>${mins} minutes</strong> of movement already banked${highlight}${remainingClause}.`;
+    const remainingClause=daysLeft>0?`, ${daysLeft} day${daysLeft===1?"":"s"} left to build on it`:"";
+    if(ratio>=0.85)return `Great momentum, ${n}, you're <strong>${summary.daysUnder} for ${summary.daysTotal}</strong> on your saturated fat target this week, with <strong>${mins} minutes</strong> of movement already banked${highlight}${remainingClause}.`;
     if(ratio>=0.5)return `Solid progress so far, ${n}. <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under target and <strong>${mins} minutes</strong> of movement this week${highlight}${remainingClause}.`;
-    return `Every day this week is still an opportunity, ${n} — <strong>${mins} minutes</strong> of movement already in the bank${highlight}${remainingClause}.`;
+    return `Every day this week is still an opportunity, ${n}, <strong>${mins} minutes</strong> of movement already in the bank${highlight}${remainingClause}.`;
   }
-  if(ratio>=0.85)return `Strong week, ${n} — <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under your saturated fat limit and <strong>${mins} minutes</strong> of movement${highlight}. Every choice like that shapes what comes next.`;
-  if(ratio>=0.5)return `Solid week, ${n}. <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under target and <strong>${mins} minutes</strong> on your feet${highlight} — the choices you're making are paying off.`;
-  return `A quieter week, ${n} — <strong>${mins} minutes</strong> of movement still went in the bank${highlight}. A new week means a fresh ${summary.daysTotal} days to build on it.`;
+  if(ratio>=0.85)return `Strong week, ${n}, <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under your saturated fat limit and <strong>${mins} minutes</strong> of movement${highlight}. Every choice like that shapes what comes next.`;
+  if(ratio>=0.5)return `Solid week, ${n}. <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under target and <strong>${mins} minutes</strong> on your feet${highlight}, the choices you're making are paying off.`;
+  return `A quieter week, ${n}, <strong>${mins} minutes</strong> of movement still went in the bank${highlight}. A new week means a fresh ${summary.daysTotal} days to build on it.`;
 }
 function renderWeekReportCardHTML(summary,name){
   const unit=distanceUnit();
@@ -1275,7 +1295,7 @@ function renderMonthReportCardHTML(name,records){
   if(totalPRs>0)extras.push(`hit <strong>${totalPRs} personal record${totalPRs===1?"":"s"}</strong>`);
   if(totalPoints>0)extras.push(`banked <strong>${fmtInt(totalPoints)} reward point${totalPoints===1?"":"s"}</strong>`);
   const extraClause=extras.length?`, and you ${extras.slice(0,2).join(", plus ")}`:"";
-  const message=`Across the last 4 weeks you've moved for <strong>${fmtInt(totalMinutes)} minutes</strong> and stayed under target on <strong>${totalDaysUnder} of ${totalDaysElapsed} days</strong>${extraClause}. Consistency compounds — nice work showing up, ${esc(name)}.`;
+  const message=`Across the last 4 weeks you've moved for <strong>${fmtInt(totalMinutes)} minutes</strong> and stayed under target on <strong>${totalDaysUnder} of ${totalDaysElapsed} days</strong>${extraClause}. Consistency compounds, nice work showing up, ${esc(name)}.`;
   return `
     <div class="report-card">
       <div class="report-badge">📊</div>
@@ -1468,7 +1488,7 @@ function showDayReport(key){
     ${repCardioSectionHTML(cardio,key,records)}
     ${repNutritionSectionHTML(day,target)}
 
-    <div class="rep-footer reveal"><div class="rep-footer-mark">— End of report —</div></div>
+    <div class="rep-footer reveal"><div class="rep-footer-mark">End of report</div></div>
   `;
 
   const dlg=$("dayReportDialog");
@@ -1610,7 +1630,7 @@ async function startBarcodeCamera(){
       },
       ()=>{}
     );
-    $("scannerStatus").textContent="Ready — point the camera at a food barcode.";
+    $("scannerStatus").textContent="Ready, point the camera at a food barcode.";
   }catch(err){
     console.error(err);
     $("scannerStatus").textContent="Camera couldn't start. Check camera permission, or enter the barcode manually below.";
@@ -1853,7 +1873,7 @@ function recalcCheckFoodImpact(){
     card.classList.add("over");
     $("impactHeadline").textContent="Would take you over today's target";
     $("impactDetail").textContent=`By about ${fmt(Math.abs(afterRaw))}g at this portion size.`;
-    $("checkMessage").textContent="That doesn't make it a 'bad' food — CholScore is just showing the impact so you can decide what works for you.";
+    $("checkMessage").textContent="That doesn't make it a 'bad' food, CholScore is just showing the impact so you can decide what works for you.";
   }
 }
 
@@ -2073,7 +2093,7 @@ const exerciseCheers=[
   "Strong work",
   "That is another one done",
   "Excellent effort",
-  "Great job — keep it moving"
+  "Great job, keep it moving"
 ];
 const workoutCheers=[
   "Amazing work",
@@ -2470,11 +2490,11 @@ function checkExercisePR(ex){
   if(ex.timed){
     const best=(ex.sets||[]).reduce((m,s)=>Math.max(m,Number(s.timedSeconds||s.actual||0)),0);
     const prevBest=prior.timed[name]?.seconds||0;
-    if(best>0&&best>prevBest)return[`New PR — longest ${esc(name)} hold: ${formatExerciseSeconds(best)}`];
+    if(best>0&&best>prevBest)return[`New PR, longest ${esc(name)} hold: ${formatExerciseSeconds(best)}`];
   }else{
     const weight=exerciseHeaviestWeight(ex);
     const prevWeight=prior.strength[name]?.weight||0;
-    if(weight>0&&weight>prevWeight)return[`New PR — heaviest ${esc(name)}: ${fmt(weight)} kg`];
+    if(weight>0&&weight>prevWeight)return[`New PR, heaviest ${esc(name)}: ${fmt(weight)} kg`];
   }
   return[];
 }
@@ -2483,12 +2503,12 @@ function checkCardioPR(type,minutes,distanceKm){
   const prior=computePersonalRecords().cardio[type];
   const unit=distanceUnit(),badges=[],label=CARDIO_TYPES[type].label.toLowerCase();
   const displayDist=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
-  if(distanceKm>0&&distanceKm>(prior.longestKm||0))badges.push(`New PR — longest ${label}: ${displayDist} ${unit}`);
+  if(distanceKm>0&&distanceKm>(prior.longestKm||0))badges.push(`New PR, longest ${label}: ${displayDist} ${unit}`);
   if(distanceKm>0&&minutes>0){
     const paceMinPerKm=minutes/distanceKm;
     if(prior.bestPaceMinPerKm==null||paceMinPerKm<prior.bestPaceMinPerKm){
       const paceDisplay=formatPace(minutes,displayDist);
-      if(paceDisplay)badges.push(`New PR — fastest ${label} pace: ${paceDisplay}/${unit}`);
+      if(paceDisplay)badges.push(`New PR, fastest ${label} pace: ${paceDisplay}/${unit}`);
     }
   }
   return badges;
@@ -2532,8 +2552,8 @@ function completeCurrentExercise(){
 
   $("exerciseCompleteTitle").textContent=`${randomFrom(exerciseCheers)}, ${state.profile.name}!`;
   $("exerciseCompleteMessage").textContent=e.timed
-    ? `${e.name} complete — ${formatExerciseSeconds(timedTotal)} held across ${e.sets.length} ${e.sets.length===1?"set":"sets"}. ${isFinal?"That was the final exercise — workout complete!":"Take that momentum into the next one."}`
-    : `${e.name} complete. ${isFinal?"That was the final exercise — workout complete!":"Take that momentum into the next one."}`;
+    ? `${e.name} complete, ${formatExerciseSeconds(timedTotal)} held across ${e.sets.length} ${e.sets.length===1?"set":"sets"}. ${isFinal?"That was the final exercise, workout complete!":"Take that momentum into the next one."}`
+    : `${e.name} complete. ${isFinal?"That was the final exercise, workout complete!":"Take that momentum into the next one."}`;
   $("exerciseCompleteStats").innerHTML=e.timed
     ? `<div><span>SETS</span><strong>${e.sets.length} ✓</strong></div><div><span>TOTAL TIME</span><strong><b data-count-target="${timedTotal}" data-count-time="1">0s</b></strong></div><div><span>BEST SET</span><strong><b data-count-target="${bestTimed}" data-count-time="1">0s</b></strong></div>`
     : `<div><span>SETS</span><strong>${e.sets.length} ✓</strong></div>${Number(e.weight)>0?`<div><span>WEIGHT</span><strong><b data-count-target="${e.weight}" data-count-decimals="1">0.0</b> kg</strong></div><div><span>VOLUME</span><strong><b data-count-target="${volume}" data-count-decimals="1">0.0</b> kg</strong></div>`:""}`;
@@ -2674,7 +2694,7 @@ function showActivityCompleteCard(type,minutes,distanceKm,feel,prBadges=[]){
   renderPrBadges("acmPrBadges",prBadges);
   const verb=meta.verb;
   $("acmMessage").innerHTML=displayDistance>0
-    ? `You ${verb} <strong>${displayDistance} ${unit}</strong> in <strong>${formatActivityDuration(minutes)}</strong>${pace?` — averaging a <strong>${pace}/${unit}</strong> pace`:""}. Feeling ${activityFeelWord[feel]||"steady"} ${feelEmoji(feel)}`
+    ? `You ${verb} <strong>${displayDistance} ${unit}</strong> in <strong>${formatActivityDuration(minutes)}</strong>${pace?`, averaging a <strong>${pace}/${unit}</strong> pace`:""}. Feeling ${activityFeelWord[feel]||"steady"} ${feelEmoji(feel)}`
     : `You ${verb} for <strong>${formatActivityDuration(minutes)}</strong> today. Nice work staying active. ${feelEmoji(feel)}`;
   const stats=[`<div><span>DURATION</span><strong>${formatActivityDuration(minutes)}</strong></div>`];
   if(displayDistance>0){
@@ -2691,7 +2711,7 @@ $("shareActivityBtn").addEventListener("click",async()=>{
   if(!lastActivityShareData)return;
   const{type,minutes,distanceKm,feel,prBadges}=lastActivityShareData;
   const unit=distanceUnit(),displayDistance=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
-  const text=`Just finished a ${type} on CholScore — ${displayDistance>0?`${displayDistance}${unit}, `:""}${formatActivityDuration(minutes)}. 💪`;
+  const text=`Just finished a ${type} on CholScore, ${displayDistance>0?`${displayDistance}${unit}, `:""}${formatActivityDuration(minutes)}. 💪`;
   const btn=$("shareActivityBtn"),original=btn.textContent;
   btn.textContent="Preparing image…";
   try{
@@ -2831,8 +2851,8 @@ $("checkoutBtn").addEventListener("click",()=>{
     noteEl.classList.toggle("reached",remaining<=0);
     const earnedClause=todayPoints>0?`<strong>+${fmtInt(todayPoints)} point${todayPoints===1?"":"s"}</strong> banked today`:"No points banked today";
     noteEl.innerHTML=remaining<=0
-      ?`🎉 <span>${earnedClause} — goal reached! <strong>${esc(goal.name)}</strong> is yours whenever you cash out.</span>`
-      :`${goal.icon} <span>${earnedClause}. ${fmtInt(remaining)} point${remaining===1?"":"s"} away from <strong>${esc(goal.name)}</strong> — keep going.</span>`;
+      ?`🎉 <span>${earnedClause}, goal reached! <strong>${esc(goal.name)}</strong> is yours whenever you cash out.</span>`
+      :`${goal.icon} <span>${earnedClause}. ${fmtInt(remaining)} point${remaining===1?"":"s"} away from <strong>${esc(goal.name)}</strong>, keep going.</span>`;
   }else{
     noteEl.classList.add("hidden");
   }
@@ -2908,7 +2928,7 @@ function openRewardBankDialog(){
     $("rbGoalTitle").textContent=`${goal.icon} ${goal.name}`;
     $("rbGoalFraction").textContent=`${fmtInt(Math.min(balance,goal.target))} / ${fmtInt(goal.target)}`;
     $("rbGoalBarFill").style.width=`${pct}%`;
-    $("rbGoalNote").textContent=remaining>0?`${fmtInt(remaining)} point${remaining===1?"":"s"} to go — keep it up.`:"Goal reached! Cash out whenever you're ready.";
+    $("rbGoalNote").textContent=remaining>0?`${fmtInt(remaining)} point${remaining===1?"":"s"} to go, keep it up.`:"Goal reached! Cash out whenever you're ready.";
     const cashoutBtn=$("rbCashoutBtn");
     cashoutBtn.disabled=remaining>0;
     cashoutBtn.textContent=remaining>0?`Cash out (need ${fmtInt(remaining)} more)`:`Cash out ${fmtInt(goal.target)} points`;
@@ -2950,7 +2970,7 @@ $("rbCashoutBtn").addEventListener("click",()=>{
 $("rbClearGoalBtn").addEventListener("click",()=>{
   const goal=state.rewardBank?.goal;
   if(!goal)return;
-  if(!confirm(`Clear "${goal.name}"? Your points stay banked — you can set a new goal any time.`))return;
+  if(!confirm(`Clear "${goal.name}"? Your points stay banked, you can set a new goal any time.`))return;
   clearRewardGoal();
   openRewardBankDialog();
 });
@@ -3018,7 +3038,7 @@ async function generateShareImageBlob(){
   const bodyText=`${name} ${satClause}${moveClause}, earning a super score of ${score}.`;
 
   const remaining=goal?Math.max(0,goal.target-availableBankPoints()):0;
-  const goalText=goal?(remaining>0?`+${fmtInt(todayPoints)} points banked — ${fmtInt(remaining)} away from ${goal.name}`:`+${fmtInt(todayPoints)} points banked — ${goal.name} unlocked!`):"";
+  const goalText=goal?(remaining>0?`+${fmtInt(todayPoints)} points banked, ${fmtInt(remaining)} away from ${goal.name}`:`+${fmtInt(todayPoints)} points banked, ${goal.name} unlocked!`):"";
 
   const W=1080;
   // Dry-run layout pass on a scratch canvas, purely to measure how tall the
@@ -3084,7 +3104,7 @@ async function generateShareImageBlob(){
   drawShareRing(ctx,860,ringY,110,Math.min(1,score/100),"#a879ff",`${score}`,"SCORE");
 
   ctx.textAlign="center";ctx.fillStyle="#6b7284";ctx.font="26px sans-serif";
-  ctx.fillText("CholScore — track yours free",W/2,H-60);
+  ctx.fillText("CholScore, track yours free",W/2,H-60);
 
   return new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
 }
@@ -3378,7 +3398,7 @@ async function generateCanvasCardShareImageBlob(type,minutes,distanceKm,feel,prB
 $("shareWorkoutBtn").addEventListener("click",async()=>{
   const w=state.activeWorkout;
   const volume=w?workoutVolume(w):0,mins=w?Math.max(1,elapsedMinutes(w.startedAt)):1;
-  const text=`Just finished a workout on CholScore — ${volume>0?`${fmt(volume)}kg lifted, `:""}${mins} minute${mins===1?"":"s"} of effort. 💪`;
+  const text=`Just finished a workout on CholScore, ${volume>0?`${fmt(volume)}kg lifted, `:""}${mins} minute${mins===1?"":"s"} of effort. 💪`;
   const btn=$("shareWorkoutBtn"),original=btn.textContent;
   btn.textContent="Preparing image…";
   try{
@@ -3407,7 +3427,7 @@ $("shareWorkoutBtn").addEventListener("click",async()=>{
 });
 $("shareCheckout").addEventListener("click",async()=>{
   const day=getDay(),score=scoreDay(day),{sat,mins}=totals(day);
-  const text=`My CholScore today: ${score}/100 — ${fmt(sat)}g saturated fat, ${fmtInt(mins)} minutes of activity. 💪`;
+  const text=`My CholScore today: ${score}/100, ${fmt(sat)}g saturated fat, ${fmtInt(mins)} minutes of activity. 💪`;
   const btn=$("shareCheckout"),original=btn.textContent;
   btn.textContent="Preparing image…";
   try{
@@ -3477,13 +3497,13 @@ const BACKUP_META_KEY="cholscore_backup_meta";
 function backupStatusText(){
   try{
     const meta=JSON.parse(localStorage.getItem(BACKUP_META_KEY)||"null");
-    if(!meta?.lastBackupAt)return "You haven't backed up yet — export one to keep your data safe.";
+    if(!meta?.lastBackupAt)return "You haven't backed up yet, export one to keep your data safe.";
     const days=Math.floor((Date.now()-new Date(meta.lastBackupAt).getTime())/86400000);
     if(days<=0)return "Last backup: today. You're all set.";
     if(days===1)return "Last backup: yesterday.";
     if(days<14)return `Last backup: ${days} days ago.`;
-    return `Last backup: ${days} days ago — probably worth doing another.`;
-  }catch(err){return "You haven't backed up yet — export one to keep your data safe.";}
+    return `Last backup: ${days} days ago, probably worth doing another.`;
+  }catch(err){return "You haven't backed up yet, export one to keep your data safe.";}
 }
 /* v1.23.0 profile photo. Resized and centre-cropped to a small square via
    canvas before being stored as a JPEG data URL — 240px is 2x the largest
@@ -3597,7 +3617,7 @@ $("exportBackupBtn").addEventListener("click",async()=>{
 
   if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
     try{
-      await navigator.share({files:[file],title:"CholScore backup",text:"CholScore data backup — save this somewhere off this device."});
+      await navigator.share({files:[file],title:"CholScore backup",text:"CholScore data backup, save this somewhere off this device."});
       markBackedUpNow();
       return;
     }catch(err){
@@ -3612,7 +3632,7 @@ $("exportBackupBtn").addEventListener("click",async()=>{
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(url),1000);
   markBackedUpNow();
-  alert("Saved to this device's Downloads/Files. For a real backup, please also move or share this file somewhere off the phone — email it to yourself, or save it to a cloud drive.");
+  alert("Saved to this device's Downloads/Files. For a real backup, please also move or share this file somewhere off the phone, email it to yourself, or save it to a cloud drive.");
 });
 
 $("importBackupBtn").addEventListener("click",()=>$("importBackupFile").click());
@@ -3623,13 +3643,13 @@ $("importBackupFile").addEventListener("change",e=>{
   reader.onload=()=>{
     let parsed;
     try{parsed=JSON.parse(reader.result);}
-    catch(err){alert("That file doesn't look like a valid CholScore backup — it couldn't be read as JSON.");e.target.value="";return;}
+    catch(err){alert("That file doesn't look like a valid CholScore backup, it couldn't be read as JSON.");e.target.value="";return;}
     const incoming=(parsed&&parsed.app==="CholScore"&&parsed.data)?parsed.data:parsed;
     if(!incoming||typeof incoming!=="object"||!("days"in incoming||"profile"in incoming)){
       alert("That file doesn't look like a valid CholScore backup.");e.target.value="";return;
     }
     const when=parsed?.exportedAt?new Date(parsed.exportedAt).toLocaleString():"an unknown date";
-    if(!confirm(`Restore this backup from ${when}?\n\nThis replaces everything currently on this device — routines, food and exercise history, achievements, all of it — and can't be undone.`)){
+    if(!confirm(`Restore this backup from ${when}?\n\nThis replaces everything currently on this device, routines, food and exercise history, achievements, all of it, and can't be undone.`)){
       e.target.value="";return;
     }
     state=normaliseState(incoming);
@@ -3637,7 +3657,7 @@ $("importBackupFile").addEventListener("change",e=>{
     markBackedUpNow();
     location.reload();
   };
-  reader.onerror=()=>alert("Couldn't read that file — please try again.");
+  reader.onerror=()=>alert("Couldn't read that file, please try again.");
   reader.readAsText(file);
   e.target.value="";
 });
