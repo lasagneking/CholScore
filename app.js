@@ -1247,7 +1247,7 @@ function weeklyReportMessage(summary,name){
   }
   if(ratio>=0.85)return `Strong week, ${n}, <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under your saturated fat limit and <strong>${mins} minutes</strong> of movement${highlight}. Every choice like that shapes what comes next.`;
   if(ratio>=0.5)return `Solid week, ${n}. <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under target and <strong>${mins} minutes</strong> on your feet${highlight}, the choices you're making are paying off.`;
-  return `A quieter week, ${n}, <strong>${mins} minutes</strong> of movement still went in the bank${highlight}. A new week means a fresh ${summary.daysTotal} days to build on it.`;
+  return `A quieter week, ${n}, <strong>${mins} minutes</strong> of movement still went in the bank${highlight}. Plenty of room to build from here.`;
 }
 function renderWeekReportCardHTML(summary,name){
   const unit=distanceUnit();
