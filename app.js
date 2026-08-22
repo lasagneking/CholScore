@@ -90,7 +90,20 @@ function normaliseState(s){
     rewardBank:{...d.rewardBank,...(s?.rewardBank||{}),goal:(s?.rewardBank?.goal||null),history:Array.isArray(s?.rewardBank?.history)?s.rewardBank.history:[]}
   };
 }
-function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(err){
+    // Most commonly QuotaExceededError from localStorage filling up (photos
+    // are the usual culprit, since they're stored as base64). Previously
+    // this threw uncaught here, which could abort whatever code called
+    // saveState() partway through — losing the food/photo/workout write
+    // that triggered it, with no error shown to the user. Surface it
+    // instead so the person actually knows a save failed.
+    console.error("saveState failed:",err);
+    alert("Couldn't save — your device storage may be full. Try freeing up space or removing an old photo.");
+  }
+}
 function ensureDay(key=todayKey()){
   if(!state.days[key]) state.days[key] = { foods:[], activities:[], checkedOut:false, finalScore:null };
   return state.days[key];
@@ -1446,7 +1459,7 @@ function repRewardSectionHTML(key){
     <div class="rep-section reveal">
       <div class="rep-section-head"><div class="rep-section-bar"></div><h2>Reward Claimed</h2></div>
       <div class="rep-reward-claim">
-        <span class="rep-reward-icon">${c.icon}</span>
+        <span class="rep-reward-icon">${esc(c.icon)}</span>
         <div><strong>${esc(c.name)}</strong><small>Cashed out for ${c.target} point${c.target===1?"":"s"}</small></div>
       </div>
     </div>`).join("");
