@@ -2897,14 +2897,15 @@ const REWARD_ICONS=[
 let selectedRewardIcon=REWARD_ICONS[REWARD_ICONS.length-2]; // "Something nice" default
 
 function renderRewardIconGrid(){
-  $("rbIconGrid").innerHTML=REWARD_ICONS.map(i=>
+  const accents=["pf-amber","pf-green","pf-violet","pf-cyan"];
+  $("rbIconGrid").innerHTML=REWARD_ICONS.map((i,idx)=>
     `<button type="button" class="icon-option${i.e===selectedRewardIcon.e?" selected":""}" data-emoji="${i.e}" data-label="${i.l}">
-      <span class="emoji">${i.e}</span><span class="label">${esc(i.l)}</span>
+      <span class="emoji-tile ${accents[idx%accents.length]}"><span class="emoji">${i.e}</span></span><span class="label">${esc(i.l)}</span>
     </button>`
   ).join("");
   qsa(".icon-option",$("rbIconGrid")).forEach(btn=>btn.addEventListener("click",()=>{
     selectedRewardIcon={e:btn.dataset.emoji,l:btn.dataset.label};
-    $("rbCurrentIconEmoji").textContent=selectedRewardIcon.e;
+    $("rbCurrentIconEmoji").innerHTML=`<span>${selectedRewardIcon.e}</span>`;
     $("rbCurrentIconLabel").textContent=selectedRewardIcon.l;
     $("rbIconPicker").classList.remove("open");
     renderRewardIconGrid();
@@ -2943,7 +2944,7 @@ function openRewardBankDialog(){
     $("rbGoalForm").classList.remove("hidden");
     $("rbGoalForm").reset();
     selectedRewardIcon=REWARD_ICONS[REWARD_ICONS.length-2];
-    $("rbCurrentIconEmoji").textContent=selectedRewardIcon.e;
+    $("rbCurrentIconEmoji").innerHTML=`<span>${selectedRewardIcon.e}</span>`;
     $("rbCurrentIconLabel").textContent=selectedRewardIcon.l;
   }
   $("rbIconPicker").classList.remove("open");
