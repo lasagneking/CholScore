@@ -1208,7 +1208,8 @@ function weekSummary(mondayKey,records){
     ].filter(Boolean);
     prCount=allDates.filter(d=>dayKeys.includes(d)).length;
   }
-  return {mondayKey,endKey,isCurrent,minutes,weightLifted,workouts,daysUnder,daysTotal:daysElapsed,rewardPoints,bestDay,prCount,distanceKm};
+  const dayKeysRemaining=dayKeys.filter(k=>k>today).length;
+  return {mondayKey,endKey,isCurrent,minutes,weightLifted,workouts,daysUnder,daysTotal:daysElapsed,dayKeysRemaining,rewardPoints,bestDay,prCount,distanceKm};
 }
 function weekLabel(mondayKey){
   const start=new Date(mondayKey+"T12:00:00");
@@ -1239,7 +1240,12 @@ function weeklyReportMessage(summary,name){
   const highlight=weeklyHighlightClause(summary);
   const n=esc(name);
   if(summary.isCurrent){
-    const daysLeft=7-summary.daysTotal;
+    // Calendar days remaining in the week — deliberately independent of
+    // summary.daysTotal, since that's capped to start from the user's first
+    // log (see weekSummary). For someone's very first, in-progress week,
+    // those two numbers differ: daysTotal might be "days since I started"
+    // rather than "days since Monday", which would throw this off.
+    const daysLeft=summary.dayKeysRemaining;
     const remainingClause=daysLeft>0?`, ${daysLeft} day${daysLeft===1?"":"s"} left to build on it`:"";
     if(ratio>=0.85)return `Great momentum, ${n}, you're <strong>${summary.daysUnder} for ${summary.daysTotal}</strong> on your saturated fat target this week, with <strong>${mins} minutes</strong> of movement already banked${highlight}${remainingClause}.`;
     if(ratio>=0.5)return `Solid progress so far, ${n}. <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under target and <strong>${mins} minutes</strong> of movement this week${highlight}${remainingClause}.`;
