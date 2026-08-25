@@ -888,14 +888,19 @@
         <button id="vacationModeOffBtn" type="button" class="secondary-btn">Turn off Vacation Mode</button>
       </div>
 
-      <p class="eyebrow" style="margin-top:22px">CHOLSCORE+ (TESTING)</p>
-      <p class="modal-note">There's no real purchase flow yet. This is a manual switch so you can preview both the free and unlocked experience while that's being built.</p>
+      <p class="eyebrow" style="margin-top:22px">CHOLSCORE+</p>
       <div id="premiumOffView">
-        <p class="modal-note">Currently showing the <strong>free</strong> experience.</p>
-        <button id="premiumTestUnlockBtn" type="button" class="secondary-btn">Simulate unlock (testing)</button>
+        <p class="modal-note">Currently on the <strong>free</strong> plan.</p>
       </div>
       <div id="premiumOnView" class="hidden">
-        <p class="modal-note">Currently showing the <strong>unlocked</strong> experience.</p>
+        <p class="modal-note">CholScore+ is <strong>active</strong>. Thanks for your support!</p>
+      </div>
+      <button id="restorePurchasesBtn" type="button" class="secondary-btn">Restore purchases</button>
+
+      <div id="premiumDebugSection" class="hidden">
+        <p class="eyebrow" style="margin-top:22px">CHOLSCORE+ (DEBUG TESTING ONLY)</p>
+        <p class="modal-note">Not visible in the real app. Manual override for previewing both states during development.</p>
+        <button id="premiumTestUnlockBtn" type="button" class="secondary-btn">Simulate unlock (testing)</button>
         <button id="premiumTestLockBtn" type="button" class="secondary-btn">Simulate locked (testing)</button>
       </div>
 

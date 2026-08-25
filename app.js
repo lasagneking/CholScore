@@ -216,7 +216,12 @@ function scoreDay(day=getDay()){
   const moveBase=Math.min(25,mins/45*25);
   const participation=activities?10:0;
   const consistency=(day.foods.length?5:0)+(activities?5:0);
-  return Math.max(0,Math.min(100,Math.round(foodScore+moveBase+participation+consistency)));
+  // Bonus 5 points for any single exercise session over an hour — a genuinely
+  // long session, not just several shorter ones adding up to the same total
+  // minutes. This is what closes the gap to a true 100; without it the other
+  // categories only ever summed to a 95 ceiling.
+  const longSessionBonus=day.activities.some(a=>Number(a.minutes||0)>60)?5:0;
+  return Math.max(0,Math.min(100,Math.round(foodScore+moveBase+participation+consistency+longSessionBonus)));
 }
 const SCORE_BANDS=[
   {min:90,label:"Outstanding"},
@@ -237,6 +242,7 @@ function init(){
     if(state.activeWorkout) showActiveWorkoutBanner();
     syncLocalNotifications();
   }
+  initPurchases();
   /* Splash dismissal is now handled entirely natively via launchShowDuration
      in capacitor.config.ts (currently 2200ms + 350ms fade). Previously this
      also fired a manual SplashScreen.hide() call from here — but with
@@ -2348,6 +2354,14 @@ function renderLiveExercises(){
   $("liveWeightUp")?.addEventListener("click",()=>adjustLiveWeight(2.5));
   $("liveWeightValue")?.addEventListener("click",promptLiveWeight);
   $("liveWeightValue")?.addEventListener("keydown",ev=>{if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();promptLiveWeight();}});
+  // Prevent the weight stepper from stealing focus off an in-progress reps
+  // input. Without this, tapping +/- while a rep box is focused blurs it,
+  // firing its change-driven markComplete() mid-typing, which then races
+  // against this button's own click + re-render. Android's WebView blurs
+  // inputs far more eagerly than iOS's, which is why this only surfaced there.
+  ["liveWeightDown","liveWeightUp","liveWeightValue"].forEach(id=>{
+    $(id)?.addEventListener("pointerdown",ev=>ev.preventDefault());
+  });
 
   if(e.timed){
     // If the app was re-rendered while a timed set was running, resume its live display.
@@ -3589,26 +3603,147 @@ $("vacationModeOffBtn").addEventListener("click",()=>{
   saveState();renderVacationModeUI();renderAll();
 });
 
-/* v1.29.0 CholScore+ paywall. isPremiumUnlocked() is the one function every
-   gate in the app checks — when real purchases exist (Capacitor + StoreKit),
-   only this function's own internals need to change to check a real
-   entitlement/receipt instead of the state flag; every call site that gates
-   a feature stays exactly as it is. */
+/* v1.31.0 CholScore+ real purchases via RevenueCat (wraps StoreKit so we
+   don't need our own server-side receipt validation). isPremiumUnlocked()
+   remains the one function every feature gate checks — its own internals
+   now reflect whichever the last confirmed entitlement check said, kept in
+   sync by syncEntitlementFromRevenueCat() below. Every call site that gates
+   a feature elsewhere in the app is untouched. */
+
+// Flip to true only for local TestFlight/dev builds where you want the
+// manual override buttons back (e.g. to preview the unlocked UI without
+// completing a real sandbox purchase each time). Must be false for any
+// build heading to App Store review or real users.
+const DEBUG_PREMIUM_TOGGLE=false;
+
+const REVENUECAT_API_KEY="appl_IBVqrKBPqMlHAwtIqIIcSsWeTHL";
+const REVENUECAT_ENTITLEMENT_ID="cholscore_pro";
+
 function isPremiumUnlocked(){return !!state.premium?.unlocked;}
 function showPaywall(){$("paywallDialog").showModal();}
+
+function getPurchasesPlugin(){return window.Capacitor?.Plugins?.Purchases||null;}
+
+let purchasesConfigured=false;
+async function initPurchases(){
+  if(DEBUG_PREMIUM_TOGGLE){
+    $("premiumDebugSection").classList.remove("hidden");
+  }
+  if(!window.Capacitor?.isNativePlatform())return; // web/PWA preview — no StoreKit here, nothing to configure
+  const Purchases=getPurchasesPlugin();
+  if(!Purchases)return; // plugin not linked in this build yet
+  if(purchasesConfigured){
+    // init() legitimately runs twice in real usage — once at normal
+    // startup, and again right after onboarding completes to refresh the
+    // whole app. Purchases.configure() must only ever run once per session;
+    // calling it twice was silently breaking purchasePackage() with no
+    // useful error, since the SDK doesn't expect a second configure call
+    // mid-session. Just re-sync entitlement state instead on the repeat call.
+    await syncEntitlementFromRevenueCat();
+    return;
+  }
+  try{
+    await Purchases.configure({apiKey:REVENUECAT_API_KEY});
+    purchasesConfigured=true;
+    await syncEntitlementFromRevenueCat();
+  }catch(err){
+    console.error("RevenueCat configure failed:",err);
+  }
+}
+
+function applyEntitlementFromCustomerInfo(customerInfo){
+  const unlocked=!!customerInfo?.entitlements?.active?.[REVENUECAT_ENTITLEMENT_ID];
+  state.premium={unlocked};
+  saveState();
+  renderPremiumTestingUI();
+  renderAll();
+  return unlocked;
+}
+
+async function syncEntitlementFromRevenueCat(){
+  const Purchases=getPurchasesPlugin();
+  if(!Purchases)return;
+  try{
+    const result=await Purchases.getCustomerInfo();
+    applyEntitlementFromCustomerInfo(result?.customerInfo);
+  }catch(err){
+    console.error("Failed to fetch RevenueCat customer info:",err);
+  }
+}
+
 qsa(".paywall-plan").forEach(btn=>btn.addEventListener("click",()=>{
   qsa(".paywall-plan").forEach(b=>b.classList.remove("selected"));
   btn.classList.add("selected");
   $("paywallUnlockBtn").textContent=`Start with ${btn.dataset.plan==="annual"?"Annual":"Monthly"}`;
 }));
-$("paywallUnlockBtn").addEventListener("click",()=>{
-  // Placeholder until real StoreKit purchasing exists — simulates a
-  // successful purchase so the unlocked experience can be tested end to end.
-  state.premium={unlocked:true};saveState();
-  $("paywallDialog").close();
-  renderPremiumTestingUI();renderAll();
+
+$("paywallUnlockBtn").addEventListener("click",async()=>{
+  const selectedPlanBtn=$("paywallDialog").querySelector(".paywall-plan.selected")||$("paywallDialog").querySelector('.paywall-plan[data-plan="annual"]');
+  const wantsMonthly=selectedPlanBtn?.dataset.plan==="monthly";
+  const Purchases=getPurchasesPlugin();
+
+  if(!Purchases||!window.Capacitor?.isNativePlatform()){
+    // Not running on a device with the purchase plugin available (e.g.
+    // previewing the web build). Nothing to actually buy here — let the
+    // person know rather than silently unlocking or doing nothing.
+    alert("Purchases aren't available in this preview. Try this on a TestFlight or App Store build.");
+    return;
+  }
+
+  const btn=$("paywallUnlockBtn");
+  const originalLabel=btn.textContent;
+  btn.disabled=true;
+  btn.textContent="Processing…";
+
+  try{
+    const offerings=await Purchases.getOfferings();
+    const offering=offerings?.current||offerings?.all?.["Default"];
+    const pkg=offering?.availablePackages?.find(p=>
+      wantsMonthly?p.packageType==="MONTHLY":p.packageType==="ANNUAL"
+    );
+    if(!pkg)throw new Error("Selected plan isn't available right now.");
+
+    const result=await Purchases.purchasePackage({aPackage:pkg});
+    const unlocked=applyEntitlementFromCustomerInfo(result?.customerInfo);
+    if(unlocked)$("paywallDialog").close();
+  }catch(err){
+    // RevenueCat flags the standard "tapped X on Apple's own sheet" case
+    // with userCancelled — that's not a failure, just skip the alert.
+    if(!err?.userCancelled){
+      console.error("Purchase failed RAW:", err);
+      console.error("Purchase failed JSON:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
+      alert("Something went wrong completing that purchase. Please try again.");
+    }
+  }finally{
+    btn.disabled=false;
+    btn.textContent=originalLabel;
+  }
 });
+
 $("paywallDismissBtn").addEventListener("click",()=>$("paywallDialog").close());
+
+$("restorePurchasesBtn").addEventListener("click",async()=>{
+  const Purchases=getPurchasesPlugin();
+  if(!Purchases||!window.Capacitor?.isNativePlatform()){
+    alert("Restore isn't available in this preview. Try this on a TestFlight or App Store build.");
+    return;
+  }
+  const btn=$("restorePurchasesBtn");
+  const originalLabel=btn.textContent;
+  btn.disabled=true;
+  btn.textContent="Restoring…";
+  try{
+    const result=await Purchases.restorePurchases();
+    const unlocked=applyEntitlementFromCustomerInfo(result?.customerInfo);
+    alert(unlocked?"CholScore+ restored successfully.":"No active CholScore+ purchase was found for this Apple ID.");
+  }catch(err){
+    console.error("Restore failed:",err);
+    alert("Couldn't restore purchases right now. Please try again.");
+  }finally{
+    btn.disabled=false;
+    btn.textContent=originalLabel;
+  }
+});
 
 function renderPremiumTestingUI(){
   const unlocked=isPremiumUnlocked();
