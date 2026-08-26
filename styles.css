@@ -1200,7 +1200,7 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 .activity-complete-modal #acmMessage{font-size:15.5px;line-height:1.55;color:#dcd6ea;margin:0 0 4px}
 .activity-complete-modal #acmMessage strong{color:#fff;font-weight:700}
 
-.acm-stats{display:flex;gap:10px;margin:22px 0 4px}
+.acm-stats{display:flex;gap:10px;margin:22px 0 18px}
 .acm-stats div{
   flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:18px;
   padding:16px 8px;text-align:center;opacity:0;transform:translateY(12px);animation:acmStatIn .5s ease forwards;
