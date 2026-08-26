@@ -1118,12 +1118,43 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
   border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 70px -20px rgba(0,0,0,.6);
 }
 .acm-scene{
-  position:absolute;inset:0;pointer-events:none;
-  background:
-    radial-gradient(120% 70% at 18% -10%, rgba(255,209,102,.28), transparent 55%),
-    radial-gradient(110% 65% at 100% 0%, rgba(84,217,255,.18), transparent 55%),
-    radial-gradient(140% 90% at 50% 120%, rgba(168,121,255,.2), transparent 60%),
-    linear-gradient(180deg,#171b28 0%, #0d1119 75%);
+  position:absolute;inset:0;pointer-events:none;overflow:hidden;
+  background:linear-gradient(180deg,#171b28 0%, #0d1119 75%);
+}
+/* Slow-drifting color washes — same palette as the original static gradient,
+   just given gentle independent motion so the screen doesn't sit flat and
+   empty on larger phones. Kept subtle: long durations, soft blur, low opacity. */
+.acm-aurora{position:absolute;inset:-20%;filter:blur(40px)}
+.acm-aurora span{position:absolute;border-radius:50%;opacity:.5}
+.acm-aurora .a1{
+  width:70%;height:35%;top:-6%;left:-8%;
+  background:radial-gradient(circle, rgba(255,209,102,.5), transparent 70%);
+  animation:acmDriftA 14s ease-in-out infinite;
+}
+.acm-aurora .a2{
+  width:60%;height:30%;top:12%;right:-10%;
+  background:radial-gradient(circle, rgba(84,217,255,.35), transparent 70%);
+  animation:acmDriftB 18s ease-in-out infinite;
+}
+.acm-aurora .a3{
+  width:75%;height:38%;bottom:-14%;left:15%;
+  background:radial-gradient(circle, rgba(168,121,255,.4), transparent 70%);
+  animation:acmDriftC 16s ease-in-out infinite;
+}
+@keyframes acmDriftA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(6%,8%) scale(1.15)}}
+@keyframes acmDriftB{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-5%,6%) scale(1.1)}}
+@keyframes acmDriftC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(4%,-7%) scale(1.08)}}
+/* Very slow rotating light sweep behind the medal — barely perceptible as
+   motion, reads more as a soft living spotlight than an obvious animation. */
+.acm-ray-sweep{
+  position:absolute;top:8%;left:50%;width:130%;aspect-ratio:1;margin-left:-65%;
+  background:conic-gradient(from 0deg, transparent 0deg, rgba(255,209,102,.1) 40deg, transparent 90deg, transparent 220deg, rgba(84,217,255,.08) 260deg, transparent 310deg);
+  animation:acmRotateRay 22s linear infinite;
+  filter:blur(6px);
+}
+@keyframes acmRotateRay{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){
+  .acm-aurora span,.acm-ray-sweep{animation:none}
 }
 .acm-stars{position:absolute;inset:0;overflow:hidden}
 .acm-stars i{position:absolute;width:3px;height:3px;border-radius:50%;background:#fff;opacity:.5;animation:acmTwinkle 3.2s ease-in-out infinite}
@@ -1134,16 +1165,22 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
   min-height:100%;display:flex;flex-direction:column;justify-content:center;
 }
 
-.acm-medal-wrap{position:relative;width:92px;height:92px;margin:0 auto 16px}
+.acm-medal-wrap{position:relative;width:130px;height:130px;margin:0 auto 18px}
+.acm-medal-glow{
+  position:absolute;inset:-26px;border-radius:50%;
+  background:radial-gradient(circle, rgba(255,209,102,.4), transparent 70%);
+  animation:acmGlowPulse 2.6s ease-in-out infinite;
+}
+@keyframes acmGlowPulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.14)}}
 .acm-medal-ribbon{
-  position:absolute;top:-13px;left:50%;transform:translateX(-50%);width:32px;height:28px;
+  position:absolute;top:-17px;left:50%;transform:translateX(-50%);width:42px;height:36px;
   background:linear-gradient(180deg,#ff6b7a,#c23f52);clip-path:polygon(0 0,100% 0,100% 100%,50% 78%,0 100%);
 }
 .acm-medal{
-  position:relative;z-index:1;width:92px;height:92px;border-radius:50%;
+  position:relative;z-index:1;width:130px;height:130px;border-radius:50%;
   background:radial-gradient(circle at 32% 28%, #fff6da, var(--amber) 42%, #d99a1f 82%, #b87c14 100%);
   border:3px solid #fff0c2;box-shadow:0 0 32px rgba(255,209,102,.45),inset 0 -6px 12px rgba(0,0,0,.25),inset 0 4px 10px rgba(255,255,255,.5);
-  display:grid;place-items:center;font-size:36px;
+  display:grid;place-items:center;font-size:50px;
   animation:acmMedalSwing 3.4s ease-in-out infinite;transform-origin:top center;
 }
 .acm-medal::after{
