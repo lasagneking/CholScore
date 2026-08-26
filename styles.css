@@ -1410,11 +1410,11 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
 
 .checkout-premium .primary-btn{margin-top:0}
 .checkout-share-btn{
-  display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
-  padding:13px 0;margin-bottom:10px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+  padding:15px 18px;margin-bottom:16px;border-radius:999px;
   background:linear-gradient(155deg,rgba(108,95,255,.16),rgba(28,207,169,.10));
   border:1.5px solid rgba(108,95,255,.4);
-  color:var(--text);font-size:14.5px;font-weight:700;
+  color:var(--text);font-size:15.5px;font-weight:700;
   box-shadow:0 6px 18px rgba(108,95,255,.18);
 }
 .checkout-share-btn svg{width:18px;height:18px;color:var(--violet)}
@@ -1837,3 +1837,11 @@ textarea:focus{border-color:rgba(84,217,255,.6);box-shadow:0 0 0 3px rgba(84,217
   display:block;width:100%;text-align:center;background:none;border:none;
   color:#c9c2db;font-size:13.5px;font-weight:600;padding:16px 0 4px;text-decoration:underline;text-underline-offset:3px;
 }
+
+/* Global scrollbar hiding — this is a native app, not a web page, so no
+   scrollable area should ever show a visible browser-style scrollbar
+   (this was leaking through on the main page scroll, since previously
+   only individual horizontal-scroll strips like .reward-tabs had this
+   applied, not html/body or generic containers). */
+*{scrollbar-width:none;-ms-overflow-style:none;}
+*::-webkit-scrollbar{display:none;width:0;height:0;}
