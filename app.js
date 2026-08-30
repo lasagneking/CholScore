@@ -3614,7 +3614,7 @@ $("vacationModeOffBtn").addEventListener("click",()=>{
 // manual override buttons back (e.g. to preview the unlocked UI without
 // completing a real sandbox purchase each time). Must be false for any
 // build heading to App Store review or real users.
-const DEBUG_PREMIUM_TOGGLE=false;
+const DEBUG_PREMIUM_TOGGLE=true;
 
 const REVENUECAT_API_KEY="appl_IBVqrKBPqMlHAwtIqIIcSsWeTHL";
 const REVENUECAT_ENTITLEMENT_ID="cholscore_pro";
