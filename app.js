@@ -664,23 +664,23 @@ const ACH_ICONS = {
   medal:()=>`<path d="M40 18l10 20 10-20" stroke="#c23f2a" stroke-width="10" fill="none"/><circle cx="50" cy="58" r="22" fill="url(#iconGold)"/><circle cx="50" cy="58" r="22" fill="none" stroke="#fff" stroke-opacity="0.25" stroke-width="2"/><circle cx="50" cy="58" r="13" fill="none" stroke="#9a6710" stroke-width="2.5"/><ellipse cx="43" cy="49" rx="4" ry="7" fill="#fff" opacity="0.5"/>`,
   chart:()=>`<path d="M26 68V50M42 68V38M58 68V46M74 68V26" stroke="url(#iconBlueGreen)" stroke-width="9" stroke-linecap="round"/><path d="M26 40l16-12 16 8 16-18" stroke="#54d9ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
   galaxy:()=>`<path filter="url(#achGlow)" d="M50 20l7 17 18.5 2.5-14 12.5L66 76 50 65 34 76l4.5-24L24 39.5l18.5-2.5z" fill="url(#iconGalaxy)"/><circle cx="74" cy="24" r="2" fill="#fff" opacity="0.8"/><circle cx="22" cy="55" r="1.5" fill="#fff" opacity="0.6"/><ellipse cx="42" cy="32" rx="3.5" ry="6" fill="#fff" opacity="0.5"/>`,
-  footprint:()=>`<ellipse cx="48" cy="60" rx="20" ry="26" fill="url(#iconFoot)"/>
-<circle cx="24" cy="34" r="7" fill="url(#iconFoot)"/>
-<circle cx="38" cy="24" r="7.5" fill="url(#iconFoot)"/>
-<circle cx="54" cy="21" r="7" fill="url(#iconFoot)"/>
-<circle cx="68" cy="26" r="6" fill="url(#iconFoot)"/>
-<circle cx="78" cy="36" r="5" fill="url(#iconFoot)"/>
-<ellipse cx="40" cy="48" rx="6" ry="10" fill="#fff" opacity="0.35"/>`,
+  footprint:()=>`<ellipse cx="46" cy="62" rx="21" ry="26" fill="url(#iconFoot)"/>
+<circle cx="20" cy="38" r="7.5" fill="url(#iconFoot)"/>
+<circle cx="34" cy="25" r="8" fill="url(#iconFoot)"/>
+<circle cx="50" cy="20" r="8" fill="url(#iconFoot)"/>
+<circle cx="66" cy="25" r="7.5" fill="url(#iconFoot)"/>
+<circle cx="78" cy="38" r="7" fill="url(#iconFoot)"/>
+<ellipse cx="38" cy="50" rx="6" ry="10" fill="#fff" opacity="0.35"/>`,
   tree:()=>`<rect x="46" y="60" width="8" height="16" fill="url(#iconBrown)"/><path d="M50 18l16 26H34z" fill="url(#iconGreen)"/><path d="M50 32l15 24H35z" fill="url(#iconGreen)" opacity="0.9"/><path d="M50 46l17 22H33z" fill="url(#iconGreen)" opacity="0.95"/><ellipse cx="42" cy="30" rx="3" ry="5" fill="#fff" opacity="0.3"/>`,
   compass:()=>`<circle cx="50" cy="50" r="26" fill="url(#iconBrass)"/><circle cx="50" cy="50" r="26" fill="none" stroke="#6b4f1e" stroke-width="2"/><path d="M50 34l7 14-7 4-7-4z" fill="#c23f2a"/><path d="M50 66l7-14-7-4-7 4z" fill="#fff"/><circle cx="50" cy="50" r="3" fill="#2a2015"/>`,
   boot:()=>`<path d="M38 22h16v24l14 10c4 2 6 6 6 10v10H38V52l-6-4V22z" fill="url(#iconLeather)"/><path d="M38 62h36v10H32c0-5 2-8 6-10z" fill="#3a2410"/><path d="M42 26h10M42 32h10M42 38h10" stroke="#8a5a2e" stroke-width="2"/><ellipse cx="46" cy="30" rx="3" ry="5" fill="#fff" opacity="0.3"/>`,
   mountain:()=>`<path d="M14 72L38 32l10 14 8-10 30 36z" fill="url(#iconSlate)"/><path d="M38 32l6 8-6 8-8-6z" fill="#fff" opacity="0.9"/><path d="M56 36l5 6-5 6-6-5z" fill="#fff" opacity="0.85"/><ellipse cx="30" cy="50" rx="4" ry="7" fill="#fff" opacity="0.25"/>`,
-  runner:()=>`<circle cx="60" cy="18" r="8" fill="url(#iconSwimmer)"/>
-<path d="M54 27 L44 50" stroke="url(#iconSwimmer)" stroke-width="7" stroke-linecap="round" fill="none"/>
-<path d="M54 27 L64 36 L57 45" stroke="url(#iconSwimmer)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-<path d="M54 27 L43 23 L35 30" stroke="url(#iconSwimmer)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-<path d="M44 50 L59 53 L55 73" stroke="url(#iconSwimmer)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-<path d="M44 50 L29 54 L22 70" stroke="url(#iconSwimmer)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
+  runner:()=>`<circle cx="60" cy="18" r="9" fill="url(#iconSwimmer)"/>
+<path d="M54 27 L44 47" stroke="url(#iconSwimmer)" stroke-width="11" stroke-linecap="round" fill="none"/>
+<path d="M54 27 L67 35" stroke="url(#iconSwimmer)" stroke-width="9.5" stroke-linecap="round" fill="none"/>
+<path d="M48 33 L35 25" stroke="url(#iconSwimmer)" stroke-width="9.5" stroke-linecap="round" fill="none"/>
+<path d="M44 47 L33 64 L27 80" stroke="url(#iconSwimmer)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+<path d="M44 47 L58 51 L53 68" stroke="url(#iconSwimmer)" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`,
   lightning:()=>`<path d="M56 18L30 54h16l-6 28 30-40H54z" fill="url(#iconYellow)"/><path d="M56 18L30 54h16l-6 28" fill="none" stroke="#fff" stroke-opacity="0.4" stroke-width="2"/>`,
   flag:()=>`<rect x="30" y="18" width="5" height="58" fill="url(#iconSteel)"/><path d="M35 22h34v10H51v10h18v10H35z" fill="#fff"/><path d="M35 22h17v10H35zM52 32h17v10H52z" fill="#20262f"/>`,
   flame:()=>`<path d="M50 14c-9 13-23 25-23 42a23 23 0 0046 0c0-10-4-18-10-24 1.5 9-3 15-8 15-5.5 0-9-4.5-9-10 0-9 6-15 4-23z" fill="url(#iconFlame)"/><path d="M50 42c-4.5 6-10 11-10 18a10 10 0 0020 0c0-4.5-2-8-5-10.5 1 4-1.5 6.5-4 6.5s-4-2-4-4.5c0-3.5 3.5-6 3-9.5z" fill="#fff9c4" opacity="0.9"/>`,
