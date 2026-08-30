@@ -57,6 +57,71 @@
   <link rel="apple-touch-startup-image" href="https://lasagneking.github.io/splash/apple-splash-1320x2868.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3)" />
 </head>
 <body>
+<!-- Shared achievement badge defs — referenced by every graphical achievement
+     icon via url(#id). Defined once here rather than duplicated per badge,
+     since gradient colors only vary by rarity/icon-type, not per achievement.
+     Rarity colors match the existing .achievement-card.r-* CSS exactly. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+  <!-- Rarity badge backgrounds -->
+  <radialGradient id="achBgCommon" cx="34%" cy="28%" r="80%">
+    <stop offset="0%" stop-color="#7a8492"/><stop offset="50%" stop-color="#454e5c"/><stop offset="100%" stop-color="#20262f"/>
+  </radialGradient>
+  <radialGradient id="achBgRare" cx="34%" cy="28%" r="80%">
+    <stop offset="0%" stop-color="#4fa8d9"/><stop offset="50%" stop-color="#1a4a63"/><stop offset="100%" stop-color="#0a222e"/>
+  </radialGradient>
+  <radialGradient id="achBgEpic" cx="34%" cy="28%" r="80%">
+    <stop offset="0%" stop-color="#8a6fd4"/><stop offset="50%" stop-color="#2e2348"/><stop offset="100%" stop-color="#130d20"/>
+  </radialGradient>
+  <radialGradient id="achBgLegend" cx="34%" cy="28%" r="80%">
+    <stop offset="0%" stop-color="#e0b34f"/><stop offset="50%" stop-color="#453714"/><stop offset="100%" stop-color="#1c1608"/>
+  </radialGradient>
+  <radialGradient id="achBgMythic" cx="34%" cy="28%" r="80%">
+    <stop offset="0%" stop-color="#c46fc0"/><stop offset="45%" stop-color="#3a2050"/><stop offset="100%" stop-color="#120a1c"/>
+  </radialGradient>
+  <linearGradient id="achRingMythic" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#ff5fd1"/><stop offset="35%" stop-color="#54d9ff"/><stop offset="70%" stop-color="#a879ff"/><stop offset="100%" stop-color="#ffd166"/>
+  </linearGradient>
+
+  <!-- Shared bevel (inset shadow toward rim) and icon drop-shadow, used by every badge regardless of rarity -->
+  <radialGradient id="achBevel" cx="50%" cy="50%" r="50%">
+    <stop offset="76%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity="0.5"/>
+  </radialGradient>
+  <filter id="achShadow" x="-50%" y="-50%" width="200%" height="200%">
+    <feDropShadow dx="0" dy="2.5" stdDeviation="2.2" flood-color="#000" flood-opacity="0.45"/>
+  </filter>
+  <filter id="achGlow" x="-70%" y="-70%" width="240%" height="240%">
+    <feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+
+  <!-- Icon-specific natural-color gradients, tier-independent since several
+       icons (flame, dumbbell, trophy, star) recur across multiple rarities -->
+  <radialGradient id="iconApple" cx="30%" cy="24%" r="75%"><stop offset="0%" stop-color="#ffb3a2"/><stop offset="45%" stop-color="#f0705a"/><stop offset="100%" stop-color="#a83621"/></radialGradient>
+  <linearGradient id="iconFoot" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#9aa7b4"/></linearGradient>
+  <linearGradient id="iconFlame" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff3c4"/><stop offset="30%" stop-color="#ffb648"/><stop offset="65%" stop-color="#ff6b4a"/><stop offset="100%" stop-color="#c23f2a"/></linearGradient>
+  <linearGradient id="iconSteel" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eef2f6"/><stop offset="100%" stop-color="#8b96a3"/></linearGradient>
+  <linearGradient id="iconGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff8e0"/><stop offset="35%" stop-color="#ffd97d"/><stop offset="70%" stop-color="#e8a51f"/><stop offset="100%" stop-color="#9a6710"/></linearGradient>
+  <linearGradient id="iconYellowStar" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff3c4"/><stop offset="100%" stop-color="#ffb648"/></linearGradient>
+  <linearGradient id="iconGalaxy" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#ffd4c4"/><stop offset="30%" stop-color="#ff6b4a"/><stop offset="70%" stop-color="#a879ff"/><stop offset="100%" stop-color="#54d9ff"/></linearGradient>
+  <linearGradient id="iconGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c6f0c2"/><stop offset="100%" stop-color="#3f9143"/></linearGradient>
+  <linearGradient id="iconCamera" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5a6472"/><stop offset="100%" stop-color="#232a35"/></linearGradient>
+  <radialGradient id="iconTarget" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#ff9d8a"/><stop offset="100%" stop-color="#c23f2a"/></radialGradient>
+  <linearGradient id="iconBrass" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0d9a0"/><stop offset="100%" stop-color="#a8802f"/></linearGradient>
+  <linearGradient id="iconLeather" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c48a55"/><stop offset="100%" stop-color="#6b4423"/></linearGradient>
+  <linearGradient id="iconSlate" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#e8edf2"/><stop offset="60%" stop-color="#7c8794"/><stop offset="100%" stop-color="#454e5c"/></linearGradient>
+  <linearGradient id="iconYellow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff9d6"/><stop offset="100%" stop-color="#ffcf3d"/></linearGradient>
+  <linearGradient id="iconSilverRed" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0f2f5"/><stop offset="60%" stop-color="#b8c0cc"/><stop offset="100%" stop-color="#ff6b4a"/></linearGradient>
+  <linearGradient id="iconCream" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff9ee"/><stop offset="100%" stop-color="#d8cba8"/></linearGradient>
+  <linearGradient id="iconBlueGreen" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#8ee6d0"/><stop offset="100%" stop-color="#2a7d8c"/></linearGradient>
+  <linearGradient id="iconMoon" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#eef2f6"/><stop offset="100%" stop-color="#9aa7c0"/></linearGradient>
+  <linearGradient id="iconBrown" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c48a55"/><stop offset="100%" stop-color="#5c3a1e"/></linearGradient>
+  <linearGradient id="iconCyanGem" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e0fbff"/><stop offset="100%" stop-color="#2ab8c9"/></linearGradient>
+  <linearGradient id="iconOrangeBrick" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f0a868"/><stop offset="100%" stop-color="#a8582f"/></linearGradient>
+  <linearGradient id="iconWave" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#a8e6ff"/><stop offset="100%" stop-color="#1a7ab8"/></linearGradient>
+  <linearGradient id="iconSwimmer" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6fc8ff"/><stop offset="100%" stop-color="#1a5a9c"/></linearGradient>
+  <linearGradient id="iconGraphite" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7c8794"/><stop offset="100%" stop-color="#2a2f38"/></linearGradient>
+</defs>
+</svg>
   <div id="app">
     <section id="onboarding" class="screen onboarding hidden">
       <div class="brand-orb">C</div>
