@@ -1056,6 +1056,7 @@
 .achievement-card.r-mythic::before{inset:-35% -20% auto!important;height:58%!important;background:radial-gradient(circle,rgba(255,95,209,.10),rgba(84,217,255,.045) 42%,transparent 70%)!important}
 .achievement-icon{display:flex!important;align-items:center;justify-content:center;width:144px!important;height:144px!important;margin:3px auto 8px!important;filter:drop-shadow(0 10px 18px rgba(0,0,0,.42));transform:translateZ(0)}
 .achievement-icon svg{width:144px!important;height:144px!important;overflow:visible}
+.achievement-icon .premium-ach-img{width:154px!important;height:154px!important;max-width:none!important;object-fit:contain;display:block;transform:translateZ(0)}
 .achievement-card.unlocked .achievement-icon{animation:achFloat 4.8s ease-in-out infinite}
 .achievement-card.locked .achievement-icon{filter:grayscale(.72) saturate(.45) brightness(.63);opacity:.68}
 .achievement-card h4{font-size:18px!important;line-height:1.12!important;margin:2px 0 7px!important;letter-spacing:-.025em;text-align:center}
@@ -1100,7 +1101,7 @@
   50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 14px 36px rgba(0,0,0,.25),0 0 30px rgba(84,217,255,.15),0 0 54px rgba(168,121,255,.16),0 0 68px rgba(255,95,209,.10)}
 }
 @keyframes achFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-@media(max-width:390px){.achievement-card{min-height:296px!important;padding:15px 12px!important}.achievement-icon,.achievement-icon svg{width:126px!important;height:126px!important}.achievement-card h4{font-size:16px!important}.achievement-card p{font-size:12px!important}}
+@media(max-width:390px){.achievement-card{min-height:296px!important;padding:15px 12px!important}.achievement-icon,.achievement-icon svg{width:126px!important;height:126px!important}.achievement-icon .premium-ach-img{width:136px!important;height:136px!important}.achievement-card h4{font-size:16px!important}.achievement-card p{font-size:12px!important}}
 @media(prefers-reduced-motion:reduce){.achievement-card.unlocked .achievement-icon{animation:none}}
 </style>
 
