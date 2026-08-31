@@ -1050,10 +1050,12 @@
 
 <style id="premium-achievement-overhaul">
 /* Premium achievement collection — larger, name-specific collectible crests */
-.achievement-card{position:relative;overflow:hidden;min-height:300px!important;padding:18px 16px 16px!important;background:linear-gradient(155deg,rgba(20,27,39,.98),rgba(10,14,23,.98))!important;border:1px solid rgba(255,255,255,.09)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 14px 34px rgba(0,0,0,.22)!important}
+.achievement-card{position:relative;overflow:hidden;min-height:312px!important;padding:18px 16px 16px!important;background:linear-gradient(155deg,rgba(20,27,39,.98),rgba(10,14,23,.98))!important;border:1px solid rgba(255,255,255,.09)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 14px 34px rgba(0,0,0,.22)!important}
 .achievement-card:before{content:"";position:absolute;inset:-45% -30% auto;height:70%;background:radial-gradient(circle,rgba(108,95,255,.12),transparent 62%);pointer-events:none}
-.achievement-icon{display:flex!important;align-items:center;justify-content:center;width:132px!important;height:132px!important;margin:5px auto 10px!important;filter:drop-shadow(0 10px 18px rgba(0,0,0,.42));transform:translateZ(0)}
-.achievement-icon svg{width:132px!important;height:132px!important;overflow:visible}
+.achievement-card::after{content:none!important;display:none!important;border:0!important;background:none!important;box-shadow:none!important}
+.achievement-card.r-mythic::before{inset:-35% -20% auto!important;height:58%!important;background:radial-gradient(circle,rgba(255,95,209,.10),rgba(84,217,255,.045) 42%,transparent 70%)!important}
+.achievement-icon{display:flex!important;align-items:center;justify-content:center;width:144px!important;height:144px!important;margin:3px auto 8px!important;filter:drop-shadow(0 10px 18px rgba(0,0,0,.42));transform:translateZ(0)}
+.achievement-icon svg{width:144px!important;height:144px!important;overflow:visible}
 .achievement-card.unlocked .achievement-icon{animation:achFloat 4.8s ease-in-out infinite}
 .achievement-card.locked .achievement-icon{filter:grayscale(.72) saturate(.45) brightness(.63);opacity:.68}
 .achievement-card h4{font-size:18px!important;line-height:1.12!important;margin:2px 0 7px!important;letter-spacing:-.025em;text-align:center}
@@ -1067,8 +1069,13 @@
 .achievement-card.r-epic.unlocked{border-color:rgba(168,121,255,.38)!important;box-shadow:0 0 28px rgba(168,121,255,.12)!important}
 .achievement-card.r-legend.unlocked{border-color:rgba(255,209,102,.42)!important;box-shadow:0 0 30px rgba(255,209,102,.13)!important}
 .achievement-card.r-mythic.unlocked{border-color:rgba(255,95,209,.44)!important;box-shadow:0 0 34px rgba(168,121,255,.16)!important}
+.fresh-achievement-svg .fresh-ach-core{transform-origin:60px 60px}
+.achievement-card.unlocked .fresh-achievement-svg{filter:saturate(1.06) contrast(1.03)}
+.achievement-card.locked .fresh-achievement-svg{opacity:.78}
+.achievement-card.r-mythic{background:linear-gradient(155deg,rgba(19,24,38,.99),rgba(10,11,20,.99))!important}
+.achievement-card.r-mythic.unlocked{outline:1px solid rgba(255,95,209,.12);outline-offset:-2px}
 @keyframes achFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-@media(max-width:390px){.achievement-card{min-height:286px!important;padding:15px 12px!important}.achievement-icon,.achievement-icon svg{width:118px!important;height:118px!important}.achievement-card h4{font-size:16px!important}.achievement-card p{font-size:12px!important}}
+@media(max-width:390px){.achievement-card{min-height:296px!important;padding:15px 12px!important}.achievement-icon,.achievement-icon svg{width:126px!important;height:126px!important}.achievement-card h4{font-size:16px!important}.achievement-card p{font-size:12px!important}}
 @media(prefers-reduced-motion:reduce){.achievement-card.unlocked .achievement-icon{animation:none}}
 </style>
 

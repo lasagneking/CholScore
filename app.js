@@ -931,26 +931,81 @@ function achievementMotif(motif,ring){
   return motifs[motif]||"";
 }
 
+function freshAchievementCore(iconKey,ring,def,art){
+  const id=String(def.id||"ach").replace(/[^a-zA-Z0-9_-]/g,"");
+  const metal=`url(#freshMetal-${id})`, dark=`url(#freshDark-${id})`, accent=`url(#freshAccent-${id})`;
+  const stroke=`stroke="${ring}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"`;
+  const fillAccent=`fill="${accent}"`;
+  const symbols={
+    apple:`<path d="M60 39c-15-10-31 1-30 20 1 19 14 33 30 33s29-14 30-33c1-19-15-30-30-20z" ${fillAccent}/><path d="M60 39c1-11 7-17 18-20" ${stroke} fill="none"/><path d="M64 28c7-7 15-7 22-2-4 8-11 12-22 10z" fill="${ring}" opacity=".78"/><circle cx="76" cy="56" r="7" fill="#fff" opacity=".18"/>`,
+    salad:`<path d="M27 59h66c-3 22-15 33-33 33S30 81 27 59z" fill="${dark}" stroke="${ring}" stroke-width="3"/><path d="M36 58c1-15 10-25 20-16 4-16 17-17 20 0 9-8 20 2 16 16" fill="${accent}" opacity=".9"/><circle cx="48" cy="54" r="7" fill="#ff786b"/><circle cx="71" cy="49" r="6" fill="#ffd166"/>`,
+    cart:`<path d="M28 38h10l8 37h36l9-25H43" fill="none" ${stroke}/><circle cx="53" cy="84" r="6" fill="${metal}"/><circle cx="79" cy="84" r="6" fill="${metal}"/><path d="M48 58h36" stroke="#fff" stroke-opacity=".22" stroke-width="3"/>`,
+    camera:`<rect x="25" y="40" width="70" height="45" rx="10" fill="${dark}" stroke="${ring}" stroke-width="3"/><path d="M42 40l7-11h22l7 11" fill="${metal}"/><circle cx="60" cy="62" r="15" fill="#071018" stroke="${ring}" stroke-width="4"/><circle cx="60" cy="62" r="8" fill="${accent}"/><path d="M31 93h58" stroke="${ring}" stroke-width="4" stroke-dasharray="2 5" opacity=".85"/>`,
+    target:`<circle cx="60" cy="60" r="31" fill="${dark}" stroke="${ring}" stroke-width="4"/><circle cx="60" cy="60" r="20" fill="none" stroke="${ring}" stroke-width="4" opacity=".8"/><circle cx="60" cy="60" r="8" fill="${accent}"/><path d="M88 31L66 55" ${stroke}/><path d="M89 30l-2 12-10-10z" fill="${ring}"/>`,
+    dumbbell:`<g fill="${metal}" stroke="#fff" stroke-opacity=".18"><rect x="21" y="48" width="15" height="26" rx="5"/><rect x="84" y="48" width="15" height="26" rx="5"/><rect x="14" y="54" width="8" height="14" rx="3"/><rect x="98" y="54" width="8" height="14" rx="3"/><rect x="35" y="57" width="50" height="8" rx="4"/></g><path d="M39 61h42" stroke="${ring}" stroke-width="2" opacity=".9"/>`,
+    gear:`<path d="M60 27l7 7 10-2 2 10 10 4-4 10 6 8-8 7 1 11-11 2-5 9-10-5-10 5-5-9-11-2 1-11-8-7 6-8-4-10 10-4 2-10 10 2z" fill="${dark}" stroke="${ring}" stroke-width="3"/><circle cx="60" cy="61" r="15" fill="${metal}"/><circle cx="60" cy="61" r="7" fill="#0a0f18"/>`,
+    clipboard:`<rect x="34" y="28" width="52" height="68" rx="8" fill="${dark}" stroke="${ring}" stroke-width="3"/><rect x="47" y="21" width="26" height="13" rx="4" fill="${metal}"/><path d="M45 48h30M45 60h30M45 72h20" stroke="${ring}" stroke-width="3" stroke-linecap="round"/><path d="M44 83l6 6 12-14" fill="none" ${stroke}/>` ,
+    trophy:`<path d="M39 29h42v19c0 17-9 27-21 27S39 65 39 48z" fill="${accent}" stroke="${ring}" stroke-width="3"/><path d="M39 35H25c0 15 5 22 17 24M81 35h14c0 15-5 22-17 24" fill="none" ${stroke}/><path d="M56 75h8v11h16v8H40v-8h16z" fill="${metal}"/>`,
+    medal:`<path d="M45 25l15 24 15-24" fill="none" stroke="#ff6b5f" stroke-width="11"/><circle cx="60" cy="67" r="24" fill="${accent}" stroke="${ring}" stroke-width="3"/><path d="M60 51l5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2z" fill="#fff" opacity=".8"/>`,
+    chart:`<path d="M28 86V61M46 86V49M64 86V57M82 86V34" stroke="${ring}" stroke-width="9" stroke-linecap="round"/><path d="M27 44l19-13 18 9 20-18" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="3"/><circle cx="84" cy="22" r="5" fill="${accent}"/>`,
+    galaxy:`<circle cx="60" cy="60" r="27" fill="${dark}" stroke="${ring}" stroke-width="3"/><ellipse cx="60" cy="60" rx="45" ry="17" fill="none" stroke="${ring}" stroke-width="3" transform="rotate(-18 60 60)"/><circle cx="93" cy="44" r="7" fill="${accent}"/><circle cx="42" cy="52" r="4" fill="#fff" opacity=".8"/><circle cx="67" cy="68" r="3" fill="#fff" opacity=".55"/>`,
+    footprint:`<path d="M53 45c-10 9-15 21-12 32 3 10 13 17 23 13 12-5 13-18 8-29-5-12-11-21-19-16z" fill="${accent}"/><circle cx="45" cy="34" r="7" fill="${metal}"/><circle cx="57" cy="29" r="6" fill="${metal}"/><circle cx="69" cy="30" r="5" fill="${metal}"/><circle cx="79" cy="36" r="4" fill="${metal}"/>`,
+    tree:`<path d="M57 66h8v25h-8z" fill="#8c5b37"/><path d="M61 25L39 56h14L35 76h52L69 56h14z" fill="${accent}" stroke="${ring}" stroke-width="2"/>`,
+    compass:`<circle cx="60" cy="60" r="32" fill="${dark}" stroke="${ring}" stroke-width="4"/><path d="M60 35l10 20-10 7-10-7z" fill="#ff6b5f"/><path d="M60 85L50 65l10-7 10 7z" fill="#fff" opacity=".9"/><circle cx="60" cy="60" r="5" fill="${accent}"/>`,
+    boot:`<path d="M42 28h22v34l19 10c7 4 10 9 10 17H36V61l-8-5V28z" fill="${dark}" stroke="${ring}" stroke-width="3"/><path d="M36 80h57v10H30c0-5 2-8 6-10z" fill="${metal}"/><path d="M47 38h13M47 47h13M47 56h13" stroke="${ring}" stroke-width="2"/>`,
+    mountain:`<path d="M17 88l28-46 14 20 10-14 34 40z" fill="${dark}" stroke="${ring}" stroke-width="3"/><path d="M45 42l8 12-8 8-8-7zM69 48l7 9-7 8-7-7z" fill="#fff" opacity=".8"/><path d="M18 88h84" stroke="${ring}" stroke-width="3"/>`,
+    runner:`<path d="M69 27a9 9 0 11-18 0 9 9 0 0118 0z" fill="${accent}"/><path d="M58 38l-10 22 17 10 14 20M49 57L31 70M64 48l18 6" fill="none" stroke="${ring}" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 92h63" stroke="${ring}" stroke-width="3" stroke-dasharray="7 6"/>`,
+    lightning:`<path d="M68 20L35 61h20l-8 38 38-49H65z" fill="${accent}" stroke="${ring}" stroke-width="2"/>`,
+    flag:`<path d="M40 24v68" ${stroke}/><path d="M43 27h39l-8 11 8 11H43z" fill="${accent}"/><path d="M43 27h19v11H43M62 38h20v11H62" fill="#fff" opacity=".65"/>`,
+    flame:`<path d="M60 18c-8 14-28 27-28 48 0 18 12 31 28 31s28-13 28-31c0-13-6-23-15-31 2 13-5 20-12 20-8 0-12-7-11-14 1-9 8-15 10-23z" fill="${accent}" stroke="${ring}" stroke-width="2"/><path d="M60 54c-6 8-11 14-11 22 0 8 5 14 11 14s11-6 11-14c0-6-3-10-7-14 1 6-2 10-5 10s-5-3-4-6c0-4 3-7 5-12z" fill="#fff" opacity=".72"/>`,
+    rocket:`<path d="M60 22c13 10 18 28 18 44L60 79 42 66c0-16 5-34 18-44z" fill="${metal}" stroke="${ring}" stroke-width="3"/><circle cx="60" cy="52" r="8" fill="${accent}"/><path d="M43 64L30 84l18-6M77 64l13 20-18-6M54 80h12l-6 16z" fill="#ff775f"/>`,
+    shootingstar:`<path d="M76 27l6 13 14 2-10 10 3 14-13-7-13 7 3-14-10-10 14-2z" fill="${accent}"/><path d="M22 79l40-19M29 88l34-16" stroke="${ring}" stroke-width="4" stroke-linecap="round" opacity=".8"/>`,
+    calendar:`<rect x="28" y="31" width="64" height="61" rx="10" fill="${dark}" stroke="${ring}" stroke-width="3"/><path d="M28 47h64" stroke="${ring}" stroke-width="5"/><path d="M42 24v14M78 24v14" ${stroke}/><path d="M43 61h10M67 61h10M43 75h10M67 75h10" stroke="${ring}" stroke-width="5" stroke-linecap="round"/>`,
+    cloud:`<path d="M35 81c-14 0-20-9-20-19s8-18 19-19c5-14 16-21 28-18 10 2 17 10 19 20 15 0 24 8 24 18 0 11-8 18-22 18z" fill="${dark}" stroke="${ring}" stroke-width="3"/>`,
+    globe:`<circle cx="60" cy="60" r="33" fill="${dark}" stroke="${ring}" stroke-width="3"/><ellipse cx="60" cy="60" rx="14" ry="33" fill="none" stroke="${ring}" stroke-width="2"/><ellipse cx="60" cy="60" rx="33" ry="13" fill="none" stroke="${ring}" stroke-width="2"/><path d="M27 60h66" stroke="${ring}" stroke-width="2"/>`,
+    crown:`<path d="M27 75l6-34 18 17 9-27 9 27 18-17 6 34z" fill="${accent}" stroke="${ring}" stroke-width="3"/><rect x="27" y="75" width="66" height="12" rx="4" fill="${metal}"/>`,
+    monolith:`<path d="M44 25h32l8 67H36z" fill="${dark}" stroke="${ring}" stroke-width="3"/><path d="M50 40h20M48 55h24M46 70h28" stroke="${ring}" stroke-width="2" opacity=".65"/>`,
+    moon:`<path d="M76 25c-17 5-27 19-27 35s10 30 27 35c-25 7-48-11-48-35s23-42 48-35z" fill="${accent}" stroke="${ring}" stroke-width="2"/><circle cx="72" cy="49" r="3" fill="#0a0f18" opacity=".45"/><circle cx="64" cy="68" r="4" fill="#0a0f18" opacity=".35"/>`,
+    book:`<path d="M28 30h29c7 0 11 4 11 10v52c-3-5-8-7-15-7H28z" fill="${dark}" stroke="${ring}" stroke-width="3"/><path d="M92 30H63c-7 0-11 4-11 10v52c3-5 8-7 15-7h25z" fill="${metal}" stroke="${ring}" stroke-width="3"/><path d="M36 47h14M36 58h14M70 47h14M70 58h14" stroke="${ring}" stroke-width="2"/>`,
+    gem:`<path d="M35 32h50l14 19-39 43-39-43z" fill="${accent}" stroke="${ring}" stroke-width="3"/><path d="M35 32l25 19-11 43M85 32L60 51l11 43M35 32h50" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2"/>`,
+    sparkle:`<path d="M60 20c3 16 9 22 25 25-16 3-22 9-25 25-3-16-9-22-25-25 16-3 22-9 25-25z" fill="${accent}"/><path d="M89 63c2 9 5 12 14 14-9 2-12 5-14 14-2-9-5-12-14-14 9-2 12-5 14-14z" fill="#fff" opacity=".72"/>`,
+    brick:`<path d="M23 72h30v17H23zM67 72h30v17H67zM45 51h30v17H45zM23 30h30v17H23zM67 30h30v17H67z" fill="${metal}" stroke="${ring}" stroke-width="2"/>`,
+    plate:`<circle cx="60" cy="60" r="34" fill="${dark}" stroke="${ring}" stroke-width="3"/><circle cx="60" cy="60" r="22" fill="none" stroke="${ring}" stroke-width="2" opacity=".55"/><path d="M23 31v28M18 31v14M28 31v14M97 31v28c0 6-8 6-8 0V31" ${stroke}/>` ,
+    wave:`<path d="M18 54c12-11 23-11 35 0s23 11 35 0 16-8 21-4" fill="none" ${stroke}/><path d="M18 75c12-11 23-11 35 0s23 11 35 0 16-8 21-4" fill="none" stroke="${ring}" stroke-width="4" opacity=".55"/>`,
+    swimmer:`<circle cx="42" cy="38" r="8" fill="${accent}"/><path d="M43 48c14 2 17 12 29 11 10 0 14-8 22-5" fill="none" ${stroke}/><path d="M20 76c11-8 22-8 33 0s22 8 33 0 16-5 23 0" fill="none" stroke="${ring}" stroke-width="5"/>`,
+    bike:`<circle cx="36" cy="73" r="18" fill="none" ${stroke}/><circle cx="85" cy="73" r="18" fill="none" ${stroke}/><path d="M36 73l18-35h16l15 35M54 38l16 35H36M54 38h18" fill="none" stroke="${ring}" stroke-width="4"/><circle cx="63" cy="73" r="4" fill="${accent}"/>`,
+    oar:`<path d="M30 90l51-59M90 90L39 31" stroke="${ring}" stroke-width="6" stroke-linecap="round"/><path d="M80 30c4-8 11-11 15-8 4 4 0 11-7 15zM40 30c-4-8-11-11-15-8-4 4 0 11 7 15z" fill="${accent}"/><path d="M18 96c12-7 24-7 36 0s24 7 36 0 13-4 18-1" fill="none" stroke="${ring}" stroke-width="3"/>`,
+    star:`<path d="M60 23l9 22 24 2-18 16 6 24-21-13-21 13 6-24-18-16 24-2z" fill="${accent}" stroke="${ring}" stroke-width="2"/>`,
+  };
+  return symbols[iconKey]||symbols.star;
+}
+
 function renderAchBadge(def){
   const rarity=def.rarity||"COMMON";
   const rs=RARITY_BADGE[rarity]||RARITY_BADGE.COMMON;
   const art=ACHIEVEMENT_ART[def.id]||{icon:def.icon,motif:"spark",label:String(def.goal||"")};
-  const iconFn=ACH_ICONS[art.icon]||ACH_ICONS[def.icon]||ACH_ICONS.star;
-  const sparkle=(rarity==="LEGEND"||rarity==="MYTHIC")
-    ?'<circle cx="102" cy="20" r="2.4" fill="#fff" opacity=".9"/><circle cx="16" cy="68" r="1.7" fill="#fff" opacity=".7"/><path d="M95 88l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fff" opacity=".8"/>'
-    :"";
+  const safeId=String(def.id||"ach").replace(/[^a-zA-Z0-9_-]/g,"");
   const motif=achievementMotif(art.motif,rs.ring);
   const label=String(art.label||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  return `<svg class="premium-ach-svg" viewBox="0 0 120 120" aria-hidden="true">
-    <defs><filter id="g-${def.id}" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="4.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-    <path class="ach-aura" d="M60 4 104 29v51l-44 26L16 80V29z" fill="none" stroke="${rs.ring}" stroke-width="3.2" opacity=".30" filter="url(#g-${def.id})"/>
-    <path d="M60 7 101 31v47l-41 24-41-24V31z" fill="url(#${rs.bg})" stroke="${rs.ring}" stroke-width="2.6"/>
-    <path d="M60 12 96 33v42L60 96 24 75V33z" fill="#070b12" fill-opacity=".64" stroke="#fff" stroke-opacity=".17"/>
-    <path d="M31 35Q60 15 89 35" fill="none" stroke="#fff" stroke-width="2.2" opacity=".20"/>
-    <g transform="translate(10 7) scale(1.00)" filter="url(#achShadow)">${iconFn()}</g>
-    <g class="achievement-motif">${motif}</g>
+  const core=freshAchievementCore(art.icon||def.icon,rs.ring,def,art);
+  const sparkle=(rarity==="LEGEND"||rarity==="MYTHIC")
+    ?'<path d="M101 17l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fff" opacity=".9"/><circle cx="18" cy="79" r="2" fill="#fff" opacity=".65"/>'
+    :"";
+  return `<svg class="premium-ach-svg fresh-achievement-svg" viewBox="0 0 120 120" aria-hidden="true">
+    <defs>
+      <linearGradient id="freshMetal-${safeId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f8fbff"/><stop offset=".28" stop-color="#aeb9c8"/><stop offset=".55" stop-color="#566273"/><stop offset=".8" stop-color="#dce5ef"/><stop offset="1" stop-color="#687587"/></linearGradient>
+      <linearGradient id="freshDark-${safeId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#202b3b"/><stop offset="1" stop-color="#080d15"/></linearGradient>
+      <linearGradient id="freshAccent-${safeId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".9"/><stop offset=".18" stop-color="${rs.ring}"/><stop offset="1" stop-color="${rs.ring}" stop-opacity=".4"/></linearGradient>
+      <filter id="freshGlow-${safeId}" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <circle cx="60" cy="60" r="48" fill="${rs.ring}" opacity=".06" filter="url(#freshGlow-${safeId})"/>
+    <path d="M60 6 104 31v58L60 114 16 89V31z" fill="#080d15" stroke="${rs.ring}" stroke-width="3.4"/>
+    <path d="M60 12 98 34v50L60 106 22 84V34z" fill="url(#freshDark-${safeId})" stroke="#fff" stroke-opacity=".13" stroke-width="1.3"/>
+    <path d="M29 37Q60 16 91 37" fill="none" stroke="#fff" stroke-width="2.5" opacity=".16"/>
+    <g class="fresh-ach-core" filter="url(#achShadow)">${core}</g>
+    <g class="achievement-motif" opacity=".9">${motif}</g>
     ${sparkle}
-    <g class="ach-goal-seal"><rect x="72" y="87" width="35" height="18" rx="9" fill="#070b12" stroke="${rs.ring}" stroke-width="1.5"/><text x="89.5" y="99.5" text-anchor="middle" font-size="10.5" font-weight="900" fill="#fff">${label}</text></g>
+    <g class="ach-goal-seal"><rect x="75" y="91" width="32" height="17" rx="8.5" fill="#05080d" stroke="${rs.ring}" stroke-width="1.6"/><text x="91" y="102.5" text-anchor="middle" font-size="9.6" font-weight="900" fill="#fff">${label}</text></g>
   </svg>`;
 }
 
