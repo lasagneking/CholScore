@@ -1033,8 +1033,43 @@ function renderWalkingSoleBadge(def){
   </svg>`;
 }
 
+function renderSwimmingBadge(def){
+  const rarity=def.rarity||"COMMON";
+  const rs=RARITY_BADGE[rarity]||RARITY_BADGE.COMMON;
+  const safeId=String(def.id||"swim").replace(/[^a-zA-Z0-9_-]/g,"");
+  const accent=rarity==="MYTHIC"?"#6ee7ff":rarity==="LEGEND"?"#f3c95f":rarity==="EPIC"?"#b879ff":rarity==="RARE"?"#52d9ff":"#aeb8ca";
+  const labels={swim_half:"0.5 MI",swim_1mi:"1 MI",swim_5mi:"5 MI",swim_10mi:"10 MI",swim_20mi:"20 MI",swim_50mi:"50 MI",swim_100mi:"100 MI",swim_200mi:"200 MI",week_swim_1:"1 MI",week_swim_3:"3 MI",week_swim_6:"6 MI"};
+  const label=labels[def.id]||`${def.goal||""} MI`;
+  const mythic=rarity==="MYTHIC";
+  return `<svg class="premium-ach-svg swimming-badge-svg" viewBox="0 0 120 120" aria-hidden="true">
+    <defs>
+      <linearGradient id="swimWater-${safeId}" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="${mythic?'#ff67d8':accent}"/><stop offset=".55" stop-color="${accent}"/><stop offset="1" stop-color="${mythic?'#57f2ff':accent}" stop-opacity=".55"/>
+      </linearGradient>
+      <linearGradient id="swimBody-${safeId}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f7fbff"/><stop offset=".28" stop-color="#9da9ba"/><stop offset=".62" stop-color="#4b5667"/><stop offset="1" stop-color="#171d28"/></linearGradient>
+      <filter id="swimGlow-${safeId}" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="${mythic?'4':'2.2'}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <path d="M15 75c11-8 20-8 30 0s20 8 30 0 20-8 30 0" fill="none" stroke="url(#swimWater-${safeId})" stroke-width="7" stroke-linecap="round" opacity=".34" filter="url(#swimGlow-${safeId})"/>
+    <path d="M12 82c10-7 19-7 29 0s19 7 29 0 19-7 38 0" fill="none" stroke="url(#swimWater-${safeId})" stroke-width="4.5" stroke-linecap="round" opacity=".9"/>
+    <path d="M17 91c8-5 16-5 24 0s16 5 24 0 16-5 24 0 13 4 19 1" fill="none" stroke="url(#swimWater-${safeId})" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+    <g filter="url(#swimGlow-${safeId})">
+      <circle cx="77" cy="48" r="8" fill="#dfe7f2"/>
+      <path d="M69 54c-11 0-20 4-29 10-8 5-15 7-22 5" fill="none" stroke="#dfe7f2" stroke-width="10" stroke-linecap="round"/>
+      <path d="M53 59c-9-8-18-15-29-18-5-1-8 5-3 8 8 4 15 9 22 17" fill="none" stroke="#dfe7f2" stroke-width="8" stroke-linecap="round"/>
+      <path d="M59 58c8-10 15-20 19-31 2-6-5-9-8-4-5 9-12 18-21 26" fill="none" stroke="#dfe7f2" stroke-width="8" stroke-linecap="round"/>
+      <path d="M39 65c-7 2-13 6-18 11" fill="none" stroke="#dfe7f2" stroke-width="7" stroke-linecap="round"/>
+      <path d="M84 55c8 3 14 7 20 13" fill="none" stroke="#dfe7f2" stroke-width="6" stroke-linecap="round" opacity=".82"/>
+    </g>
+    <path d="M83 51c7 1 13 4 18 8" fill="none" stroke="${accent}" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="34" y="96" width="52" height="18" rx="9" fill="#080c13" stroke="${accent}" stroke-width="2"/>
+    <text x="60" y="109" text-anchor="middle" font-size="11" font-weight="950" fill="#f6f9ff">${label}</text>
+    ${mythic?'<circle cx="18" cy="25" r="2" fill="#ff72dc"/><circle cx="102" cy="34" r="2" fill="#61eaff"/><path d="M96 18l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fff" opacity=".9"/>':''}
+  </svg>`;
+}
+
 function renderAchBadge(def){
   if(def.cat==="walking") return renderWalkingSoleBadge(def);
+  if(def.cat==="swimming" || def.metric==="weekSwimMiles") return renderSwimmingBadge(def);
   const rarity=def.rarity||"COMMON";
   const rs=RARITY_BADGE[rarity]||RARITY_BADGE.COMMON;
   const art=ACHIEVEMENT_ART[def.id]||{icon:def.icon,motif:"spark",label:String(def.goal||"")};
