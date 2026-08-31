@@ -709,20 +709,251 @@ const RARITY_BADGE = {
   MYTHIC:{bg:"achBgMythic",ring:"url(#achRingMythic)"},
 };
 
-function renderAchBadge(iconKey,rarity){
+const ACHIEVEMENT_ART = {
+  "food_first":{icon:"apple",motif:"bite",label:"1"},
+  "food_10":{icon:"salad",motif:"compass",label:"10"},
+  "food_50":{icon:"clipboard",motif:"laurel",label:"50"},
+  "food_scan_3":{icon:"camera",motif:"barcode",label:"3"},
+  "food_scan_10":{icon:"camera",motif:"proscan",label:"10"},
+  "food_ontarget_5":{icon:"target",motif:"arrow",label:"5"},
+  "workout_first":{icon:"dumbbell",motif:"spark",label:"1"},
+  "workout_5":{icon:"dumbbell",motif:"up",label:"5"},
+  "workout_25":{icon:"gear",motif:"orbit",label:"25"},
+  "workout_100":{icon:"dumbbell",motif:"iron",label:"100"},
+  "sets_100":{icon:"clipboard",motif:"stack",label:"100"},
+  "sets_500":{icon:"trophy",motif:"stack",label:"500"},
+  "routine_first":{icon:"clipboard",motif:"check",label:"1"},
+  "pr_first":{icon:"medal",motif:"crown",label:"PB"},
+  "pr_3":{icon:"chart",motif:"roll",label:"3"},
+  "weight_10000":{icon:"dumbbell",motif:"ton",label:"10T"},
+  "weight_100000":{icon:"galaxy",motif:"ton",label:"100T"},
+  "walk_first":{icon:"footprint",motif:"spark",label:"1"},
+  "walk_1mi":{icon:"footprint",motif:"milepost",label:"1"},
+  "walk_5mi":{icon:"tree",motif:"trail",label:"5"},
+  "walk_25mi":{icon:"compass",motif:"route",label:"25"},
+  "walk_100mi":{icon:"boot",motif:"laurel",label:"100"},
+  "walk_250mi":{icon:"mountain",motif:"horizon",label:"250"},
+  "run_first":{icon:"runner",motif:"startline",label:"GO"},
+  "run_1mi":{icon:"lightning",motif:"milepost",label:"1"},
+  "run_5mi":{icon:"flag",motif:"wings",label:"5"},
+  "run_25mi":{icon:"flame",motif:"road",label:"25"},
+  "run_100mi":{icon:"rocket",motif:"laurel",label:"100"},
+  "run_250mi":{icon:"shootingstar",motif:"demon",label:"250"},
+  "week_walk_5":{icon:"footprint",motif:"calendar",label:"5"},
+  "week_walk_10":{icon:"footprint",motif:"double",label:"10"},
+  "week_walk_20":{icon:"footprint",motif:"calendar",label:"20"},
+  "week_run_5":{icon:"runner",motif:"calendar",label:"5"},
+  "week_run_10":{icon:"runner",motif:"calendar",label:"10"},
+  "week_run_20":{icon:"runner",motif:"calendar",label:"20"},
+  "week_combo_15":{icon:"footprint",motif:"splitroute",label:"15"},
+  "week_combo_30":{icon:"runner",motif:"splitroute",label:"30"},
+  "streak_2":{icon:"flame",motif:"return",label:"2"},
+  "streak_3":{icon:"flame",motif:"triple",label:"3"},
+  "streak_7":{icon:"flame",motif:"calendar",label:"7"},
+  "streak_14":{icon:"star",motif:"flow",label:"14"},
+  "streak_30":{icon:"crown",motif:"calendar",label:"30"},
+  "streak_60":{icon:"mountain",motif:"twinmoon",label:"60"},
+  "streak_100":{icon:"monolith",motif:"flame",label:"100"},
+  "streak_365":{icon:"mountain",motif:"sunorbit",label:"365"},
+  "tenure_90":{icon:"calendar",motif:"quarter",label:"90"},
+  "tenure_180":{icon:"moon",motif:"half",label:"180"},
+  "tenure_365":{icon:"galaxy",motif:"orbit",label:"365"},
+  "checkout_25":{icon:"moon",motif:"check",label:"25"},
+  "checkout_100":{icon:"book",motif:"check",label:"100"},
+  "score_70":{icon:"star",motif:"score",label:"70"},
+  "score_80":{icon:"rocket",motif:"score",label:"80"},
+  "score_90":{icon:"gem",motif:"score",label:"90"},
+  "score_90x5":{icon:"trophy",motif:"highfive",label:"5"},
+  "points_500":{icon:"sparkle",motif:"coins",label:"500"},
+  "points_2500":{icon:"trophy",motif:"coins",label:"2.5K"},
+  "points_100":{icon:"sparkle",motif:"pocket",label:"100"},
+  "food_ontarget_3":{icon:"target",motif:"triple",label:"3"},
+  "workout_sets_25":{icon:"clipboard",motif:"stack",label:"25"},
+  "weekly_workouts_3":{icon:"dumbbell",motif:"calendar",label:"3"},
+  "food_25":{icon:"plate",motif:"calendar",label:"25"},
+  "food_scan_5":{icon:"camera",motif:"barcode",label:"5"},
+  "consistency_checkouts_10":{icon:"calendar",motif:"check",label:"10"},
+  "points_1000":{icon:"gem",motif:"coins",label:"1K"},
+  "food_ontarget_10":{icon:"target",motif:"arrow",label:"10"},
+  "workout_pr_10":{icon:"medal",motif:"crosshair",label:"10"},
+  "walking_50":{icon:"boot",motif:"half",label:"50"},
+  "running_50":{icon:"runner",motif:"half",label:"50"},
+  "workout_50":{icon:"dumbbell",motif:"laurel",label:"50"},
+  "workout_sets_250":{icon:"brick",motif:"stack",label:"250"},
+  "food_scan_50":{icon:"camera",motif:"proscan",label:"50"},
+  "food_100":{icon:"plate",motif:"laurel",label:"100"},
+  "food_ontarget_30":{icon:"target",motif:"calendar",label:"30"},
+  "workout_pr_25":{icon:"medal",motif:"collection",label:"25"},
+  "workout_weight_50000":{icon:"dumbbell",motif:"ton",label:"50T"},
+  "workout_150":{icon:"gear",motif:"laurel",label:"150"},
+  "workout_sets_1000":{icon:"brick",motif:"tower",label:"1K"},
+  "food_scan_100":{icon:"camera",motif:"laurel",label:"100"},
+  "food_500":{icon:"plate",motif:"stack",label:"500"},
+  "weekly_move_40":{icon:"runner",motif:"ultraroute",label:"40"},
+  "workout_weight_250000":{icon:"dumbbell",motif:"vault",label:"250K"},
+  "walking_500":{icon:"boot",motif:"horizon",label:"500"},
+  "running_500":{icon:"runner",motif:"horizon",label:"500"},
+  "workout_250":{icon:"dumbbell",motif:"crown",label:"250"},
+  "workout_sets_2500":{icon:"brick",motif:"tower",label:"2.5K"},
+  "workout_pr_75":{icon:"medal",motif:"crown",label:"75"},
+  "food_ontarget_100":{icon:"target",motif:"laurel",label:"100"},
+  "points_10000":{icon:"trophy",motif:"coins",label:"10K"},
+  "score_90_25":{icon:"gem",motif:"laurel",label:"90"},
+  "workout_weight_500000":{icon:"dumbbell",motif:"vault",label:"500K"},
+  "weekly_move_50":{icon:"lightning",motif:"ultraroute",label:"50"},
+  "walking_1000":{icon:"footprint",motif:"galaxyroute",label:"1K"},
+  "running_1000":{icon:"runner",motif:"galaxyroute",label:"1K"},
+  "swim_half":{icon:"wave",motif:"splash",label:"½"},
+  "swim_1mi":{icon:"swimmer",motif:"milepost",label:"1"},
+  "swim_5mi":{icon:"swimmer",motif:"fin",label:"5"},
+  "swim_10mi":{icon:"swimmer",motif:"deep",label:"10"},
+  "swim_20mi":{icon:"wave",motif:"current",label:"20"},
+  "swim_50mi":{icon:"wave",motif:"channel",label:"50"},
+  "swim_100mi":{icon:"gem",motif:"ice",label:"100"},
+  "swim_200mi":{icon:"galaxy",motif:"sunwaves",label:"200"},
+  "week_swim_1":{icon:"swimmer",motif:"calendar",label:"1"},
+  "week_swim_3":{icon:"swimmer",motif:"triple",label:"3"},
+  "week_swim_6":{icon:"wave",motif:"calendar",label:"6"},
+  "cycle_5mi":{icon:"bike",motif:"spin",label:"5"},
+  "cycle_15mi":{icon:"bike",motif:"roll",label:"15"},
+  "cycle_50mi":{icon:"mountain",motif:"half",label:"50"},
+  "cycle_100mi":{icon:"medal",motif:"wheel",label:"100"},
+  "cycle_250mi":{icon:"mountain",motif:"climb",label:"250"},
+  "cycle_500mi":{icon:"rocket",motif:"road",label:"500"},
+  "cycle_1000mi":{icon:"lightning",motif:"wheel",label:"1K"},
+  "cycle_2500mi":{icon:"galaxy",motif:"map",label:"2.5K"},
+  "week_cycle_15":{icon:"bike",motif:"calendar",label:"15"},
+  "week_cycle_30":{icon:"bike",motif:"calendar",label:"30"},
+  "week_cycle_60":{icon:"bike",motif:"calendar",label:"60"},
+  "hike_1mi":{icon:"tree",motif:"trail",label:"1"},
+  "hike_5mi":{icon:"boot",motif:"trail",label:"5"},
+  "hike_20mi":{icon:"compass",motif:"ridge",label:"20"},
+  "hike_50mi":{icon:"mountain",motif:"summit",label:"50"},
+  "hike_100mi":{icon:"mountain",motif:"flagsummit",label:"100"},
+  "hike_200mi":{icon:"mountain",motif:"wander",label:"200"},
+  "hike_400mi":{icon:"mountain",motif:"highland",label:"400"},
+  "hike_750mi":{icon:"galaxy",motif:"longtrail",label:"750"},
+  "week_hike_5":{icon:"boot",motif:"calendar",label:"5"},
+  "week_hike_10":{icon:"boot",motif:"calendar",label:"10"},
+  "week_hike_15":{icon:"mountain",motif:"calendar",label:"15"},
+  "row_1mi":{icon:"oar",motif:"startline",label:"1"},
+  "row_5mi":{icon:"wave",motif:"pull",label:"5"},
+  "row_25mi":{icon:"wave",motif:"steady",label:"25"},
+  "row_50mi":{icon:"flag",motif:"half",label:"50"},
+  "row_100mi":{icon:"medal",motif:"oars",label:"100"},
+  "row_250mi":{icon:"flame",motif:"engine",label:"250"},
+  "row_500mi":{icon:"rocket",motif:"oars",label:"500"},
+  "row_1000mi":{icon:"galaxy",motif:"oars",label:"1K"},
+  "week_row_5":{icon:"oar",motif:"calendar",label:"5"},
+  "week_row_10":{icon:"oar",motif:"calendar",label:"10"},
+  "week_row_20":{icon:"oar",motif:"calendar",label:"20"},
+  "workout_500":{icon:"galaxy",motif:"dumbbellorbit",label:"500"},
+  "workout_sets_5000":{icon:"galaxy",motif:"tower",label:"5K"},
+  "food_ontarget_250":{icon:"galaxy",motif:"targetorbit",label:"250"},
+  "workout_weight_1000000":{icon:"galaxy",motif:"vault",label:"1M"},
+  "points_25000":{icon:"galaxy",motif:"coins",label:"25K"},
+  "consistency_52weeks":{icon:"galaxy",motif:"calendarorbit",label:"52"},
+  "consistency_move_2500":{icon:"globe",motif:"worldroute",label:"2.5K"},
+};
+
+function achievementMotif(motif,ring){
+  const c=ring;
+  const motifs={
+    bite:`<circle cx="72" cy="42" r="8" fill="#080d16"/><circle cx="77" cy="54" r="7" fill="#080d16"/>`,
+    compass:`<circle cx="79" cy="31" r="13" fill="#090d14" stroke="${c}" stroke-width="2"/><path d="M79 21l4 9-4 3-4-3zM79 41l-4-9 4-3 4 3z" fill="${c}"/>`,
+    laurel:`<path d="M25 75c-9-8-13-20-11-33M95 75c9-8 13-20 11-33" fill="none" stroke="${c}" stroke-width="2.4" opacity=".8"/><path d="M18 62l-7-5M20 52l-8-3M22 43l-7-1M102 62l7-5M100 52l8-3M98 43l7-1" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`,
+    barcode:`<g stroke="${c}" stroke-width="2"><path d="M30 78v12M35 75v15M41 80v10M46 73v17M52 77v13M58 74v16M64 79v11M70 73v17M76 78v12M82 75v15"/></g>`,
+    proscan:`<path d="M22 30h12M22 30v12M98 30H86M98 30v12M22 82h12M22 82V70M98 82H86M98 82V70" stroke="${c}" stroke-width="3" stroke-linecap="round"/><path d="M28 91h64" stroke="${c}" stroke-width="2" stroke-dasharray="3 3"/>`,
+    arrow:`<path d="M69 24l21 12-21 12v-8H52v-8h17z" fill="${c}" opacity=".9"/>`,
+    spark:`<path d="M87 27l2 6 6 2-6 2-2 6-2-6-6-2 6-2zM29 77l1.5 4.5L35 83l-4.5 1.5L29 89l-1.5-4.5L23 83l4.5-1.5z" fill="${c}"/>`,
+    up:`<path d="M83 79V52M83 52l-9 9M83 52l9 9" fill="none" stroke="${c}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`,
+    orbit:`<ellipse cx="60" cy="58" rx="43" ry="19" fill="none" stroke="${c}" stroke-width="2" opacity=".65" transform="rotate(-18 60 58)"/><circle cx="99" cy="48" r="4" fill="${c}"/>`,
+    iron:`<path d="M22 28h76M22 84h76" stroke="${c}" stroke-width="3" opacity=".55"/><circle cx="60" cy="56" r="38" fill="none" stroke="${c}" stroke-width="2" opacity=".35"/>`,
+    stack:`<path d="M31 84h58M36 78h48M42 72h36" stroke="${c}" stroke-width="4" stroke-linecap="round" opacity=".8"/>`,
+    check:`<path d="M75 76l8 8 16-19" fill="none" stroke="${c}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>`,
+    crown:`<path d="M78 25l5 10 8-8 4 18H72l4-18 8 8z" fill="${c}" opacity=".9"/>`,
+    roll:`<path d="M23 80c18-7 20-25 37-25s20 18 37 11" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`,
+    ton:`<path d="M22 86h76" stroke="${c}" stroke-width="5"/><path d="M33 86l5-10h44l5 10" fill="none" stroke="${c}" stroke-width="3"/>`,
+    milepost:`<path d="M87 35v44M77 35h20l-3 12H77z" fill="none" stroke="${c}" stroke-width="3"/>`,
+    trail:`<path d="M23 84c16-19 23-5 35-24 10-16 22-10 38-30" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round" stroke-dasharray="5 4"/>`,
+    route:`<path d="M22 83c15-17 20-6 29-23 10-19 22-9 46-31" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 4"/><circle cx="22" cy="83" r="4" fill="${c}"/><circle cx="97" cy="29" r="4" fill="${c}"/>`,
+    horizon:`<path d="M14 81h92" stroke="${c}" stroke-width="2" opacity=".6"/><path d="M20 81l15-13 12 7 18-18 17 13 12-10 12 21" fill="none" stroke="${c}" stroke-width="2" opacity=".55"/>`,
+    startline:`<path d="M18 82h84" stroke="${c}" stroke-width="4"/><path d="M24 76v12M32 76v12M40 76v12M48 76v12" stroke="#fff" stroke-width="2"/>`,
+    wings:`<path d="M29 50C14 42 12 30 15 21c11 7 18 15 21 25M91 50c15-8 17-20 14-29-11 7-18 15-21 25" fill="none" stroke="${c}" stroke-width="3"/>`,
+    road:`<path d="M47 91l9-34h8l9 34" fill="none" stroke="${c}" stroke-width="3"/><path d="M60 84v-8M60 69v-7" stroke="#fff" stroke-width="2"/>`,
+    demon:`<path d="M22 32l9 12M98 32l-9 12" stroke="${c}" stroke-width="4" stroke-linecap="round"/><path d="M23 30l10-4M97 30l-10-4" stroke="${c}" stroke-width="3"/>`,
+    calendar:`<rect x="75" y="68" width="28" height="23" rx="4" fill="#090d14" stroke="${c}" stroke-width="2"/><path d="M75 76h28M81 65v7M97 65v7" stroke="${c}" stroke-width="2"/>`,
+    double:`<circle cx="84" cy="33" r="10" fill="none" stroke="${c}" stroke-width="2"/><circle cx="90" cy="39" r="10" fill="none" stroke="${c}" stroke-width="2" opacity=".6"/>`,
+    splitroute:`<path d="M60 88V69c0-14-18-11-18-27M60 69c0-14 18-11 18-27" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`,
+    return:`<path d="M89 45a28 28 0 10-5 31" fill="none" stroke="${c}" stroke-width="3"/><path d="M89 45l-12-2 7-10" fill="none" stroke="${c}" stroke-width="3"/>`,
+    triple:`<circle cx="83" cy="27" r="4" fill="${c}"/><circle cx="91" cy="35" r="4" fill="${c}"/><circle cx="79" cy="39" r="4" fill="${c}"/>`,
+    flow:`<path d="M18 78c12-16 20 10 32-6s19 9 31-7 18 2 23-8" fill="none" stroke="${c}" stroke-width="3"/>`,
+    twinmoon:`<circle cx="83" cy="33" r="12" fill="none" stroke="${c}" stroke-width="2"/><path d="M88 24a10 10 0 100 18" fill="#090d14"/>`,
+    sunorbit:`<circle cx="88" cy="30" r="8" fill="${c}"/><ellipse cx="60" cy="58" rx="45" ry="20" fill="none" stroke="${c}" stroke-width="2" opacity=".5" transform="rotate(-20 60 58)"/>`,
+    quarter:`<path d="M82 27a14 14 0 0114 14H82z" fill="${c}"/><circle cx="82" cy="41" r="14" fill="none" stroke="${c}" stroke-width="2"/>`,
+    half:`<path d="M84 26a14 14 0 010 28z" fill="${c}"/><circle cx="84" cy="40" r="14" fill="none" stroke="${c}" stroke-width="2"/>`,
+    score:`<path d="M20 86h80" stroke="${c}" stroke-width="3"/><path d="M22 86l13-8 12 4 16-16 14 6 20-24" fill="none" stroke="${c}" stroke-width="3"/>`,
+    highfive:`<path d="M82 28v16M76 30v15M88 31v14M71 35v14c0 10 6 17 15 17s14-7 14-15V39" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`,
+    coins:`<ellipse cx="87" cy="74" rx="13" ry="5" fill="none" stroke="${c}" stroke-width="2"/><path d="M74 74v10c0 3 6 5 13 5s13-2 13-5V74M74 80c0 3 6 5 13 5s13-2 13-5" fill="none" stroke="${c}" stroke-width="2"/>`,
+    pocket:`<path d="M74 69h28v22H74z" fill="none" stroke="${c}" stroke-width="2"/><path d="M74 72l14 9 14-9" fill="none" stroke="${c}" stroke-width="2"/>`,
+    crosshair:`<circle cx="87" cy="33" r="12" fill="none" stroke="${c}" stroke-width="2"/><path d="M87 17v9M87 40v9M71 33h9M94 33h9" stroke="${c}" stroke-width="2"/>`,
+    collection:`<circle cx="81" cy="31" r="6" fill="${c}"/><circle cx="93" cy="31" r="6" fill="${c}" opacity=".7"/><circle cx="87" cy="42" r="6" fill="${c}" opacity=".85"/>`,
+    tower:`<path d="M75 87V44h24v43M79 44v-9h16v9M80 56h14M80 67h14M80 78h14" fill="none" stroke="${c}" stroke-width="2.5"/>`,
+    ultraroute:`<path d="M14 85c14-25 24 2 38-22s24 8 53-30" fill="none" stroke="${c}" stroke-width="4" stroke-dasharray="7 4"/><path d="M93 28l12 5-8 10" fill="none" stroke="${c}" stroke-width="3"/>`,
+    vault:`<rect x="73" y="66" width="29" height="25" rx="4" fill="none" stroke="${c}" stroke-width="2.5"/><circle cx="87" cy="78" r="6" fill="none" stroke="${c}" stroke-width="2"/><path d="M87 72v12M81 78h12" stroke="${c}" stroke-width="1.5"/>`,
+    galaxyroute:`<path d="M17 83c20-22 34 5 47-21 11-22 23-8 40-31" fill="none" stroke="${c}" stroke-width="3" stroke-dasharray="4 4"/><circle cx="21" cy="29" r="2" fill="#fff"/><circle cx="99" cy="63" r="2" fill="#fff"/><circle cx="87" cy="20" r="1.5" fill="#fff"/>`,
+    splash:`<path d="M23 79c8-8 16-8 24 0s16 8 24 0 16-8 24 0" fill="none" stroke="${c}" stroke-width="4"/><path d="M60 27l-5 10M74 30l-3 9M45 30l3 9" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`,
+    fin:`<path d="M79 28c10 9 15 19 12 31-9-6-15-13-20-22z" fill="${c}" opacity=".8"/>`,
+    deep:`<path d="M19 83h82M25 75h70M31 67h58" stroke="${c}" stroke-width="2" opacity=".65"/>`,
+    current:`<path d="M15 78c11-12 22-12 33 0s22 12 33 0 18-8 26-2" fill="none" stroke="${c}" stroke-width="4"/><path d="M91 69l12 7-11 8" fill="none" stroke="${c}" stroke-width="3"/>`,
+    channel:`<path d="M18 82h84M25 74c10-9 18-9 28 0s18 9 28 0 12-6 19-1" fill="none" stroke="${c}" stroke-width="3"/><path d="M18 61h13M89 61h13" stroke="${c}" stroke-width="4"/>`,
+    ice:`<path d="M83 24v28M70 31l26 14M70 45l26-14" stroke="${c}" stroke-width="3" stroke-linecap="round"/>`,
+    sunwaves:`<circle cx="88" cy="28" r="9" fill="${c}"/><path d="M19 82c10-9 20-9 30 0s20 9 30 0 18-8 27-1" fill="none" stroke="${c}" stroke-width="3"/>`,
+    spin:`<circle cx="86" cy="35" r="13" fill="none" stroke="${c}" stroke-width="3"/><path d="M86 22a13 13 0 018 23" fill="none" stroke="#fff" stroke-width="2"/>`,
+    wheel:`<circle cx="87" cy="35" r="15" fill="none" stroke="${c}" stroke-width="3"/><path d="M87 20v30M72 35h30M76 24l22 22M98 24L76 46" stroke="${c}" stroke-width="1.5" opacity=".7"/>`,
+    climb:`<path d="M16 84l24-30 12 14 18-26 34 42" fill="none" stroke="${c}" stroke-width="3"/><path d="M70 42l8 2-4 7" fill="none" stroke="${c}" stroke-width="2"/>`,
+    map:`<path d="M72 65l10-5 10 5 10-5v27l-10 5-10-5-10 5z" fill="none" stroke="${c}" stroke-width="2"/><path d="M82 60v27M92 65v27" stroke="${c}" stroke-width="1.5"/>`,
+    ridge:`<path d="M14 82l22-28 16 16 15-25 37 37" fill="none" stroke="${c}" stroke-width="3"/>`,
+    summit:`<path d="M19 83l31-42 13 18 12-13 27 37" fill="none" stroke="${c}" stroke-width="3"/><path d="M50 41l6 8-6 7-7-6z" fill="${c}"/>`,
+    flagsummit:`<path d="M19 83l31-42 13 18 12-13 27 37" fill="none" stroke="${c}" stroke-width="3"/><path d="M50 41V24h18l-5 6 5 6H50" fill="${c}"/>`,
+    wander:`<path d="M14 84c18-20 29-5 40-21 13-19 22-3 50-29" fill="none" stroke="${c}" stroke-width="3" stroke-dasharray="3 5"/>`,
+    highland:`<path d="M14 84l21-24 13 12 18-29 15 16 12-9 14 34" fill="none" stroke="${c}" stroke-width="3"/><path d="M18 84h84" stroke="${c}" stroke-width="2"/>`,
+    longtrail:`<path d="M15 87c13-25 25 0 38-20 12-18 21-4 33-19 8-10 13-14 20-20" fill="none" stroke="${c}" stroke-width="3" stroke-dasharray="5 4"/><circle cx="104" cy="27" r="3" fill="${c}"/>`,
+    pull:`<path d="M22 83h76" stroke="${c}" stroke-width="3"/><path d="M35 74l18-18M85 74L67 56" stroke="${c}" stroke-width="4" stroke-linecap="round"/>`,
+    steady:`<path d="M17 78c11-8 22-8 33 0s22 8 33 0 16-6 24-1" fill="none" stroke="${c}" stroke-width="3"/><path d="M30 87h60" stroke="${c}" stroke-width="2" opacity=".5"/>`,
+    oars:`<path d="M76 23l22 42M98 23L76 65" stroke="${c}" stroke-width="4" stroke-linecap="round"/>`,
+    engine:`<circle cx="87" cy="38" r="14" fill="none" stroke="${c}" stroke-width="3"/><path d="M87 18v8M87 50v8M67 38h8M99 38h8M73 24l6 6M95 46l6 6M101 24l-6 6M79 46l-6 6" stroke="${c}" stroke-width="2"/>`,
+    dumbbellorbit:`<ellipse cx="60" cy="58" rx="45" ry="19" fill="none" stroke="${c}" stroke-width="2" transform="rotate(-15 60 58)"/><path d="M31 81h58" stroke="${c}" stroke-width="5"/>`,
+    targetorbit:`<ellipse cx="60" cy="58" rx="44" ry="20" fill="none" stroke="${c}" stroke-width="2" transform="rotate(20 60 58)"/><circle cx="98" cy="42" r="4" fill="${c}"/>`,
+    calendarorbit:`<rect x="74" y="65" width="28" height="24" rx="4" fill="none" stroke="${c}" stroke-width="2"/><ellipse cx="60" cy="58" rx="44" ry="20" fill="none" stroke="${c}" stroke-width="2" opacity=".55" transform="rotate(-18 60 58)"/>`,
+    worldroute:`<path d="M25 72c13-17 22 2 34-14 10-14 18-3 34-20" fill="none" stroke="${c}" stroke-width="3" stroke-dasharray="4 4"/><circle cx="25" cy="72" r="3" fill="${c}"/><circle cx="93" cy="38" r="3" fill="${c}"/>`,
+  };
+  return motifs[motif]||"";
+}
+
+function renderAchBadge(def){
+  const rarity=def.rarity||"COMMON";
   const rs=RARITY_BADGE[rarity]||RARITY_BADGE.COMMON;
-  const iconFn=ACH_ICONS[iconKey]||ACH_ICONS.star;
+  const art=ACHIEVEMENT_ART[def.id]||{icon:def.icon,motif:"spark",label:String(def.goal||"")};
+  const iconFn=ACH_ICONS[art.icon]||ACH_ICONS[def.icon]||ACH_ICONS.star;
   const sparkle=(rarity==="LEGEND"||rarity==="MYTHIC")
-    ?'<circle cx="78" cy="20" r="2" fill="#fff" opacity="0.85"/><circle cx="20" cy="58" r="1.5" fill="#fff" opacity="0.6"/>'
+    ?'<circle cx="102" cy="20" r="2.4" fill="#fff" opacity=".9"/><circle cx="16" cy="68" r="1.7" fill="#fff" opacity=".7"/><path d="M95 88l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fff" opacity=".8"/>'
     :"";
-  return `<svg viewBox="0 0 100 100" width="48" height="48" aria-hidden="true">
-    <circle cx="50" cy="50" r="47" fill="url(#${rs.bg})"/>
-    <circle cx="50" cy="50" r="47" fill="url(#achBevel)"/>
-    <circle cx="50" cy="50" r="46" fill="none" stroke="${rs.ring}" stroke-width="2" stroke-opacity="0.85"/>
-    <g filter="url(#achShadow)">${iconFn()}</g>
+  const motif=achievementMotif(art.motif,rs.ring);
+  const label=String(art.label||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  return `<svg class="premium-ach-svg" viewBox="0 0 120 120" aria-hidden="true">
+    <defs><filter id="g-${def.id}" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="4.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+    <path class="ach-aura" d="M60 4 104 29v51l-44 26L16 80V29z" fill="none" stroke="${rs.ring}" stroke-width="3.2" opacity=".30" filter="url(#g-${def.id})"/>
+    <path d="M60 7 101 31v47l-41 24-41-24V31z" fill="url(#${rs.bg})" stroke="${rs.ring}" stroke-width="2.6"/>
+    <path d="M60 12 96 33v42L60 96 24 75V33z" fill="#070b12" fill-opacity=".64" stroke="#fff" stroke-opacity=".17"/>
+    <path d="M31 35Q60 15 89 35" fill="none" stroke="#fff" stroke-width="2.2" opacity=".20"/>
+    <g transform="translate(10 7) scale(1.00)" filter="url(#achShadow)">${iconFn()}</g>
+    <g class="achievement-motif">${motif}</g>
     ${sparkle}
+    <g class="ach-goal-seal"><rect x="72" y="87" width="35" height="18" rx="9" fill="#070b12" stroke="${rs.ring}" stroke-width="1.5"/><text x="89.5" y="99.5" text-anchor="middle" font-size="10.5" font-weight="900" fill="#fff">${label}</text></g>
   </svg>`;
 }
+
 
 const achievementDefs = [
   // Food
@@ -1061,7 +1292,7 @@ function renderRewards(){
     const shown=achievementDisplay(a);
     return `<div class="achievement-card r-${a.rarity.toLowerCase()} ${done?"unlocked":"locked"}">
       <span class="achievement-rarity">${a.rarity}</span>
-      <span class="achievement-icon">${renderAchBadge(a.icon,a.rarity)}</span>
+      <span class="achievement-icon">${renderAchBadge(a)}</span>
       <h4>${esc(shown.title)}</h4>
       <p>${esc(shown.desc)}</p>
       <div class="achievement-mini-progress"><i style="width:${progress}%"></i></div>
