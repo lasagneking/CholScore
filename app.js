@@ -981,53 +981,55 @@ function freshAchievementCore(iconKey,ring,def,art){
 }
 
 function renderWalkingSoleBadge(def){
+  // Walking collection: the trainer outsole itself IS the achievement badge.
+  // Deliberately no pictograms inside another badge — just a premium outsole,
+  // integrated milestone and progressively richer rarity materials.
   const rarity=def.rarity||"COMMON";
-  const rs=RARITY_BADGE[rarity]||RARITY_BADGE.COMMON;
   const safeId=String(def.id||"walk").replace(/[^a-zA-Z0-9_-]/g,"");
-  const configs={
-    walk_first:{label:"1",mark:"steps",accent:"#aeb8ca"},
-    walk_1mi:{label:"1",mark:"flag",accent:"#8fd34f"},
-    walk_5mi:{label:"5",mark:"trail",accent:"#ff8a3d"},
-    walk_25mi:{label:"25",mark:"compass",accent:"#b77cff"},
-    walking_50:{label:"50",mark:"boot",accent:"#52d9ff"},
-    walk_100mi:{label:"100",mark:"road",accent:"#a879ff"},
-    walk_250mi:{label:"250",mark:"mountain",accent:"#ffd166"},
-    walking_500:{label:"500",mark:"globe",accent:"#54d9ff"},
-    walking_1000:{label:"1000",mark:"summit",accent:"#ff5fd1"}
+  const palettes={
+    COMMON:{edge:"#d8dee9",tread:"#b8c1d1",hot:"#f3f6fb",glow:"#aab7cc"},
+    RARE:{edge:"#59dcff",tread:"#22bce8",hot:"#b8f3ff",glow:"#31cfff"},
+    EPIC:{edge:"#bd78ff",tread:"#8e4de8",hot:"#e3c3ff",glow:"#a95fff"},
+    LEGEND:{edge:"#ffd35b",tread:"#d99a16",hot:"#fff0a3",glow:"#ffc52e"},
+    MYTHIC:{edge:"#f27ce8",tread:"#55dfff",hot:"#fff1ff",glow:"#b56cff"}
   };
-  const c=configs[def.id]||{label:String(def.goal||""),mark:"steps",accent:rs.ring};
-  const a=c.accent;
-  const tread=`<g fill="${a}" stroke="#05070b" stroke-width="1.2">
-    <path d="M44 17l8 7-8 7-8-7z"/><path d="M60 14l8 8-8 8-8-8z"/><path d="M76 17l8 7-8 7-8-7z"/>
-    <path d="M38 33l11 7-8 9-10-6z"/><path d="M82 33l-11 7 8 9 10-6z"/>
-    <path d="M34 51l13 7-6 10-13-6z"/><path d="M86 51l-13 7 6 10 13-6z"/>
-    <path d="M33 72l14 5-4 11-14-5z"/><path d="M87 72l-14 5 4 11 14-5z"/>
-    <path d="M38 92l12 4-2 10-13-3z"/><path d="M82 92l-12 4 2 10 13-3z"/>
-  </g>`;
-  const marks={
-    steps:`<path d="M51 45c-7 6-10 15-8 22 2 7 9 11 15 8 8-3 9-12 6-20-3-8-8-14-13-10z" fill="#e7edf7"/><circle cx="47" cy="39" r="4" fill="#e7edf7"/><circle cx="55" cy="36" r="3.6" fill="#e7edf7"/><circle cx="62" cy="37" r="3" fill="#e7edf7"/>`,
-    flag:`<path d="M58 42v28" stroke="#e9eef8" stroke-width="4" stroke-linecap="round"/><path d="M60 43h17l-5 6 5 6H60z" fill="${a}"/>`,
-    trail:`<path d="M42 68c9-8 12-18 18-26 4 8 9 13 18 19" fill="none" stroke="#e9eef8" stroke-width="4" stroke-linecap="round" stroke-dasharray="4 4"/><path d="M60 39l-9 14h6l-8 12h22l-8-12h6z" fill="${a}"/>`,
-    compass:`<circle cx="60" cy="54" r="15" fill="none" stroke="#e9eef8" stroke-width="3"/><path d="M65 44l-3 12-10 7 3-12z" fill="${a}"/><circle cx="60" cy="54" r="3" fill="#fff"/>`,
-    boot:`<path d="M49 39h14v20l12 7c4 2 6 5 6 10H45V60l-5-3V39z" fill="${a}" stroke="#e9eef8" stroke-width="2"/><path d="M45 70h36v7H41c0-3 1-5 4-7z" fill="#e9eef8"/>`,
-    road:`<path d="M46 71c5-9 7-18 14-31 7 13 9 22 14 31z" fill="#202735" stroke="#e9eef8" stroke-width="2"/><path d="M60 44v7m0 6v7" stroke="${a}" stroke-width="3" stroke-linecap="round"/>`,
-    mountain:`<path d="M39 69l14-23 7 10 6-8 16 21z" fill="${a}"/><path d="M53 46l4 6-4 5-4-4zM66 48l4 5-4 5-4-4z" fill="#fff"/>`,
-    globe:`<circle cx="60" cy="55" r="17" fill="none" stroke="#e9eef8" stroke-width="3"/><ellipse cx="60" cy="55" rx="7" ry="17" fill="none" stroke="${a}" stroke-width="2"/><path d="M43 55h34" stroke="${a}" stroke-width="2"/>`,
-    summit:`<path d="M38 69l15-24 7 9 7-12 16 27z" fill="${a}"/><path d="M67 42l4 7-4 4-4-4z" fill="#fff"/><path d="M60 34l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fff"/>`
-  };
-  const label=String(c.label).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-  return `<svg class="premium-ach-svg walking-sole-svg" viewBox="0 0 120 120" aria-hidden="true">
+  const p=palettes[rarity]||palettes.COMMON;
+  const labels={walk_first:"FIRST",walk_1mi:"1",walk_5mi:"5",walk_25mi:"25",walking_50:"50",walk_100mi:"100",walk_250mi:"250",walking_500:"500",walking_1000:"1000"};
+  const label=labels[def.id]||String(def.goal||"");
+  const unit=def.id==="walk_first"?"STEPS":"MI";
+  const mythic=rarity==="MYTHIC";
+  return `<svg class="premium-ach-svg walking-sole-svg" viewBox="0 0 120 150" aria-hidden="true">
     <defs>
-      <linearGradient id="sole-${safeId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#303847"/><stop offset=".48" stop-color="#101620"/><stop offset="1" stop-color="#05080d"/></linearGradient>
-      <filter id="soleGlow-${safeId}" x="-80%" y="-50%" width="260%" height="200%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="walkBody-${safeId}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#313946"/><stop offset=".42" stop-color="#141a24"/><stop offset="1" stop-color="#06090f"/></linearGradient>
+      <linearGradient id="walkTread-${safeId}" x1="0" y1="0" x2="0" y2="1"><stop stop-color="${p.hot}"/><stop offset=".22" stop-color="${p.tread}"/><stop offset="1" stop-color="${p.edge}"/></linearGradient>
+      ${mythic?`<linearGradient id="walkMythic-${safeId}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff6ecf"/><stop offset=".48" stop-color="#a779ff"/><stop offset="1" stop-color="#43ddff"/></linearGradient>`:""}
+      <filter id="walkGlow-${safeId}" x="-70%" y="-40%" width="240%" height="180%"><feGaussianBlur stdDeviation="3.4" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="walkShadow-${safeId}" x="-40%" y="-30%" width="180%" height="180%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000" flood-opacity=".75"/></filter>
     </defs>
-    <path d="M60 5c18 0 29 10 31 27 2 14-5 24-5 36 0 10 8 18 6 31-2 11-12 17-32 17s-30-6-32-17c-2-13 6-21 6-31 0-12-7-22-5-36C31 15 42 5 60 5z" fill="${a}" opacity=".14" filter="url(#soleGlow-${safeId})"/>
-    <path d="M60 7c17 0 27 9 29 25 2 14-5 24-5 36 0 11 8 19 5 30-2 10-11 15-29 15s-27-5-29-15c-3-11 5-19 5-30 0-12-7-22-5-36C33 16 43 7 60 7z" fill="url(#sole-${safeId})" stroke="#05070b" stroke-width="5"/>
-    <path d="M60 10c15 0 23 8 25 22 2 12-5 23-5 36 0 12 7 20 5 29-2 8-10 12-25 12s-23-4-25-12c-2-9 5-17 5-29 0-13-7-24-5-36 2-14 10-22 25-22z" fill="none" stroke="#dce4ef" stroke-opacity=".78" stroke-width="2" stroke-dasharray="2.5 2.2"/>
-    ${tread}
-    <path d="M43 36c5-5 11-7 17-7s12 2 17 7v43c-5 5-11 8-17 8s-12-3-17-8z" fill="#1a202b" stroke="#e1e7f0" stroke-opacity=".42" stroke-width="1.5"/>
-    ${marks[c.mark]||marks.steps}
-    <text x="60" y="96" text-anchor="middle" font-size="13" font-weight="950" fill="#f4f7fb" stroke="#05070b" stroke-width=".8" paint-order="stroke">${label}</text>
+    <g filter="url(#walkShadow-${safeId})">
+      <path d="M58 5C40 5 29 16 27 35c-1 13 5 25 6 35 1 9-5 19-7 30-3 17 1 31 10 39 6 5 14 7 24 7s18-2 24-7c9-8 13-22 10-39-2-11-8-21-7-30 1-10 7-22 6-35C91 16 80 5 62 5z" fill="${mythic?`url(#walkMythic-${safeId})`:p.glow}" opacity=".24" filter="url(#walkGlow-${safeId})"/>
+      <path d="M59 7C43 7 33 17 31 35c-1 13 6 25 6 36 0 10-6 19-8 30-2 14 1 26 8 33 5 5 12 7 23 7s18-2 23-7c7-7 10-19 8-33-2-11-8-20-8-30 0-11 7-23 6-36C87 17 77 7 61 7z" fill="url(#walkBody-${safeId})" stroke="${mythic?`url(#walkMythic-${safeId})`:p.edge}" stroke-width="2.6"/>
+      <!-- Forefoot: realistic segmented rubber lugs -->
+      <g fill="${mythic?`url(#walkMythic-${safeId})`:`url(#walkTread-${safeId})`}" stroke="#090c12" stroke-width="1.5">
+        <path d="M39 18l11-5 5 10-12 6z"/><path d="M57 12h8l2 12H55z"/><path d="M70 14l11 5-4 11-12-6z"/>
+        <path d="M35 33l14-5 4 10-15 6z"/><path d="M55 28h11l1 11H54z"/><path d="M70 29l15 5-3 11-15-6z"/>
+        <path d="M36 48l15-5 3 10-15 6z"/><path d="M55 43h12v11H54z"/><path d="M69 44l14 5-3 11-14-6z"/>
+        <path d="M40 63l13-5 3 9-13 7z"/><path d="M67 58l13 6-4 10-13-7z"/>
+        <!-- Heel -->
+        <path d="M35 105l14-5 5 11-15 6z"/><path d="M66 101l14 5-4 11-15-6z"/>
+        <path d="M37 120l15-5 4 11-14 7z"/><path d="M64 115l17 5-3 12-16-6z"/>
+        <path d="M47 132h26l-4 7H51z"/>
+      </g>
+      <!-- Flex channels and carbon-like waist -->
+      <path d="M40 79c8-5 32-5 40 0M38 91c10-5 34-5 44 0" fill="none" stroke="#566171" stroke-width="2" opacity=".7"/>
+      <path d="M48 69c6 4 18 4 24 0l5 30c-9-4-25-4-34 0z" fill="#0a0e15" stroke="${p.edge}" stroke-opacity=".45" stroke-width="1.2"/>
+      <!-- Achievement moulded directly into outsole -->
+      <text x="60" y="84" text-anchor="middle" font-size="${label.length>3?12:18}" font-weight="950" fill="#f7f9fc" stroke="#05070b" stroke-width="1.4" paint-order="stroke">${label}</text>
+      <text x="60" y="96" text-anchor="middle" font-size="8" font-weight="900" letter-spacing="1.4" fill="${p.edge}">${unit}</text>
+      <path d="M47 102h26" stroke="${p.edge}" stroke-width="1.4" opacity=".65"/>
+      <!-- subtle moulding highlights -->
+      <path d="M36 37c1-15 9-24 22-26M84 38c-1-14-8-23-20-27" fill="none" stroke="#fff" stroke-width="1.2" opacity=".18"/>
+    </g>
   </svg>`;
 }
 
