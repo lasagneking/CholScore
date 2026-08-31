@@ -1033,6 +1033,24 @@ function renderWalkingSoleBadge(def){
   </svg>`;
 }
 
+const RUNNING_ACHIEVEMENT_ASSETS = Object.freeze({
+  run_first:"assets/achievements/running/run_first.webp",
+  run_1mi:"assets/achievements/running/run_1mi.webp",
+  run_5mi:"assets/achievements/running/run_5mi.webp",
+  run_25mi:"assets/achievements/running/run_25mi.webp",
+  running_50:"assets/achievements/running/run_50mi.webp",
+  run_100mi:"assets/achievements/running/run_100mi.webp",
+  run_250mi:"assets/achievements/running/run_250mi.webp",
+  running_500:"assets/achievements/running/run_500mi.webp",
+  running_1000:"assets/achievements/running/run_1000mi.webp"
+});
+function renderRunningBadge(def){
+  const src=RUNNING_ACHIEVEMENT_ASSETS[def.id];
+  if(!src) return null;
+  const alt=String(def.title||"Running achievement").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;");
+  return `<img class="premium-ach-img running-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
+}
+
 const SWIMMING_ACHIEVEMENT_ASSETS = Object.freeze({
   swim_half:"assets/achievements/swimming/swim_half.webp",
   swim_1mi:"assets/achievements/swimming/swim_1mi.webp",
@@ -1095,6 +1113,7 @@ function renderSwimmingVectorBadge(def){
 }
 
 function renderAchBadge(def){
+  if(def.cat==="running" && RUNNING_ACHIEVEMENT_ASSETS[def.id]) return renderRunningBadge(def);
   if(def.cat==="walking") return renderWalkingSoleBadge(def);
   if(def.cat==="swimming" || def.metric==="weekSwimMiles") return renderSwimmingBadge(def);
   const rarity=def.rarity||"COMMON";
