@@ -980,7 +980,59 @@ function freshAchievementCore(iconKey,ring,def,art){
   return symbols[iconKey]||symbols.star;
 }
 
+function renderWalkingSoleBadge(def){
+  const rarity=def.rarity||"COMMON";
+  const rs=RARITY_BADGE[rarity]||RARITY_BADGE.COMMON;
+  const safeId=String(def.id||"walk").replace(/[^a-zA-Z0-9_-]/g,"");
+  const configs={
+    walk_first:{label:"1",mark:"steps",accent:"#aeb8ca"},
+    walk_1mi:{label:"1",mark:"flag",accent:"#8fd34f"},
+    walk_5mi:{label:"5",mark:"trail",accent:"#ff8a3d"},
+    walk_25mi:{label:"25",mark:"compass",accent:"#b77cff"},
+    walking_50:{label:"50",mark:"boot",accent:"#52d9ff"},
+    walk_100mi:{label:"100",mark:"road",accent:"#a879ff"},
+    walk_250mi:{label:"250",mark:"mountain",accent:"#ffd166"},
+    walking_500:{label:"500",mark:"globe",accent:"#54d9ff"},
+    walking_1000:{label:"1000",mark:"summit",accent:"#ff5fd1"}
+  };
+  const c=configs[def.id]||{label:String(def.goal||""),mark:"steps",accent:rs.ring};
+  const a=c.accent;
+  const tread=`<g fill="${a}" stroke="#05070b" stroke-width="1.2">
+    <path d="M44 17l8 7-8 7-8-7z"/><path d="M60 14l8 8-8 8-8-8z"/><path d="M76 17l8 7-8 7-8-7z"/>
+    <path d="M38 33l11 7-8 9-10-6z"/><path d="M82 33l-11 7 8 9 10-6z"/>
+    <path d="M34 51l13 7-6 10-13-6z"/><path d="M86 51l-13 7 6 10 13-6z"/>
+    <path d="M33 72l14 5-4 11-14-5z"/><path d="M87 72l-14 5 4 11 14-5z"/>
+    <path d="M38 92l12 4-2 10-13-3z"/><path d="M82 92l-12 4 2 10 13-3z"/>
+  </g>`;
+  const marks={
+    steps:`<path d="M51 45c-7 6-10 15-8 22 2 7 9 11 15 8 8-3 9-12 6-20-3-8-8-14-13-10z" fill="#e7edf7"/><circle cx="47" cy="39" r="4" fill="#e7edf7"/><circle cx="55" cy="36" r="3.6" fill="#e7edf7"/><circle cx="62" cy="37" r="3" fill="#e7edf7"/>`,
+    flag:`<path d="M58 42v28" stroke="#e9eef8" stroke-width="4" stroke-linecap="round"/><path d="M60 43h17l-5 6 5 6H60z" fill="${a}"/>`,
+    trail:`<path d="M42 68c9-8 12-18 18-26 4 8 9 13 18 19" fill="none" stroke="#e9eef8" stroke-width="4" stroke-linecap="round" stroke-dasharray="4 4"/><path d="M60 39l-9 14h6l-8 12h22l-8-12h6z" fill="${a}"/>`,
+    compass:`<circle cx="60" cy="54" r="15" fill="none" stroke="#e9eef8" stroke-width="3"/><path d="M65 44l-3 12-10 7 3-12z" fill="${a}"/><circle cx="60" cy="54" r="3" fill="#fff"/>`,
+    boot:`<path d="M49 39h14v20l12 7c4 2 6 5 6 10H45V60l-5-3V39z" fill="${a}" stroke="#e9eef8" stroke-width="2"/><path d="M45 70h36v7H41c0-3 1-5 4-7z" fill="#e9eef8"/>`,
+    road:`<path d="M46 71c5-9 7-18 14-31 7 13 9 22 14 31z" fill="#202735" stroke="#e9eef8" stroke-width="2"/><path d="M60 44v7m0 6v7" stroke="${a}" stroke-width="3" stroke-linecap="round"/>`,
+    mountain:`<path d="M39 69l14-23 7 10 6-8 16 21z" fill="${a}"/><path d="M53 46l4 6-4 5-4-4zM66 48l4 5-4 5-4-4z" fill="#fff"/>`,
+    globe:`<circle cx="60" cy="55" r="17" fill="none" stroke="#e9eef8" stroke-width="3"/><ellipse cx="60" cy="55" rx="7" ry="17" fill="none" stroke="${a}" stroke-width="2"/><path d="M43 55h34" stroke="${a}" stroke-width="2"/>`,
+    summit:`<path d="M38 69l15-24 7 9 7-12 16 27z" fill="${a}"/><path d="M67 42l4 7-4 4-4-4z" fill="#fff"/><path d="M60 34l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fff"/>`
+  };
+  const label=String(c.label).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  return `<svg class="premium-ach-svg walking-sole-svg" viewBox="0 0 120 120" aria-hidden="true">
+    <defs>
+      <linearGradient id="sole-${safeId}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#303847"/><stop offset=".48" stop-color="#101620"/><stop offset="1" stop-color="#05080d"/></linearGradient>
+      <filter id="soleGlow-${safeId}" x="-80%" y="-50%" width="260%" height="200%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <path d="M60 5c18 0 29 10 31 27 2 14-5 24-5 36 0 10 8 18 6 31-2 11-12 17-32 17s-30-6-32-17c-2-13 6-21 6-31 0-12-7-22-5-36C31 15 42 5 60 5z" fill="${a}" opacity=".14" filter="url(#soleGlow-${safeId})"/>
+    <path d="M60 7c17 0 27 9 29 25 2 14-5 24-5 36 0 11 8 19 5 30-2 10-11 15-29 15s-27-5-29-15c-3-11 5-19 5-30 0-12-7-22-5-36C33 16 43 7 60 7z" fill="url(#sole-${safeId})" stroke="#05070b" stroke-width="5"/>
+    <path d="M60 10c15 0 23 8 25 22 2 12-5 23-5 36 0 12 7 20 5 29-2 8-10 12-25 12s-23-4-25-12c-2-9 5-17 5-29 0-13-7-24-5-36 2-14 10-22 25-22z" fill="none" stroke="#dce4ef" stroke-opacity=".78" stroke-width="2" stroke-dasharray="2.5 2.2"/>
+    ${tread}
+    <path d="M43 36c5-5 11-7 17-7s12 2 17 7v43c-5 5-11 8-17 8s-12-3-17-8z" fill="#1a202b" stroke="#e1e7f0" stroke-opacity=".42" stroke-width="1.5"/>
+    ${marks[c.mark]||marks.steps}
+    <text x="60" y="96" text-anchor="middle" font-size="13" font-weight="950" fill="#f4f7fb" stroke="#05070b" stroke-width=".8" paint-order="stroke">${label}</text>
+  </svg>`;
+}
+
 function renderAchBadge(def){
+  if(def.cat==="walking") return renderWalkingSoleBadge(def);
   const rarity=def.rarity||"COMMON";
   const rs=RARITY_BADGE[rarity]||RARITY_BADGE.COMMON;
   const art=ACHIEVEMENT_ART[def.id]||{icon:def.icon,motif:"spark",label:String(def.goal||"")};
