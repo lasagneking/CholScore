@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "175"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "176"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -1033,7 +1033,26 @@ function renderWalkingSoleBadge(def){
   </svg>`;
 }
 
+const SWIMMING_ACHIEVEMENT_ASSETS = Object.freeze({
+  swim_half:"assets/achievements/swimming/swim_half.webp",
+  swim_1mi:"assets/achievements/swimming/swim_1mi.webp",
+  swim_5mi:"assets/achievements/swimming/swim_5mi.webp",
+  swim_10mi:"assets/achievements/swimming/swim_10mi.webp",
+  swim_20mi:"assets/achievements/swimming/swim_20mi.webp",
+  swim_50mi:"assets/achievements/swimming/swim_50mi.webp",
+  swim_100mi:"assets/achievements/swimming/swim_100mi.webp",
+  swim_200mi:"assets/achievements/swimming/swim_200mi.webp"
+});
 function renderSwimmingBadge(def){
+  const src=SWIMMING_ACHIEVEMENT_ASSETS[def.id];
+  if(src){
+    const alt=String(def.title||"Swimming achievement").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;");
+    return `<img class="premium-ach-img swimming-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
+  }
+  return renderSwimmingVectorBadge(def);
+}
+
+function renderSwimmingVectorBadge(def){
   const rarity=def.rarity||"COMMON";
   const safeId=String(def.id||"swim").replace(/[^a-zA-Z0-9_-]/g,"");
   const accent=rarity==="MYTHIC"?"#65e9ff":rarity==="LEGEND"?"#f3c95f":rarity==="EPIC"?"#b879ff":rarity==="RARE"?"#4fd8ff":"#aeb8ca";
