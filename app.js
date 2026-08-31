@@ -1035,35 +1035,43 @@ function renderWalkingSoleBadge(def){
 
 function renderSwimmingBadge(def){
   const rarity=def.rarity||"COMMON";
-  const rs=RARITY_BADGE[rarity]||RARITY_BADGE.COMMON;
   const safeId=String(def.id||"swim").replace(/[^a-zA-Z0-9_-]/g,"");
-  const accent=rarity==="MYTHIC"?"#6ee7ff":rarity==="LEGEND"?"#f3c95f":rarity==="EPIC"?"#b879ff":rarity==="RARE"?"#52d9ff":"#aeb8ca";
-  const labels={swim_half:"0.5 MI",swim_1mi:"1 MI",swim_5mi:"5 MI",swim_10mi:"10 MI",swim_20mi:"20 MI",swim_50mi:"50 MI",swim_100mi:"100 MI",swim_200mi:"200 MI",week_swim_1:"1 MI",week_swim_3:"3 MI",week_swim_6:"6 MI"};
+  const accent=rarity==="MYTHIC"?"#65e9ff":rarity==="LEGEND"?"#f3c95f":rarity==="EPIC"?"#b879ff":rarity==="RARE"?"#4fd8ff":"#aeb8ca";
+  const labels={swim_half:"½ MI",swim_1mi:"1 MI",swim_5mi:"5 MI",swim_10mi:"10 MI",swim_20mi:"20 MI",swim_50mi:"50 MI",swim_100mi:"100 MI",swim_200mi:"200 MI",week_swim_1:"1 MI",week_swim_3:"3 MI",week_swim_6:"6 MI"};
   const label=labels[def.id]||`${def.goal||""} MI`;
   const mythic=rarity==="MYTHIC";
+  const legend=rarity==="LEGEND";
+  /* Purpose-built freestyle silhouette: long horizontal torso, obvious head,
+     one lead arm reaching forward and one recovery arm arcing above the water. */
   return `<svg class="premium-ach-svg swimming-badge-svg" viewBox="0 0 120 120" aria-hidden="true">
     <defs>
-      <linearGradient id="swimWater-${safeId}" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="${mythic?'#ff67d8':accent}"/><stop offset=".55" stop-color="${accent}"/><stop offset="1" stop-color="${mythic?'#57f2ff':accent}" stop-opacity=".55"/>
-      </linearGradient>
-      <linearGradient id="swimBody-${safeId}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f7fbff"/><stop offset=".28" stop-color="#9da9ba"/><stop offset=".62" stop-color="#4b5667"/><stop offset="1" stop-color="#171d28"/></linearGradient>
-      <filter id="swimGlow-${safeId}" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="${mythic?'4':'2.2'}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="water-${safeId}" x1="0" y1="0" x2="1" y2="0"><stop stop-color="${mythic?'#ff63d8':accent}"/><stop offset=".52" stop-color="${accent}"/><stop offset="1" stop-color="${mythic?'#57f2ff':'#2c8fc4'}"/></linearGradient>
+      <linearGradient id="body-${safeId}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f7fbff"/><stop offset=".18" stop-color="#cbd5e4"/><stop offset=".55" stop-color="#77849a"/><stop offset="1" stop-color="#303949"/></linearGradient>
+      <filter id="sg-${safeId}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${mythic?'3.2':'1.25'}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     </defs>
-    <path d="M15 75c11-8 20-8 30 0s20 8 30 0 20-8 30 0" fill="none" stroke="url(#swimWater-${safeId})" stroke-width="7" stroke-linecap="round" opacity=".34" filter="url(#swimGlow-${safeId})"/>
-    <path d="M12 82c10-7 19-7 29 0s19 7 29 0 19-7 38 0" fill="none" stroke="url(#swimWater-${safeId})" stroke-width="4.5" stroke-linecap="round" opacity=".9"/>
-    <path d="M17 91c8-5 16-5 24 0s16 5 24 0 16-5 24 0 13 4 19 1" fill="none" stroke="url(#swimWater-${safeId})" stroke-width="3" stroke-linecap="round" opacity=".55"/>
-    <g filter="url(#swimGlow-${safeId})">
-      <circle cx="77" cy="48" r="8" fill="#dfe7f2"/>
-      <path d="M69 54c-11 0-20 4-29 10-8 5-15 7-22 5" fill="none" stroke="#dfe7f2" stroke-width="10" stroke-linecap="round"/>
-      <path d="M53 59c-9-8-18-15-29-18-5-1-8 5-3 8 8 4 15 9 22 17" fill="none" stroke="#dfe7f2" stroke-width="8" stroke-linecap="round"/>
-      <path d="M59 58c8-10 15-20 19-31 2-6-5-9-8-4-5 9-12 18-21 26" fill="none" stroke="#dfe7f2" stroke-width="8" stroke-linecap="round"/>
-      <path d="M39 65c-7 2-13 6-18 11" fill="none" stroke="#dfe7f2" stroke-width="7" stroke-linecap="round"/>
-      <path d="M84 55c8 3 14 7 20 13" fill="none" stroke="#dfe7f2" stroke-width="6" stroke-linecap="round" opacity=".82"/>
+    ${legend?`<circle cx="60" cy="57" r="46" fill="none" stroke="${accent}" stroke-width="1.5" opacity=".28"/>`:''}
+    <g filter="url(#sg-${safeId})">
+      <!-- head + neck -->
+      <circle cx="78" cy="47" r="7.2" fill="url(#body-${safeId})"/>
+      <path d="M72 52 Q69 55 66 58" fill="none" stroke="url(#body-${safeId})" stroke-width="7" stroke-linecap="round"/>
+      <!-- torso, unmistakably horizontal in the water -->
+      <path d="M67 58 C57 57 48 59 39 64 C33 67 28 69 22 68" fill="none" stroke="url(#body-${safeId})" stroke-width="12" stroke-linecap="round"/>
+      <!-- forward arm: shoulder to hand, reaching right -->
+      <path d="M66 59 C77 61 87 65 101 68" fill="none" stroke="url(#body-${safeId})" stroke-width="7.5" stroke-linecap="round"/>
+      <ellipse cx="104" cy="69" rx="5" ry="2.5" fill="#cbd5e4" transform="rotate(12 104 69)"/>
+      <!-- recovery arm: elbow clearly above head, then hand entering ahead -->
+      <path d="M55 59 C59 49 63 38 69 29 C72 25 77 27 76 32 C74 39 72 45 75 51" fill="none" stroke="url(#body-${safeId})" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- trailing arm/hand at waterline -->
+      <path d="M40 64 C34 58 28 55 21 54" fill="none" stroke="url(#body-${safeId})" stroke-width="6" stroke-linecap="round"/>
+      <!-- small wake behind body -->
+      <path d="M18 70 C25 66 31 66 37 70" fill="none" stroke="${accent}" stroke-width="2.5" stroke-linecap="round" opacity=".75"/>
     </g>
-    <path d="M83 51c7 1 13 4 18 8" fill="none" stroke="${accent}" stroke-width="2.5" stroke-linecap="round"/>
-    <rect x="34" y="96" width="52" height="18" rx="9" fill="#080c13" stroke="${accent}" stroke-width="2"/>
-    <text x="60" y="109" text-anchor="middle" font-size="11" font-weight="950" fill="#f6f9ff">${label}</text>
-    ${mythic?'<circle cx="18" cy="25" r="2" fill="#ff72dc"/><circle cx="102" cy="34" r="2" fill="#61eaff"/><path d="M96 18l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fff" opacity=".9"/>':''}
+    <!-- water is deliberately below the body, never through the swimmer -->
+    <path d="M10 77 C19 71 28 71 37 77 S55 83 64 77 82 71 91 77 104 81 111 77" fill="none" stroke="url(#water-${safeId})" stroke-width="5" stroke-linecap="round"/>
+    <path d="M16 85 C24 81 32 81 40 85 S56 89 64 85 80 81 88 85 101 88 108 84" fill="none" stroke="url(#water-${safeId})" stroke-width="2.8" stroke-linecap="round" opacity=".62"/>
+    <rect x="37" y="94" width="46" height="18" rx="9" fill="#080c13" stroke="${accent}" stroke-width="2"/>
+    <text x="60" y="107.5" text-anchor="middle" font-size="10.5" font-weight="950" fill="#f6f9ff">${label}</text>
+    ${mythic?'<circle cx="18" cy="25" r="2" fill="#ff72dc"/><circle cx="102" cy="34" r="2" fill="#61eaff"/><path d="M96 18l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" fill="#fff" opacity=".92"/>':''}
   </svg>`;
 }
 
