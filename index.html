@@ -1074,6 +1074,31 @@
 .achievement-card.locked .fresh-achievement-svg{opacity:.78}
 .achievement-card.r-mythic{background:linear-gradient(155deg,rgba(19,24,38,.99),rgba(10,11,20,.99))!important}
 .achievement-card.r-mythic.unlocked{outline:1px solid rgba(255,95,209,.12);outline-offset:-2px}
+/* Mythic aura — restored as a full-card glow, without the old horizontal pseudo-element */
+.achievement-card.r-mythic{
+  border-color:rgba(196,111,192,.40)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 34px rgba(0,0,0,.25),0 0 22px rgba(168,121,255,.12),0 0 42px rgba(255,95,209,.07)!important;
+  animation:mythicAura 3.6s ease-in-out infinite;
+}
+.achievement-card.r-mythic.unlocked{
+  border-color:rgba(255,95,209,.72)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 14px 36px rgba(0,0,0,.26),0 0 26px rgba(84,217,255,.18),0 0 48px rgba(168,121,255,.24),0 0 70px rgba(255,95,209,.14)!important;
+}
+.achievement-card.r-mythic .achievement-rarity{
+  background:linear-gradient(135deg,rgba(255,95,209,.92),rgba(168,121,255,.92) 52%,rgba(84,217,255,.92))!important;
+  color:#100916!important;
+  box-shadow:0 0 14px rgba(255,95,209,.30),0 0 26px rgba(84,217,255,.16)!important;
+}
+.achievement-card.r-mythic .achievement-icon{
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.42)) drop-shadow(0 0 13px rgba(168,121,255,.20));
+}
+.achievement-card.r-mythic.unlocked .achievement-icon{
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.42)) drop-shadow(0 0 16px rgba(84,217,255,.28)) drop-shadow(0 0 24px rgba(255,95,209,.20));
+}
+@keyframes mythicAura{
+  0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 34px rgba(0,0,0,.25),0 0 22px rgba(168,121,255,.12),0 0 42px rgba(255,95,209,.07)}
+  50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 14px 36px rgba(0,0,0,.25),0 0 30px rgba(84,217,255,.15),0 0 54px rgba(168,121,255,.16),0 0 68px rgba(255,95,209,.10)}
+}
 @keyframes achFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @media(max-width:390px){.achievement-card{min-height:296px!important;padding:15px 12px!important}.achievement-icon,.achievement-icon svg{width:126px!important;height:126px!important}.achievement-card h4{font-size:16px!important}.achievement-card p{font-size:12px!important}}
 @media(prefers-reduced-motion:reduce){.achievement-card.unlocked .achievement-icon{animation:none}}
