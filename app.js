@@ -1051,6 +1051,42 @@ function renderRunningBadge(def){
   return `<img class="premium-ach-img running-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
 }
 
+const WORKOUT_ACHIEVEMENT_ASSETS = Object.freeze({
+  workout_first:"assets/achievements/workout/workout_first.webp",
+  workout_5:"assets/achievements/workout/workout_5.webp",
+  workout_25:"assets/achievements/workout/workout_25.webp",
+  workout_100:"assets/achievements/workout/workout_100.webp",
+  sets_100:"assets/achievements/workout/sets_100.webp",
+  sets_500:"assets/achievements/workout/sets_500.webp",
+  routine_first:"assets/achievements/workout/routine_first.webp",
+  pr_first:"assets/achievements/workout/pr_first.webp",
+  pr_3:"assets/achievements/workout/pr_3.webp",
+  weight_10000:"assets/achievements/workout/weight_10000.webp",
+  weight_100000:"assets/achievements/workout/weight_100000.webp",
+  workout_sets_25:"assets/achievements/workout/workout_sets_25.webp",
+  workout_pr_10:"assets/achievements/workout/workout_pr_10.webp",
+  workout_50:"assets/achievements/workout/workout_50.webp",
+  workout_sets_250:"assets/achievements/workout/workout_sets_250.webp",
+  workout_pr_25:"assets/achievements/workout/workout_pr_25.webp",
+  workout_weight_50000:"assets/achievements/workout/workout_weight_50000.webp",
+  workout_150:"assets/achievements/workout/workout_150.webp",
+  workout_sets_1000:"assets/achievements/workout/workout_sets_1000.webp",
+  workout_weight_250000:"assets/achievements/workout/workout_weight_250000.webp",
+  workout_250:"assets/achievements/workout/workout_250.webp",
+  workout_sets_2500:"assets/achievements/workout/workout_sets_2500.webp",
+  workout_pr_75:"assets/achievements/workout/workout_pr_75.webp",
+  workout_weight_500000:"assets/achievements/workout/workout_weight_500000.webp",
+  workout_500:"assets/achievements/workout/workout_500.webp",
+  workout_sets_5000:"assets/achievements/workout/workout_sets_5000.webp",
+  workout_weight_1000000:"assets/achievements/workout/workout_weight_1000000.webp"
+});
+function renderWorkoutBadge(def){
+  const src=WORKOUT_ACHIEVEMENT_ASSETS[def.id];
+  if(!src) return null;
+  const alt=String(def.title||"Workout achievement").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;");
+  return `<img class="premium-ach-img workout-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
+}
+
 const SWIMMING_ACHIEVEMENT_ASSETS = Object.freeze({
   swim_half:"assets/achievements/swimming/swim_half.webp",
   swim_1mi:"assets/achievements/swimming/swim_1mi.webp",
@@ -1113,6 +1149,7 @@ function renderSwimmingVectorBadge(def){
 }
 
 function renderAchBadge(def){
+  if(def.cat==="workout" && WORKOUT_ACHIEVEMENT_ASSETS[def.id]) return renderWorkoutBadge(def);
   if(def.cat==="running" && RUNNING_ACHIEVEMENT_ASSETS[def.id]) return renderRunningBadge(def);
   if(def.cat==="walking") return renderWalkingSoleBadge(def);
   if(def.cat==="swimming" || def.metric==="weekSwimMiles") return renderSwimmingBadge(def);
