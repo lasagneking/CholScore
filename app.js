@@ -1033,6 +1033,26 @@ function renderWalkingSoleBadge(def){
   </svg>`;
 }
 
+const CHOLSCORE_ACHIEVEMENT_ASSETS = Object.freeze({
+  score_70:"assets/achievements/cholscore/score_70.webp",
+  score_80:"assets/achievements/cholscore/score_80.webp",
+  score_90:"assets/achievements/cholscore/score_90.webp",
+  score_90x5:"assets/achievements/cholscore/score_90x5.webp",
+  points_500:"assets/achievements/cholscore/points_500.webp",
+  points_2500:"assets/achievements/cholscore/points_2500.webp",
+  points_100:"assets/achievements/cholscore/points_100.webp",
+  points_1000:"assets/achievements/cholscore/points_1000.webp",
+  points_10000:"assets/achievements/cholscore/points_10000.webp",
+  score_90_25:"assets/achievements/cholscore/score_90_25.webp",
+  points_25000:"assets/achievements/cholscore/points_25000.webp"
+});
+function renderCholScoreBadge(def){
+  const src=CHOLSCORE_ACHIEVEMENT_ASSETS[def.id];
+  if(!src) return null;
+  const alt=String(def.title||"CholScore achievement").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;");
+  return `<img class="premium-ach-img cholscore-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
+}
+
 const RUNNING_ACHIEVEMENT_ASSETS = Object.freeze({
   run_first:"assets/achievements/running/run_first.webp",
   run_1mi:"assets/achievements/running/run_1mi.webp",
@@ -1149,6 +1169,7 @@ function renderSwimmingVectorBadge(def){
 }
 
 function renderAchBadge(def){
+  if(def.cat==="score" && CHOLSCORE_ACHIEVEMENT_ASSETS[def.id]) return renderCholScoreBadge(def);
   if(def.cat==="workout" && WORKOUT_ACHIEVEMENT_ASSETS[def.id]) return renderWorkoutBadge(def);
   if(def.cat==="running" && RUNNING_ACHIEVEMENT_ASSETS[def.id]) return renderRunningBadge(def);
   if(def.cat==="walking") return renderWalkingSoleBadge(def);
