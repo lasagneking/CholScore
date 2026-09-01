@@ -55,6 +55,12 @@
   <link rel="apple-touch-startup-image" href="https://lasagneking.github.io/splash/apple-splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
   <link rel="apple-touch-startup-image" href="https://lasagneking.github.io/splash/apple-splash-1206x2622.png" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3)" />
   <link rel="apple-touch-startup-image" href="https://lasagneking.github.io/splash/apple-splash-1320x2868.png" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3)" />
+
+  <style id="quick-activity-premium-art">
+    .quick-activity .quick-activity-art{display:flex;align-items:center;justify-content:center;width:76px;height:76px;margin:0 0 4px;overflow:visible;line-height:1}
+    .quick-activity .quick-activity-art img{display:block;width:76px;height:76px;object-fit:contain;filter:drop-shadow(0 5px 10px rgba(0,0,0,.28));pointer-events:none}
+    .quick-activity.oneoff-card > span:not(.quick-activity-art){width:auto;height:auto;margin:0;filter:none}
+  </style>
 </head>
 <body>
 <!-- Shared achievement badge defs — referenced by every graphical achievement
@@ -330,12 +336,12 @@
         <section class="section-block">
           <div class="section-title"><h3>Quick activity</h3></div>
           <div class="exercise-actions">
-            <button class="activity-type-card quick-activity" data-type="walk"><span>🚶</span><strong>Walk</strong><small>Log a walk</small></button>
-            <button class="activity-type-card quick-activity" data-type="run"><span>🏃</span><strong>Run</strong><small>Log a run</small></button>
-            <button class="activity-type-card quick-activity" data-type="swim"><span>🏊</span><strong>Swim</strong><small>Log a swim</small></button>
-            <button class="activity-type-card quick-activity" data-type="cycle"><span>🚴</span><strong>Cycle</strong><small>Log a ride</small></button>
-            <button class="activity-type-card quick-activity" data-type="hike"><span>🥾</span><strong>Hike</strong><small>Log a hike</small></button>
-            <button class="activity-type-card quick-activity" data-type="row"><span>🚣</span><strong>Row</strong><small>Log a row</small></button>
+            <button class="activity-type-card quick-activity" data-type="walk"><span class="quick-activity-art"><img src="assets/activities/walk.webp" alt="" /></span><strong>Walk</strong><small>Log a walk</small></button>
+            <button class="activity-type-card quick-activity" data-type="run"><span class="quick-activity-art"><img src="assets/activities/run.webp" alt="" /></span><strong>Run</strong><small>Log a run</small></button>
+            <button class="activity-type-card quick-activity" data-type="swim"><span class="quick-activity-art"><img src="assets/activities/swim.webp" alt="" /></span><strong>Swim</strong><small>Log a swim</small></button>
+            <button class="activity-type-card quick-activity" data-type="cycle"><span class="quick-activity-art"><img src="assets/activities/cycle.webp" alt="" /></span><strong>Cycle</strong><small>Log a ride</small></button>
+            <button class="activity-type-card quick-activity" data-type="hike"><span class="quick-activity-art"><img src="assets/activities/hike.webp" alt="" /></span><strong>Hike</strong><small>Log a hike</small></button>
+            <button class="activity-type-card quick-activity" data-type="row"><span class="quick-activity-art"><img src="assets/activities/row.webp" alt="" /></span><strong>Row</strong><small>Log a row</small></button>
           </div>
           <button class="activity-type-card quick-activity oneoff-card" data-type="oneoff"><span>⚡</span><strong>One-off exercise</strong><small>Anything else, yoga, sports, a class</small></button>
         </section>
@@ -1036,7 +1042,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=180"></script>
+  <script src="app.js?v=181"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
