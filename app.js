@@ -1033,6 +1033,11 @@ function renderWalkingSoleBadge(def){
   </svg>`;
 }
 
+const WALKING_ACHIEVEMENT_ASSETS = Object.freeze({
+  walk_first:"assets/achievements/walking/walk_first.webp", walk_1mi:"assets/achievements/walking/walk_1mi.webp", walk_5mi:"assets/achievements/walking/walk_5mi.webp", walk_25mi:"assets/achievements/walking/walk_25mi.webp", walking_50:"assets/achievements/walking/walk_50mi.webp", walk_100mi:"assets/achievements/walking/walk_100mi.webp", walk_250mi:"assets/achievements/walking/walk_250mi.webp", walking_500:"assets/achievements/walking/walk_500mi.webp", walking_1000:"assets/achievements/walking/walk_1000mi.webp"
+});
+function renderWalkingAssetBadge(def){ const src=WALKING_ACHIEVEMENT_ASSETS[def.id]; if(!src)return null; const alt=String(def.title||"Walking achievement").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;"); return `<img class="premium-ach-img walking-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`; }
+
 const CHOLSCORE_ACHIEVEMENT_ASSETS = Object.freeze({
   score_70:"assets/achievements/cholscore/score_70.webp",
   score_80:"assets/achievements/cholscore/score_80.webp",
@@ -1172,7 +1177,7 @@ function renderAchBadge(def){
   if(def.cat==="score" && CHOLSCORE_ACHIEVEMENT_ASSETS[def.id]) return renderCholScoreBadge(def);
   if(def.cat==="workout" && WORKOUT_ACHIEVEMENT_ASSETS[def.id]) return renderWorkoutBadge(def);
   if(def.cat==="running" && RUNNING_ACHIEVEMENT_ASSETS[def.id]) return renderRunningBadge(def);
-  if(def.cat==="walking") return renderWalkingSoleBadge(def);
+  if(def.cat==="walking" && WALKING_ACHIEVEMENT_ASSETS[def.id]) return renderWalkingAssetBadge(def);
   if(def.cat==="swimming" || def.metric==="weekSwimMiles") return renderSwimmingBadge(def);
   const rarity=def.rarity||"COMMON";
   const rs=RARITY_BADGE[rarity]||RARITY_BADGE.COMMON;
