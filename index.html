@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=193" />
+  <link rel="stylesheet" href="styles.css?v=194" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -315,6 +315,29 @@
 #exerciseView .log-item{
   background-color:var(--cs-surface-core)!important;
   border-color:var(--cs-surface-edge)!important;
+}
+</style>
+
+
+<style id="rewards-safe-area-chrome-v26">
+/* v26 — when Rewards is the active top-level view, carry the cooler
+   graphite/blue-black palette all the way through the header and device
+   safe area. The plum identity now starts as a restrained ambient glow
+   inside the Rewards content rather than tinting the entire top chrome. */
+html.rewards-active,
+body.rewards-active{
+  background:#0b0e16!important;
+}
+body.rewards-active #mainApp{
+  background:
+    radial-gradient(ellipse at 82% 28%,rgba(84,63,120,.055),transparent 38%),
+    linear-gradient(180deg,#0b0e16 0%,#0b0d14 42%,#090c12 100%)!important;
+}
+body.rewards-active .app-header{
+  background:linear-gradient(180deg,rgba(11,14,22,.98),rgba(11,14,22,.90) 72%,rgba(11,14,22,0))!important;
+}
+body.rewards-active #rewardsView{
+  background:transparent!important;
 }
 </style>
 
@@ -1331,7 +1354,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=193"></script>
+  <script src="app.js?v=194"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

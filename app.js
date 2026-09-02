@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "193"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "194"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -2224,11 +2224,23 @@ $("finishSetup").addEventListener("click",()=>{
 });
 
 /* Navigation */
+function syncTopLevelViewChrome(viewId){
+  const rewardsActive=viewId==="rewardsView";
+  document.documentElement.classList.toggle("rewards-active",rewardsActive);
+  document.body.classList.toggle("rewards-active",rewardsActive);
+  const theme=document.querySelector('meta[name="theme-color"]');
+  if(theme) theme.setAttribute("content",rewardsActive?"#0b0e16":"#0b0d12");
+}
 qsa(".nav-btn").forEach(btn=>btn.addEventListener("click",()=>{
   if(btn.dataset.view==="rewardsView"&&!isPremiumUnlocked()){showPaywall();return;}
   qsa(".nav-btn").forEach(x=>x.classList.remove("active"));btn.classList.add("active");
-  qsa(".view").forEach(x=>x.classList.remove("active"));$(btn.dataset.view).classList.add("active");renderAll();
+  qsa(".view").forEach(x=>x.classList.remove("active"));$(btn.dataset.view).classList.add("active");
+  syncTopLevelViewChrome(btn.dataset.view);
+  renderAll();
 }));
+// Keep device safe-area/header chrome in sync on initial load too.
+const initialTopView=qsa(".nav-btn").find(btn=>btn.classList.contains("active"))?.dataset.view||"todayView";
+syncTopLevelViewChrome(initialTopView);
 
 
 /* Friendly cancel behaviour — never validate when the user just wants to leave */
