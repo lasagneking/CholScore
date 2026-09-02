@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=197" />
+  <link rel="stylesheet" href="styles.css?v=198" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -737,9 +737,9 @@ body.rewards-active #rewardsView::before{
         </div>
 
         <div class="stats-grid">
-          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-flame.png?v=197" alt="" aria-hidden="true"><strong id="streakStat">0</strong><small>day streak</small></div>
-          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-points.png?v=197" alt="" aria-hidden="true"><strong id="pointsStat">0</strong><small>total points</small></div>
-          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-trophy.png?v=197" alt="" aria-hidden="true"><strong id="bestStat">0</strong><small>personal best</small></div>
+          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-flame.png?v=198" alt="" aria-hidden="true"><strong id="streakStat">0</strong><small>day streak</small></div>
+          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-points.png?v=198" alt="" aria-hidden="true"><strong id="pointsStat">0</strong><small>total points</small></div>
+          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-trophy.png?v=198" alt="" aria-hidden="true"><strong id="bestStat">0</strong><small>personal best</small></div>
         </div>
 
         <div class="reward-tabs" id="rewardCategoryTabs"></div>
@@ -1403,13 +1403,31 @@ body.rewards-active #rewardsView::before{
   </dialog>
 
 
+  <dialog id="achievementCelebrationDialog" class="achievement-celebration-dialog" aria-labelledby="achievementCelebrationHeading">
+    <div id="achievementCelebrationConfetti" class="achievement-celebration-confetti" aria-hidden="true"></div>
+    <div class="achievement-celebration-burst" aria-hidden="true"></div>
+    <button id="achievementCelebrationClose" class="achievement-celebration-close" type="button" aria-label="Close achievement celebration">×</button>
+    <div class="achievement-celebration-card">
+      <p id="achievementCelebrationHeading" class="achievement-celebration-heading">ACHIEVEMENT<br>UNLOCKED!</p>
+      <span id="achievementCelebrationRarity" class="achievement-celebration-rarity">COMMON</span>
+      <div id="achievementCelebrationArt" class="achievement-celebration-art" aria-hidden="true"></div>
+      <h2 id="achievementCelebrationTitle" class="achievement-celebration-title">Achievement</h2>
+      <p id="achievementCelebrationMessage" class="achievement-celebration-message">Brilliant work — another milestone unlocked.</p>
+      <div class="achievement-celebration-brand"><img src="icon-512.png?v=198" alt="" aria-hidden="true"><strong>CholScore</strong></div>
+      <div class="achievement-celebration-actions">
+        <button id="shareAchievementCelebrationBtn" type="button" class="achievement-celebration-share"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>Share achievement</button>
+        <button id="achievementCelebrationDone" type="button" class="achievement-celebration-done">Keep going</button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog id="dayReportDialog" class="day-report-dialog">
     <button id="dayReportClose" class="rep-close" aria-label="Close report">✕</button>
     <div id="dayReportInner" class="report-inner"></div>
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=197"></script>
+  <script src="app.js?v=198"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
@@ -1420,6 +1438,30 @@ body.rewards-active #rewardsView::before{
       });
     }
   </script>
+
+<style id="achievement-celebration-system">
+.achievement-celebration-dialog{width:min(92vw,430px);max-width:430px;padding:0;border:0;background:transparent;overflow:visible;color:#fff}
+.achievement-celebration-dialog::backdrop{background:rgba(3,6,12,.78);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);animation:achBackdropIn .28s ease both}
+.achievement-celebration-card{position:relative;overflow:hidden;padding:28px 24px 22px;border-radius:28px;background:linear-gradient(155deg,rgba(10,20,33,.99),rgba(14,14,28,.99) 58%,rgba(10,12,22,.99));border:1.5px solid transparent;background-image:linear-gradient(155deg,rgba(10,20,33,.99),rgba(14,14,28,.99) 58%,rgba(10,12,22,.99)),linear-gradient(125deg,#39d7e8,#7468ff 48%,#ff5f7d);background-origin:border-box;background-clip:padding-box,border-box;box-shadow:0 28px 80px rgba(0,0,0,.58),0 0 42px rgba(94,112,255,.16);transform:translateY(42px) scale(.91);opacity:0;transition:transform .56s cubic-bezier(.16,1,.3,1),opacity .32s ease}
+.achievement-celebration-dialog.celebration-live .achievement-celebration-card{transform:translateY(0) scale(1);opacity:1}
+.achievement-celebration-card::before{content:"";position:absolute;inset:-24% -18% 45%;background:radial-gradient(circle,rgba(84,217,255,.15),rgba(168,121,255,.08) 38%,transparent 70%);pointer-events:none}
+.achievement-celebration-close{position:absolute;z-index:8;top:13px;right:13px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(9,13,23,.8);color:#dce3ef;font-size:25px;line-height:1;display:grid;place-items:center;cursor:pointer}
+.achievement-celebration-heading{position:relative;z-index:2;margin:0;text-align:center;font:800 27px/1.02 'Space Grotesk',sans-serif;letter-spacing:.035em;background:linear-gradient(100deg,#6eeaff,#d6d5ff 42%,#d99cff);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 24px rgba(84,217,255,.12)}
+.achievement-celebration-rarity{position:relative;z-index:2;display:table;margin:10px auto 1px;padding:5px 10px;border-radius:999px;font:800 10px/1 'Inter',sans-serif;letter-spacing:.14em;color:#d9e1ee;background:rgba(255,255,255,.08)}
+.achievement-celebration-rarity.r-rare{color:#8eeaff;background:rgba(84,217,255,.12)}.achievement-celebration-rarity.r-epic{color:#c7a7ff;background:rgba(168,121,255,.14)}.achievement-celebration-rarity.r-legend{color:#ffe19a;background:rgba(255,209,102,.13)}.achievement-celebration-rarity.r-mythic{color:#120817;background:linear-gradient(120deg,#ff68d3,#a879ff 52%,#62e7ff);box-shadow:0 0 18px rgba(255,95,209,.25)}
+.achievement-celebration-art{position:relative;z-index:2;width:230px;height:230px;margin:0 auto -4px;display:grid;place-items:center;filter:drop-shadow(0 15px 22px rgba(0,0,0,.42));transform:scale(.72) rotate(-3deg);opacity:.15;transition:transform .68s .1s cubic-bezier(.16,1,.3,1),opacity .3s .1s ease}
+.achievement-celebration-dialog.celebration-live .achievement-celebration-art{transform:scale(1) rotate(0);opacity:1}
+.achievement-celebration-art .premium-ach-img{width:226px!important;height:226px!important;object-fit:contain;display:block}.achievement-celebration-art svg{width:218px!important;height:218px!important;overflow:visible}
+.achievement-celebration-title{position:relative;z-index:2;margin:3px 0 9px;text-align:center;font:800 25px/1.08 'Space Grotesk',sans-serif;color:#fff}
+.achievement-celebration-message{position:relative;z-index:2;margin:0 auto 18px;max-width:330px;text-align:center;font:600 15px/1.42 'Inter',sans-serif;color:#c6cddd}
+.achievement-celebration-brand{position:relative;z-index:2;display:flex;align-items:center;justify-content:center;gap:9px;margin:4px 0 16px;color:#fff;font:800 20px/1 'Space Grotesk',sans-serif}.achievement-celebration-brand img{width:34px;height:34px;border-radius:9px;object-fit:cover;filter:drop-shadow(0 0 12px rgba(84,217,255,.18))}
+.achievement-celebration-actions{position:relative;z-index:2;display:grid;grid-template-columns:1.45fr 1fr;gap:10px}.achievement-celebration-actions button{min-height:48px;border-radius:15px;font:800 13px/1 'Inter',sans-serif;cursor:pointer}.achievement-celebration-share{border:0;color:#fff;background:linear-gradient(105deg,#1fc6c7,#7268ff 62%,#a767ef);box-shadow:0 8px 24px rgba(93,92,255,.2);display:flex;align-items:center;justify-content:center;gap:8px}.achievement-celebration-share svg{width:19px;height:19px}.achievement-celebration-share:disabled{opacity:.65}.achievement-celebration-done{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.055);color:#dbe2ef}
+.achievement-celebration-burst{position:absolute;z-index:-1;left:50%;top:42%;width:240px;height:240px;transform:translate(-50%,-50%) scale(.2);border-radius:50%;opacity:0;background:radial-gradient(circle,rgba(255,255,255,.9) 0 1%,rgba(84,217,255,.34) 4%,rgba(168,121,255,.16) 28%,transparent 68%);filter:blur(1px);pointer-events:none}.achievement-celebration-dialog.celebration-live .achievement-celebration-burst{animation:achLightBurst .85s ease-out both}
+.achievement-celebration-confetti{position:absolute;z-index:9;inset:-25px;overflow:hidden;pointer-events:none}.achievement-celebration-confetti i{position:absolute;left:var(--x);top:-20px;width:7px;height:14px;border-radius:2px;opacity:0}.achievement-celebration-dialog.celebration-live .achievement-celebration-confetti i{animation:achConfetti var(--dur) var(--delay) cubic-bezier(.15,.7,.3,1) both}
+@keyframes achBackdropIn{from{opacity:0}to{opacity:1}}@keyframes achLightBurst{0%{opacity:0;transform:translate(-50%,-50%) scale(.1)}35%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(2.8)}}@keyframes achConfetti{0%{opacity:0;transform:translate3d(0,-5px,0) rotate(0)}12%{opacity:1}100%{opacity:0;transform:translate3d(var(--drift),560px,0) rotate(var(--rot))}}
+@media(max-width:390px){.achievement-celebration-card{padding:24px 18px 18px}.achievement-celebration-heading{font-size:24px}.achievement-celebration-art{width:202px;height:202px}.achievement-celebration-art .premium-ach-img{width:202px!important;height:202px!important}.achievement-celebration-art svg{width:194px!important;height:194px!important}.achievement-celebration-title{font-size:22px}.achievement-celebration-message{font-size:14px}}
+@media(prefers-reduced-motion:reduce){.achievement-celebration-card,.achievement-celebration-art{transition:none!important;transform:none!important;opacity:1!important}.achievement-celebration-burst,.achievement-celebration-confetti{display:none!important}}
+</style>
 
 <style id="premium-achievement-overhaul">
 /* Premium achievement collection — larger, name-specific collectible crests */

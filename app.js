@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "197"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "198"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -51,6 +51,14 @@ let editingRoutineId = null;
 let activeRewardCategory = "all";
 let currentFoodDetailId = null;
 let currentFoodDetailRef = null;
+
+/* v1.38.0 Achievement celebrations — one-time popup + share image.
+   A separate localStorage ledger prevents already-earned achievements from
+   replaying after this feature ships, while still allowing genuinely new
+   unlocks to celebrate the instant their metric crosses the goal. */
+const ACHIEVEMENT_SEEN_KEY = "cholscore_seen_achievement_celebrations_v1";
+let achievementCelebrationQueue = [];
+let activeAchievementCelebration = null;
 
 function cloneDefault(){ return JSON.parse(JSON.stringify(defaultState)); }
 function loadState(){
@@ -1286,6 +1294,157 @@ function renderAchBadge(def){
 }
 
 
+
+function achievementAssetSrc(def){
+  if(!def)return null;
+  if(def.cat==="food")return FOOD_ACHIEVEMENT_ASSETS[def.id]||null;
+  if(def.cat==="score")return CHOLSCORE_ACHIEVEMENT_ASSETS[def.id]||null;
+  if(def.cat==="workout")return WORKOUT_ACHIEVEMENT_ASSETS[def.id]||null;
+  if(def.cat==="running")return RUNNING_ACHIEVEMENT_ASSETS[def.id]||null;
+  if(def.cat==="walking")return WALKING_ACHIEVEMENT_ASSETS[def.id]||null;
+  if(def.cat==="swimming"||def.metric==="weekSwimMiles")return SWIMMING_ACHIEVEMENT_ASSETS[def.id]||null;
+  return null;
+}
+function achievementCelebrationMessage(def){
+  const rarity={
+    COMMON:["Brilliant start — this is exactly how momentum begins.","Another positive step banked. Keep that momentum moving.","You earned this one. Small wins stack up fast."],
+    RARE:["You’re building real momentum now. That one was earned.","Excellent work — your consistency is starting to show.","That is a proper milestone. Keep pushing forward."],
+    EPIC:["Seriously impressive. The work you’re putting in is showing.","That is a huge achievement — be proud of this one.","Outstanding progress. You’re operating on another level."],
+    LEGEND:["Outstanding. This is the kind of milestone worth celebrating.","That took real commitment. An absolutely brilliant achievement.","Exceptional work — you’ve earned a place among the big milestones."],
+    MYTHIC:["Extraordinary. You’ve reached one of CholScore’s biggest milestones.","That is genuinely massive. Incredible commitment and consistency.","Mythic for a reason — an exceptional achievement. Be proud of it."]
+  }[def.rarity]||["Brilliant work — another milestone unlocked."];
+  let h=0;for(const c of String(def.id||""))h=(h*31+c.charCodeAt(0))>>>0;
+  return rarity[h%rarity.length];
+}
+function readSeenAchievementCelebrations(){
+  try{
+    const raw=localStorage.getItem(ACHIEVEMENT_SEEN_KEY);
+    if(raw===null)return null;
+    const arr=JSON.parse(raw);
+    return new Set(Array.isArray(arr)?arr:[]);
+  }catch(e){return new Set();}
+}
+function writeSeenAchievementCelebrations(set){
+  try{localStorage.setItem(ACHIEVEMENT_SEEN_KEY,JSON.stringify([...set]));}catch(e){}
+}
+function checkForNewAchievementCelebrations(metrics){
+  const currentlyUnlocked=achievementDefs.filter(a=>Number(metrics[a.metric]||0)>=a.goal);
+  let seen=readSeenAchievementCelebrations();
+  // First run after this feature ships: silently baseline everything already earned.
+  if(seen===null){
+    seen=new Set(currentlyUnlocked.map(a=>a.id));
+    writeSeenAchievementCelebrations(seen);
+    return;
+  }
+  const fresh=currentlyUnlocked.filter(a=>!seen.has(a.id));
+  if(!fresh.length)return;
+  fresh.forEach(a=>{seen.add(a.id);achievementCelebrationQueue.push(a);});
+  writeSeenAchievementCelebrations(seen);
+  showNextAchievementCelebration();
+}
+function buildAchievementConfetti(){
+  const host=$("achievementCelebrationConfetti");if(!host)return;
+  host.innerHTML="";
+  const colors=["#54d9ff","#ff6452","#a879ff","#ffd166","#55f0a7","#ff5fd1"];
+  for(let i=0;i<30;i++){
+    const bit=document.createElement("i");
+    bit.style.setProperty("--x",`${6+Math.random()*88}%`);
+    bit.style.setProperty("--delay",`${Math.random()*.65}s`);
+    bit.style.setProperty("--dur",`${1.7+Math.random()*1.35}s`);
+    bit.style.setProperty("--rot",`${Math.round(Math.random()*420-210)}deg`);
+    bit.style.setProperty("--drift",`${Math.round((Math.random()-.5)*170)}px`);
+    bit.style.background=colors[i%colors.length];
+    host.appendChild(bit);
+  }
+}
+function showNextAchievementCelebration(){
+  const dlg=$("achievementCelebrationDialog");
+  if(!dlg||dlg.open||activeAchievementCelebration||!achievementCelebrationQueue.length)return;
+  const def=achievementCelebrationQueue.shift();
+  activeAchievementCelebration=def;
+  const shown=achievementDisplay(def);
+  $("achievementCelebrationArt").innerHTML=renderAchBadge(def);
+  $("achievementCelebrationTitle").textContent=shown.title;
+  $("achievementCelebrationMessage").textContent=achievementCelebrationMessage(def);
+  $("achievementCelebrationRarity").textContent=def.rarity;
+  $("achievementCelebrationRarity").className=`achievement-celebration-rarity r-${def.rarity.toLowerCase()}`;
+  buildAchievementConfetti();
+  dlg.classList.remove("celebration-live");
+  dlg.showModal();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>dlg.classList.add("celebration-live")));
+}
+function closeAchievementCelebration(){
+  const dlg=$("achievementCelebrationDialog");
+  if(dlg?.open)dlg.close();
+}
+function svgMarkupToDataUrl(markup){return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(markup)}`;}
+async function achievementShareArtwork(def){
+  const src=achievementAssetSrc(def);
+  if(src)return loadImage(`${src}${src.includes("?")?"&":"?"}v=${APP_VERSION}`).catch(()=>null);
+  const holder=document.createElement("div");holder.innerHTML=renderAchBadge(def);
+  const img=holder.querySelector("img");
+  if(img)return loadImage(img.getAttribute("src")).catch(()=>null);
+  const svg=holder.querySelector("svg");
+  if(svg){
+    svg.setAttribute("xmlns","http://www.w3.org/2000/svg");
+    return loadImage(svgMarkupToDataUrl(svg.outerHTML)).catch(()=>null);
+  }
+  return null;
+}
+function achievementShareRarityColor(rarity){
+  return {COMMON:"#aeb8ca",RARE:"#54d9ff",EPIC:"#a879ff",LEGEND:"#ffd166",MYTHIC:"#ff5fd1"}[rarity]||"#54d9ff";
+}
+async function generateAchievementShareImageBlob(def){
+  const W=1080,H=1350,canvas=document.createElement("canvas");canvas.width=W;canvas.height=H;
+  const ctx=canvas.getContext("2d");
+  const bg=ctx.createLinearGradient(0,0,W,H);bg.addColorStop(0,"#07111d");bg.addColorStop(.55,"#101323");bg.addColorStop(1,"#090b12");ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
+  const rarityColor=achievementShareRarityColor(def.rarity);
+  let glow=ctx.createRadialGradient(W*.5,410,30,W*.5,410,500);glow.addColorStop(0,rarityColor+"38");glow.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=glow;ctx.fillRect(0,0,W,H);
+  // subtle CholScore spectrum edge
+  const edge=ctx.createLinearGradient(60,0,W-60,H);edge.addColorStop(0,"#38d6ea");edge.addColorStop(.45,"#786bff");edge.addColorStop(1,"#ff607d");ctx.strokeStyle=edge;ctx.lineWidth=5;roundRectPath(ctx,52,52,W-104,H-104,44);ctx.stroke();
+  // restrained confetti around the art
+  const conf=["#54d9ff","#ff6452","#a879ff","#ffd166","#55f0a7","#ff5fd1"];
+  for(let i=0;i<42;i++){
+    const angle=(i*2.399)+(String(def.id).length*.17),rad=245+(i%7)*24,x=W/2+Math.cos(angle)*rad,y=430+Math.sin(angle)*rad*.7;
+    ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.fillStyle=conf[i%conf.length];ctx.globalAlpha=.78;ctx.fillRect(-5,-11,10,22);ctx.restore();
+  }
+  ctx.globalAlpha=1;ctx.textAlign="center";
+  ctx.fillStyle="#dff8ff";ctx.font="800 55px 'Space Grotesk',sans-serif";ctx.fillText("ACHIEVEMENT UNLOCKED",W/2,165);
+  ctx.fillStyle=rarityColor;ctx.font="800 25px 'Space Grotesk',sans-serif";ctx.fillText(def.rarity,W/2,207);
+  const art=await achievementShareArtwork(def);
+  if(art){
+    const max=500,scale=Math.min(max/art.width,max/art.height),dw=art.width*scale,dh=art.height*scale;
+    ctx.save();ctx.shadowColor=rarityColor;ctx.shadowBlur=34;ctx.drawImage(art,(W-dw)/2,260+(500-dh)/2,dw,dh);ctx.restore();
+  }
+  const shown=achievementDisplay(def);
+  ctx.fillStyle="#fff";ctx.font="800 48px 'Space Grotesk',sans-serif";wrapCanvasText(ctx,shown.title,W/2,830,850,58);
+  ctx.fillStyle="#c5cada";ctx.font="500 30px 'Inter',sans-serif";wrapCanvasText(ctx,achievementCelebrationMessage(def),W/2,920,810,42);
+  // brand lockup
+  const logo=await loadImage(`icon-512.png?v=${APP_VERSION}`).catch(()=>null);
+  const brandY=1165;
+  if(logo)ctx.drawImage(logo,305,brandY-55,90,90);
+  ctx.textAlign="left";ctx.fillStyle="#fff";ctx.font="800 46px 'Space Grotesk',sans-serif";ctx.fillText("CholScore",415,brandY+4);
+  ctx.fillStyle="#8f98ad";ctx.font="500 24px 'Inter',sans-serif";ctx.fillText("Positive choices. Real progress.",415,brandY+43);
+  return new Promise(resolve=>canvas.toBlob(resolve,"image/png"));
+}
+async function shareAchievementCelebration(){
+  const def=activeAchievementCelebration;if(!def)return;
+  const btn=$("shareAchievementCelebrationBtn"),old=btn?.innerHTML;
+  if(btn){btn.disabled=true;btn.textContent="Preparing…";}
+  const shown=achievementDisplay(def);
+  const text=`I just unlocked “${shown.title}” on CholScore 🎉`;
+  try{
+    const blob=await generateAchievementShareImageBlob(def);
+    const file=new File([blob],`cholscore-${String(def.id).replace(/[^a-z0-9_-]/gi,"-")}.png`,{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({files:[file],title:"CholScore achievement",text});
+    else if(navigator.share)await navigator.share({text});
+    else{
+      const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=file.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }
+  }catch(err){if(err?.name!=="AbortError")console.error("Achievement share failed",err);}
+  finally{if(btn){btn.disabled=false;btn.innerHTML=old;}}
+}
+
 const achievementDefs = [
   // Food
   {id:"food_first",cat:"food",icon:"apple",title:"First Bite",desc:"Log your first food.",rarity:"COMMON",goal:1,metric:"foodEntries"},
@@ -1634,6 +1793,8 @@ function renderRewards(){
       </div>
     </div>`;
   }).join("");
+
+  checkForNewAchievementCelebrations(metrics);
 }
 /* Vacation Mode — pausing protects a streak from breaking while genuinely
    away or ill, without granting free progress toward it. A paused day is
@@ -4176,6 +4337,15 @@ $("settingsPhotoFile").addEventListener("change",(e)=>{
   e.target.value="";
 });
 $("saveSettings").addEventListener("click",()=>{const n=$("settingsName").value.trim(),t=Number($("settingsTarget").value),u=$("settingsUnits").value==="km"?"km":"mi";if(n&&t>0){state.profile={...state.profile,name:n,target:t,distanceUnit:u};saveState();renderAll();}});
+$("achievementCelebrationClose").addEventListener("click",closeAchievementCelebration);
+$("achievementCelebrationDone").addEventListener("click",closeAchievementCelebration);
+$("shareAchievementCelebrationBtn").addEventListener("click",shareAchievementCelebration);
+$("achievementCelebrationDialog").addEventListener("close",()=>{
+  $("achievementCelebrationDialog").classList.remove("celebration-live");
+  activeAchievementCelebration=null;
+  setTimeout(showNextAchievementCelebration,180);
+});
+
 $("resetData").addEventListener("click",()=>{if(confirm("Reset all CholScore data on this device?")){localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(LEGACY_KEY);state=cloneDefault();$("settingsDialog").close();location.reload();}});
 
 /* v1.5.0 Backup & Restore — everything lives only in this device's
