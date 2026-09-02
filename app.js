@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "201"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "202"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -4401,7 +4401,23 @@ $("achievementCelebrationDialog").addEventListener("close",()=>{
   scheduleAchievementCelebration(180);
 });
 
-$("resetData").addEventListener("click",()=>{if(confirm("Reset all CholScore data on this device?")){localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(LEGACY_KEY);state=cloneDefault();$("settingsDialog").close();location.reload();}});
+$("resetData").addEventListener("click",()=>{
+  if(!confirm("Reset all CholScore data on this device? This gives you a completely fresh start, including achievements and their celebration popups.")) return;
+  // A true fresh start must clear both the app state AND the separate
+  // achievement-celebration ledger. Otherwise an achievement could reset
+  // visually but its popup would stay suppressed because it had been shown
+  // in the previous run. Backup metadata is also cleared so Settings reflects
+  // that this is a brand-new local state.
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(LEGACY_KEY);
+  localStorage.removeItem(ACHIEVEMENT_SEEN_KEY);
+  localStorage.removeItem(BACKUP_META_KEY);
+  achievementCelebrationQueue=[];
+  activeAchievementCelebration=null;
+  state=cloneDefault();
+  $("settingsDialog").close();
+  location.reload();
+});
 
 /* v1.5.0 Backup & Restore — everything lives only in this device's
    localStorage, so losing the phone or clearing site data would otherwise
