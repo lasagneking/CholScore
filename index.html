@@ -66,6 +66,26 @@
     .pr-row-icon.pr-row-icon-art{display:flex;align-items:center;justify-content:center;width:48px;height:48px;flex:0 0 48px;line-height:1}
     .pr-row-icon.pr-row-icon-art img{display:block;width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 4px 8px rgba(0,0,0,.32));pointer-events:none}
   </style>
+
+<style id="home-premium-bank-checkout-v17">
+/* v17 — premium Home Reward Bank + Checkout, matching the approved visual direction. */
+.premium-bank-card{position:relative;overflow:hidden;display:grid!important;grid-template-columns:68px minmax(0,1fr) 48px;align-items:center;gap:14px;padding:18px 18px!important;min-height:118px;background:linear-gradient(112deg,rgba(22,22,24,.98),rgba(24,22,22,.98))!important;border:1px solid rgba(226,181,72,.42)!important;border-radius:24px!important;box-shadow:0 14px 40px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.035)!important}
+.premium-bank-card:before{content:"";position:absolute;inset:-60% 45% -60% -20%;background:radial-gradient(circle,rgba(224,170,51,.12),transparent 63%);pointer-events:none}
+.premium-bank-icon{width:62px;height:62px;border-radius:18px;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,rgba(255,213,92,.2),rgba(48,37,19,.72) 55%,rgba(13,15,20,.96));border:1px solid rgba(244,196,75,.42);box-shadow:0 0 24px rgba(226,171,48,.12),inset 0 0 18px rgba(255,200,65,.07)}
+.premium-bank-icon svg{width:42px;height:42px;stroke:#f0c35d;stroke-width:2.2;filter:drop-shadow(0 0 5px rgba(244,194,69,.28))}
+.premium-bank-card .bank-copy{min-width:0;display:flex;flex-direction:column;align-items:flex-start!important;gap:3px;text-align:left!important}
+.premium-bank-card .bank-copy>span{font-size:11px!important;letter-spacing:.18em!important;font-weight:800!important;color:#e8c86f!important}
+.bank-balance{display:flex;align-items:baseline;gap:10px;min-width:0}.bank-balance strong{font-family:'Space Grotesk',sans-serif;font-size:40px!important;line-height:1!important;color:#f7f5f3!important}.bank-balance b{font-size:15px;color:#e7bd58;font-weight:600;white-space:nowrap}.premium-bank-card .bank-copy small{font-size:13px!important;color:#9694a4!important}
+.bank-arrow{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-size:34px;line-height:1;color:#f0c55e;border:1px solid rgba(238,190,72,.5);background:rgba(230,176,49,.07);box-shadow:0 0 18px rgba(232,181,57,.08)}
+.premium-bank-card .bank-goal-bar{width:100%;margin-top:6px}
+.premium-checkout-card{position:relative;overflow:hidden;width:100%;min-height:132px;margin-top:18px!important;padding:18px 22px!important;display:grid!important;grid-template-columns:72px minmax(0,1fr) 96px;align-items:center;gap:16px;text-align:left!important;border-radius:24px!important;border:1px solid transparent!important;background:linear-gradient(#111523,#111523) padding-box,linear-gradient(100deg,#23d9e9,#7258ff 52%,#ff6a63) border-box!important;box-shadow:0 15px 42px rgba(0,0,0,.28),0 0 28px rgba(92,75,255,.08)!important;color:#fff!important}
+.premium-checkout-card:before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,rgba(0,213,232,.10),rgba(101,73,234,.13) 52%,rgba(255,91,85,.16));pointer-events:none}
+.checkout-medallion{position:relative;z-index:1;width:66px;height:66px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle,rgba(32,229,240,.17),rgba(31,25,75,.7) 58%,rgba(12,15,25,.95));box-shadow:0 0 24px rgba(29,213,232,.22)}
+.checkout-medallion svg{width:58px;height:58px;stroke:#40e9ed;stroke-width:3}.checkout-medallion svg circle:first-child{stroke:#806aff}.checkout-medallion svg path{stroke-width:6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 4px rgba(45,232,235,.5))}
+.checkout-copy{position:relative;z-index:1;display:flex;flex-direction:column;gap:3px}.checkout-copy strong{font-family:'Space Grotesk',sans-serif;font-size:18px;line-height:1.15;color:#f6f5f8}.checkout-copy b{font-size:18px;color:#32dce5}.checkout-copy b i{font-style:normal;color:#8e91ff;margin-left:6px}.checkout-copy small{font-size:13px;color:#9795a8}
+.checkout-sunset{position:relative;z-index:1;height:58px;opacity:.72}.checkout-sunset:before{content:"";position:absolute;left:12px;right:4px;bottom:15px;height:1px;background:linear-gradient(90deg,transparent,#ff7180 20%,#ff7180 80%,transparent)}.checkout-sunset:after{content:"";position:absolute;width:48px;height:24px;border:2px solid #ff7180;border-bottom:0;border-radius:50px 50px 0 0;left:25px;bottom:16px;box-shadow:0 0 14px rgba(255,101,115,.18)}
+@media(max-width:430px){.premium-bank-card{grid-template-columns:58px minmax(0,1fr) 40px;gap:10px;padding:16px!important}.premium-bank-icon{width:54px;height:54px}.premium-bank-icon svg{width:36px;height:36px}.bank-balance strong{font-size:36px!important}.bank-balance b{font-size:14px}.premium-checkout-card{grid-template-columns:62px minmax(0,1fr) 64px;padding:16px!important;gap:12px}.checkout-medallion{width:58px;height:58px}.checkout-medallion svg{width:51px;height:51px}.checkout-copy strong,.checkout-copy b{font-size:16px}.checkout-sunset:after{left:8px;width:44px}}
+</style>
 </head>
 <body>
 <!-- Shared achievement badge defs — referenced by every graphical achievement
@@ -251,18 +271,24 @@
         </section>
 
         
-        <div class="weekly-bank-card" id="rewardBankCard" role="button" tabindex="0">
-          <div class="bank-icon">🏦</div>
+        <div class="weekly-bank-card premium-bank-card" id="rewardBankCard" role="button" tabindex="0" aria-label="Open Reward Bank">
+          <div class="bank-icon premium-bank-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none"><rect x="10" y="12" width="44" height="42" rx="10"/><circle cx="32" cy="33" r="13"/><circle cx="32" cy="33" r="4"/><path d="M32 20v5M32 41v5M19 33h5M40 33h5M23 24l4 4M37 38l4 4M41 24l-4 4M27 38l-4 4"/><path d="M18 12V8h28v4"/></svg>
+          </div>
           <div class="bank-copy">
             <span>REWARD BANK</span>
-            <strong><span id="bankPoints">0</span> points</strong>
-            <small id="bankGoalText">Tap to set a goal</small>
+            <div class="bank-balance"><strong><span id="bankPoints">0</span></strong><b>CholPoints banked</b></div>
+            <small id="bankGoalText">Tap to set a reward goal</small>
             <div class="bank-goal-bar hidden" id="bankGoalBar"><i id="bankGoalBarFill"></i></div>
           </div>
-          <div class="bank-badge" id="bankBadge">Tap to view</div>
+          <div class="bank-arrow" aria-hidden="true">›</div>
         </div>
 
-<button id="checkoutBtn" class="checkout-btn">🌙 Check out for today</button>
+<button id="checkoutBtn" class="checkout-btn premium-checkout-card">
+  <span class="checkout-medallion" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="25"/><circle cx="32" cy="32" r="19"/><path d="M20 33l8 8 17-19"/></svg></span>
+  <span class="checkout-copy"><strong>Ready to finish your day?</strong><b>Check out for today <i>›</i></b><small>Lock in today’s CholScore</small></span>
+  <span class="checkout-sunset" aria-hidden="true"><i></i></span>
+</button>
       </section>
 
       <section id="foodView" class="view">
@@ -1047,7 +1073,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=184"></script>
+  <script src="app.js?v=185"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
