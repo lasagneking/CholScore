@@ -1487,10 +1487,10 @@ function renderPersonalRecords(){
   const rows=[];
 
   Object.entries(recs.strength).sort((a,b)=>b[1].weight-a[1].weight).forEach(([name,r])=>{
-    rows.push(`<div class="pr-row"><span class="pr-row-icon">🏋️</span><div class="pr-row-main"><strong>${esc(name)}</strong><small>Heaviest lift</small></div><div class="pr-row-value"><b>${fmt(r.weight)} kg</b><small>${fmtDate(r.date)}</small></div></div>`);
+    rows.push(`<div class="pr-row"><span class="pr-row-icon pr-row-icon-art"><img src="assets/pr/strength.webp" alt="" aria-hidden="true"></span><div class="pr-row-main"><strong>${esc(name)}</strong><small>Heaviest lift</small></div><div class="pr-row-value"><b>${fmt(r.weight)} kg</b><small>${fmtDate(r.date)}</small></div></div>`);
   });
   Object.entries(recs.timed).sort((a,b)=>b[1].seconds-a[1].seconds).forEach(([name,r])=>{
-    rows.push(`<div class="pr-row"><span class="pr-row-icon">⏱️</span><div class="pr-row-main"><strong>${esc(name)}</strong><small>Longest hold</small></div><div class="pr-row-value"><b>${formatExerciseSeconds(r.seconds)}</b><small>${fmtDate(r.date)}</small></div></div>`);
+    rows.push(`<div class="pr-row"><span class="pr-row-icon pr-row-icon-art"><img src="assets/pr/timed.webp" alt="" aria-hidden="true"></span><div class="pr-row-main"><strong>${esc(name)}</strong><small>Longest hold</small></div><div class="pr-row-value"><b>${formatExerciseSeconds(r.seconds)}</b><small>${fmtDate(r.date)}</small></div></div>`);
   });
   for(const type in CARDIO_TYPES){
     const icon=CARDIO_TYPES[type].icon,label=CARDIO_TYPES[type].label;
