@@ -110,6 +110,94 @@
   box-shadow:0 14px 38px rgba(0,0,0,.24),0 0 24px rgba(88,109,255,.075),inset 0 1px 0 rgba(255,255,255,.04)!important;
 }
 </style>
+<!-- v19 — unified CholScore card hierarchy.
+     Hero/feature cards keep the full cyan→violet→coral edge lighting.
+     Everyday content cards use a restrained graphite/blue-grey edge so the
+     app feels related without making every surface shout. Reward Bank and
+     achievement rarity treatments remain intentionally special. -->
+<style id="cholscore-card-system-v19">
+:root{
+  --cs-card-edge:rgba(137,151,181,.18);
+  --cs-card-edge-strong:rgba(154,169,203,.24);
+  --cs-card-inset:rgba(255,255,255,.028);
+  --cs-card-shadow:rgba(0,0,0,.14);
+  --cs-card-active:#53dbe7;
+  --cs-card-active-violet:#766bff;
+  --cs-card-active-coral:#ff6d73;
+}
+
+/* Standard surfaces — quiet, premium graphite edging. */
+.metric-card,
+.protein-card,
+.scan-card,
+.routine-card,
+.activity-type-card:not(.premium-checkout-card),
+.log-item,
+.pr-row,
+.calendar-card,
+.trend-card,
+.report-card,
+.report-stat-card,
+.weekly-bank-card,
+.goal-card,
+.impact-card,
+.stat-card,
+.guided-exercise-card,
+.staple-card,
+.calculated-sat-card,
+.ring-card,
+.checkout-ring-card,
+.premium-stat-card,
+.glass-card,
+.protein-row,
+.report-week-row,
+.score-band-row,
+.rep-ring-card,
+.rep-food-row,
+.rep-score-row,
+.rep-exercise-row,
+.rep-cardio-row{
+  border:1px solid var(--cs-card-edge)!important;
+  box-shadow:inset 0 1px 0 var(--cs-card-inset),0 8px 24px var(--cs-card-shadow)!important;
+}
+
+/* Slightly stronger edge for interactive standard cards. */
+.routine-card,
+.activity-type-card:not(.premium-checkout-card),
+.staple-card,
+.goal-card,
+.scan-card{
+  border-color:var(--cs-card-edge-strong)!important;
+}
+
+/* Selected / engaged surfaces borrow the CholScore spectrum without turning
+   every ordinary card into a hero card. */
+.routine-card:focus-visible,
+.activity-type-card:focus-visible,
+.staple-card:focus-visible,
+.goal-card:focus-visible,
+.scan-card:focus-visible,
+.activity-type-card.selected,
+.staple-card.selected,
+.goal-card.selected{
+  outline:none!important;
+  border-color:transparent!important;
+  background:
+    linear-gradient(rgba(18,24,36,.98),rgba(12,16,25,.98)) padding-box,
+    linear-gradient(105deg,var(--cs-card-active),var(--cs-card-active-violet) 55%,var(--cs-card-active-coral)) border-box!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 0 24px rgba(102,91,255,.10)!important;
+}
+
+/* Keep special systems special. */
+.premium-bank-card{border-color:rgba(226,181,72,.42)!important}
+.premium-checkout-card{border-color:transparent!important}
+.achievement-card{ /* rarity CSS below remains the source of truth */ }
+
+/* The top-level feature cards deliberately retain the v18 full gradient edge. */
+.hero-card,
+.check-food-card{box-shadow:0 14px 38px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.035)!important}
+</style>
+
 </head>
 <body>
 <!-- Shared achievement badge defs — referenced by every graphical achievement
@@ -1097,7 +1185,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=186"></script>
+  <script src="app.js?v=187"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
@@ -1168,3 +1256,4 @@
 
 </body>
 </html>
+
