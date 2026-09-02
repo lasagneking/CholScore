@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=196" />
+  <link rel="stylesheet" href="styles.css?v=197" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -338,6 +338,46 @@ body.rewards-active .app-header{
 }
 body.rewards-active #rewardsView{
   background:transparent!important;
+}
+</style>
+
+
+<style id="rewards-header-clarity-v29">
+/* v29 — Rewards header must remain fully legible. The cooler Rewards atmosphere
+   previously left the shared app header visually subdued beneath the page
+   treatment. Keep the global greeting/avatar at full strength and above any
+   Rewards ambient layers. */
+body.rewards-active .app-header{
+  position:relative!important;
+  z-index:50!important;
+  opacity:1!important;
+  filter:none!important;
+  mix-blend-mode:normal!important;
+  background:linear-gradient(180deg,rgba(11,14,22,.995),rgba(11,14,22,.94) 76%,rgba(11,14,22,0))!important;
+}
+body.rewards-active .app-header .eyebrow{
+  color:#8f98ad!important;
+  opacity:1!important;
+}
+body.rewards-active .app-header h2,
+body.rewards-active .app-header #greeting{
+  color:#f7f7f8!important;
+  opacity:1!important;
+  filter:none!important;
+}
+body.rewards-active .app-header .profile-avatar,
+body.rewards-active .app-header #profileBtn,
+body.rewards-active .app-header #profileBtn img{
+  opacity:1!important;
+  filter:none!important;
+  visibility:visible!important;
+}
+body.rewards-active #rewardsView{
+  position:relative!important;
+  z-index:1!important;
+}
+body.rewards-active #rewardsView::before{
+  z-index:-1!important;
 }
 </style>
 
@@ -697,9 +737,9 @@ body.rewards-active #rewardsView{
         </div>
 
         <div class="stats-grid">
-          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-flame.png?v=196" alt="" aria-hidden="true"><strong id="streakStat">0</strong><small>day streak</small></div>
-          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-points.png?v=196" alt="" aria-hidden="true"><strong id="pointsStat">0</strong><small>total points</small></div>
-          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-trophy.png?v=196" alt="" aria-hidden="true"><strong id="bestStat">0</strong><small>personal best</small></div>
+          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-flame.png?v=197" alt="" aria-hidden="true"><strong id="streakStat">0</strong><small>day streak</small></div>
+          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-points.png?v=197" alt="" aria-hidden="true"><strong id="pointsStat">0</strong><small>total points</small></div>
+          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-trophy.png?v=197" alt="" aria-hidden="true"><strong id="bestStat">0</strong><small>personal best</small></div>
         </div>
 
         <div class="reward-tabs" id="rewardCategoryTabs"></div>
@@ -1369,7 +1409,7 @@ body.rewards-active #rewardsView{
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=196"></script>
+  <script src="app.js?v=197"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
