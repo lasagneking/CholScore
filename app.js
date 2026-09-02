@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "187"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "189"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -563,6 +563,26 @@ function renderProteinToday(day=getDay()){
     </div>
   `).join("");
 }
+
+function setupCollapsibleSummaryPanels(){
+  const pairs=[
+    {buttonId:"proteinToggle",panelId:"proteinBreakdown",openLabel:"Collapse protein entries",closedLabel:"Expand protein entries"},
+    {buttonId:"timelineToggle",panelId:"timeline",openLabel:"Collapse today's timeline",closedLabel:"Expand today's timeline"}
+  ];
+  pairs.forEach(({buttonId,panelId,openLabel,closedLabel})=>{
+    const button=$(buttonId),panel=$(panelId);
+    if(!button||!panel||button.dataset.collapseWired==="1")return;
+    button.dataset.collapseWired="1";
+    button.addEventListener("click",()=>{
+      const isOpen=button.getAttribute("aria-expanded")==="true";
+      const nextOpen=!isOpen;
+      button.setAttribute("aria-expanded",String(nextOpen));
+      button.setAttribute("aria-label",nextOpen?openLabel:closedLabel);
+      panel.hidden=!nextOpen;
+    });
+  });
+}
+setupCollapsibleSummaryPanels();
 
 function bestEverScore(){
   const days=Object.entries(state.days).filter(([_,d])=>d.checkedOut);
