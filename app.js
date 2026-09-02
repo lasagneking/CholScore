@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "200"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "201"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -1327,12 +1327,21 @@ function readSeenAchievementCelebrations(){
 function writeSeenAchievementCelebrations(set){
   try{localStorage.setItem(ACHIEVEMENT_SEEN_KEY,JSON.stringify([...set]));}catch(e){}
 }
+function achievementCelebrationSeenToken(def){
+  // Lifetime achievements celebrate once ever. "This Week" achievements are
+  // deliberately repeatable: the week-start is part of their seen token so the
+  // same weekly milestone can celebrate again after the Monday reset.
+  if(def?.cat==="weekly") return `weekly:${mondayKeyFor(new Date())}:${def.id}`;
+  return def?.id||"";
+}
 function checkForNewAchievementCelebrations(metrics){
   const currentlyUnlocked=achievementDefs.filter(a=>Number(metrics[a.metric]||0)>=a.goal);
   let seen=readSeenAchievementCelebrations();
   // First run after this feature ships: silently baseline everything already earned.
+  // Weekly achievements are baselined only for the CURRENT week, so they become
+  // eligible to celebrate again automatically when the next Monday begins.
   if(seen===null){
-    seen=new Set(currentlyUnlocked.map(a=>a.id));
+    seen=new Set(currentlyUnlocked.map(achievementCelebrationSeenToken));
     writeSeenAchievementCelebrations(seen);
     return;
   }
@@ -1342,10 +1351,13 @@ function checkForNewAchievementCelebrations(metrics){
   // an achievement being lost if the unlock is detected while another modal
   // (for example the cardio logger) is still closing.
   const alreadyQueued=new Set([
-    ...achievementCelebrationQueue.map(a=>a.id),
-    ...(activeAchievementCelebration?[activeAchievementCelebration.id]:[])
+    ...achievementCelebrationQueue.map(a=>achievementCelebrationSeenToken(a)),
+    ...(activeAchievementCelebration?[achievementCelebrationSeenToken(activeAchievementCelebration)]:[])
   ]);
-  const fresh=currentlyUnlocked.filter(a=>!seen.has(a.id)&&!alreadyQueued.has(a.id));
+  const fresh=currentlyUnlocked.filter(a=>{
+    const token=achievementCelebrationSeenToken(a);
+    return token&&!seen.has(token)&&!alreadyQueued.has(token);
+  });
   fresh.forEach(a=>achievementCelebrationQueue.push(a));
   if(fresh.length)scheduleAchievementCelebration();
 }
@@ -1405,7 +1417,7 @@ function showNextAchievementCelebration(){
   achievementCelebrationQueue.shift();
   activeAchievementCelebration=def;
   const seen=readSeenAchievementCelebrations()||new Set();
-  seen.add(def.id);
+  seen.add(achievementCelebrationSeenToken(def));
   writeSeenAchievementCelebrations(seen);
 
   // Force a paint before enabling both the one-shot card entrance and the
