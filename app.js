@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "199"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "200"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -1336,11 +1336,27 @@ function checkForNewAchievementCelebrations(metrics){
     writeSeenAchievementCelebrations(seen);
     return;
   }
-  const fresh=currentlyUnlocked.filter(a=>!seen.has(a.id));
-  if(!fresh.length)return;
-  fresh.forEach(a=>{seen.add(a.id);achievementCelebrationQueue.push(a);});
-  writeSeenAchievementCelebrations(seen);
-  showNextAchievementCelebration();
+
+  // Queue newly-earned achievements, but DO NOT mark them as seen yet.
+  // They are only persisted as seen after showModal() succeeds. This prevents
+  // an achievement being lost if the unlock is detected while another modal
+  // (for example the cardio logger) is still closing.
+  const alreadyQueued=new Set([
+    ...achievementCelebrationQueue.map(a=>a.id),
+    ...(activeAchievementCelebration?[activeAchievementCelebration.id]:[])
+  ]);
+  const fresh=currentlyUnlocked.filter(a=>!seen.has(a.id)&&!alreadyQueued.has(a.id));
+  fresh.forEach(a=>achievementCelebrationQueue.push(a));
+  if(fresh.length)scheduleAchievementCelebration();
+}
+
+let achievementCelebrationRetryTimer=null;
+function scheduleAchievementCelebration(delay=140){
+  if(achievementCelebrationRetryTimer)clearTimeout(achievementCelebrationRetryTimer);
+  achievementCelebrationRetryTimer=setTimeout(()=>{
+    achievementCelebrationRetryTimer=null;
+    showNextAchievementCelebration();
+  },delay);
 }
 function buildAchievementConfetti(){
   const host=$("achievementCelebrationConfetti");if(!host)return;
@@ -1361,8 +1377,14 @@ function buildAchievementConfetti(){
 function showNextAchievementCelebration(){
   const dlg=$("achievementCelebrationDialog");
   if(!dlg||dlg.open||activeAchievementCelebration||!achievementCelebrationQueue.length)return;
-  const def=achievementCelebrationQueue.shift();
-  activeAchievementCelebration=def;
+
+  // Unlock detection often happens during renderAll() before the logging
+  // dialog has finished closing. Wait until other modal dialogs are gone
+  // rather than trying to stack showModal() calls and losing the celebration.
+  const blockingDialog=qsa("dialog[open]").find(d=>d!==dlg);
+  if(blockingDialog){scheduleAchievementCelebration(220);return;}
+
+  const def=achievementCelebrationQueue[0]; // peek; only remove after successful open
   const shown=achievementDisplay(def);
   $("achievementCelebrationArt").innerHTML=renderAchBadge(def);
   $("achievementCelebrationTitle").textContent=shown.title;
@@ -1371,8 +1393,28 @@ function showNextAchievementCelebration(){
   $("achievementCelebrationRarity").className=`achievement-celebration-rarity r-${def.rarity.toLowerCase()}`;
   buildAchievementConfetti();
   dlg.classList.remove("celebration-live");
-  dlg.showModal();
-  requestAnimationFrame(()=>requestAnimationFrame(()=>dlg.classList.add("celebration-live")));
+
+  try{
+    dlg.showModal();
+  }catch(err){
+    console.warn("Achievement celebration waiting for UI to become available",err);
+    scheduleAchievementCelebration(260);
+    return;
+  }
+
+  achievementCelebrationQueue.shift();
+  activeAchievementCelebration=def;
+  const seen=readSeenAchievementCelebrations()||new Set();
+  seen.add(def.id);
+  writeSeenAchievementCelebrations(seen);
+
+  // Force a paint before enabling both the one-shot card entrance and the
+  // looping burst/confetti. This makes the first (or only) card animate just
+  // as reliably as later cards in a queue.
+  requestAnimationFrame(()=>{
+    void dlg.offsetWidth;
+    requestAnimationFrame(()=>dlg.classList.add("celebration-live"));
+  });
 }
 function closeAchievementCelebration(){
   const dlg=$("achievementCelebrationDialog");
@@ -4344,7 +4386,7 @@ $("shareAchievementCelebrationBtn").addEventListener("click",shareAchievementCel
 $("achievementCelebrationDialog").addEventListener("close",()=>{
   $("achievementCelebrationDialog").classList.remove("celebration-live");
   activeAchievementCelebration=null;
-  setTimeout(showNextAchievementCelebration,180);
+  scheduleAchievementCelebration(180);
 });
 
 $("resetData").addEventListener("click",()=>{if(confirm("Reset all CholScore data on this device?")){localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(LEGACY_KEY);state=cloneDefault();$("settingsDialog").close();location.reload();}});
