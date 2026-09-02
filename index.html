@@ -198,6 +198,50 @@
 .check-food-card{box-shadow:0 14px 38px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.035)!important}
 </style>
 
+
+<style id="cholscore-primary-card-borders-v20">
+/* v20 — extend the Home-page premium feature border language across every
+   top-level screen. Only primary/summary/action surfaces get the spectrum
+   edge; ordinary content cards stay on the quieter v19 graphite system, and
+   achievement rarity / Reward Bank treatments remain untouched. */
+#foodView > .metric-card,
+#foodView > .scan-card,
+#exerciseView > .metric-card,
+#exerciseView > .protein-card,
+#rewardsView > .rewards-hero,
+#historyCalendarView > .calendar-card,
+#historyTrendsView .trend-card,
+#historyReportsView #reportContent > .report-card,
+#historyReportsView #reportContent > .weekly-bank-card,
+#historyReportsView #reportContent > .impact-card{
+  border:1px solid transparent!important;
+  background:
+    radial-gradient(circle at 88% 0%,rgba(255,92,96,.10),transparent 32%) padding-box,
+    radial-gradient(circle at 3% 78%,rgba(35,217,233,.055),transparent 32%) padding-box,
+    linear-gradient(145deg,rgba(18,22,31,.985),rgba(18,16,27,.985)) padding-box,
+    linear-gradient(105deg,#27dce9 0%,#6f67ff 54%,#ff6b72 100%) border-box!important;
+  box-shadow:0 14px 38px rgba(0,0,0,.20),0 0 22px rgba(83,83,255,.045),inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+/* Protein keeps its subtly violet interior while gaining the shared edge. */
+#exerciseView > .protein-card{
+  background:
+    radial-gradient(circle at 88% 0%,rgba(108,95,255,.10),transparent 34%) padding-box,
+    linear-gradient(145deg,rgba(27,25,48,.985),rgba(18,18,34,.985)) padding-box,
+    linear-gradient(105deg,#27dce9 0%,#6f67ff 54%,#ff6b72 100%) border-box!important;
+}
+/* Rewards collection hero stays celebratory, but now clearly belongs to the
+   same app-wide primary-card family. Achievement cards below retain rarity. */
+#rewardsView > .rewards-hero{
+  background:
+    radial-gradient(circle at 86% 5%,rgba(255,92,96,.13),transparent 35%) padding-box,
+    radial-gradient(circle at 8% 78%,rgba(35,217,233,.06),transparent 34%) padding-box,
+    linear-gradient(145deg,rgba(30,20,32,.985),rgba(20,18,32,.985)) padding-box,
+    linear-gradient(105deg,#27dce9 0%,#6f67ff 54%,#ff6b72 100%) border-box!important;
+}
+/* Keep the three compact Rewards stats quiet; they are supporting data. */
+#rewardsView .stats-grid .stat-card{border:1px solid var(--cs-card-edge)!important}
+</style>
+
 </head>
 <body>
 <!-- Shared achievement badge defs — referenced by every graphical achievement
@@ -1185,7 +1229,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=187"></script>
+  <script src="app.js?v=188"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
