@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=195" />
+  <link rel="stylesheet" href="styles.css?v=196" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -357,6 +357,21 @@ body.rewards-active #rewardsView{
 @media(max-width:430px){.collapse-toggle{width:34px;height:34px;min-width:34px}.protein-card-actions{gap:8px}}
 </style>
 
+
+<style id="reward-stat-artwork-v28">
+/* v28 — custom premium Rewards stat artwork replaces platform emoji. */
+#rewardsView .stats-grid .stat-card .reward-stat-icon{
+  display:block;
+  width:48px;
+  height:48px;
+  object-fit:contain;
+  margin:0 auto 2px;
+  filter:drop-shadow(0 4px 9px rgba(0,0,0,.28));
+}
+@media (max-width:380px){
+  #rewardsView .stats-grid .stat-card .reward-stat-icon{width:44px;height:44px}
+}
+</style>
 </head>
 <body>
 <!-- Shared achievement badge defs — referenced by every graphical achievement
@@ -682,9 +697,9 @@ body.rewards-active #rewardsView{
         </div>
 
         <div class="stats-grid">
-          <div class="stat-card"><span>🔥</span><strong id="streakStat">0</strong><small>day streak</small></div>
-          <div class="stat-card"><span>⭐</span><strong id="pointsStat">0</strong><small>total points</small></div>
-          <div class="stat-card"><span>🏆</span><strong id="bestStat">0</strong><small>personal best</small></div>
+          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-flame.png?v=196" alt="" aria-hidden="true"><strong id="streakStat">0</strong><small>day streak</small></div>
+          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-points.png?v=196" alt="" aria-hidden="true"><strong id="pointsStat">0</strong><small>total points</small></div>
+          <div class="stat-card"><img class="reward-stat-icon" src="reward-stat-trophy.png?v=196" alt="" aria-hidden="true"><strong id="bestStat">0</strong><small>personal best</small></div>
         </div>
 
         <div class="reward-tabs" id="rewardCategoryTabs"></div>
@@ -1354,7 +1369,7 @@ body.rewards-active #rewardsView{
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=195"></script>
+  <script src="app.js?v=196"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
