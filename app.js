@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "189"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "190"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -30,7 +30,7 @@ const defaultState = {
   // daily use for no reason. Once real purchases exist, new installs should
   // default to false instead; existing users who already paid stay unlocked
   // via their own stored receipt/entitlement at that point, not this flag.
-  premium: { unlocked: true }
+  premium: { unlocked: false, source: null }
 };
 
 let state = loadState();
@@ -66,28 +66,71 @@ function loadState(){
   } catch(e){}
   return cloneDefault();
 }
+function safeProfilePhoto(photo){
+  if(typeof photo!=="string"||!photo)return null;
+  // Profile photos created by CholScore are cropped JPEG data URLs. Accept
+  // only raster image data URLs on restore — never SVG, HTML, javascript:,
+  // remote URLs, or other attacker-controlled schemes from a backup file.
+  if(photo.length>2_000_000)return null;
+  return /^data:image\/(?:png|jpe?g|webp);base64,[A-Za-z0-9+/=\r\n]+$/i.test(photo)?photo:null;
+}
+function isPlainObject(value){
+  return !!value&&typeof value==="object"&&!Array.isArray(value);
+}
 function normaliseState(s){
   const d=cloneDefault();
+  const src=isPlainObject(s)?s:{};
 
-  // Upgrade legacy food records created before food IDs were introduced.
-  if(s?.days){
-    for(const day of Object.values(s.days)){
-      if(Array.isArray(day?.foods)){
-        day.foods=day.foods.map(food=>({
-          ...food,
-          id: food.id || id()
-        }));
-      }
-    }
+  // Days are deliberately rebuilt instead of trusting imported/local JSON.
+  // A malformed backup used to be able to replace this object (or a day's
+  // arrays) with arbitrary types and then crash normal rendering on startup.
+  const days={};
+  const rawDays=isPlainObject(src.days)?src.days:{};
+  for(const [key,rawDay] of Object.entries(rawDays)){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(key)||!isPlainObject(rawDay))continue;
+    const foods=Array.isArray(rawDay.foods)?rawDay.foods
+      .filter(isPlainObject)
+      .map(food=>({...food,id:food.id||id()})):[];
+    const activities=Array.isArray(rawDay.activities)?rawDay.activities.filter(isPlainObject):[];
+    const finalScore=rawDay.finalScore==null?null:Number(rawDay.finalScore);
+    days[key]={
+      ...rawDay,
+      foods,
+      activities,
+      checkedOut:!!rawDay.checkedOut,
+      finalScore:Number.isFinite(finalScore)?finalScore:null
+    };
   }
-  const profile=s?.profile ? {...s.profile, distanceUnit:(s.profile.distanceUnit==="km"?"km":"mi")} : null;
+
+  const rawProfile=isPlainObject(src.profile)?src.profile:null;
+  const profile=rawProfile?{
+    ...rawProfile,
+    photo:safeProfilePhoto(rawProfile.photo),
+    distanceUnit:(rawProfile.distanceUnit==="km"?"km":"mi")
+  }:null;
+  const rawPremium=isPlainObject(src.premium)?src.premium:{};
+  const premium={
+    unlocked:!!rawPremium.unlocked,
+    // Only a successful RevenueCat sync writes this marker. Legacy debug
+    // unlocks intentionally do not become trusted production entitlements.
+    source:rawPremium.source==="revenuecat"?"revenuecat":null
+  };
+
   return {
-    ...d,...s,
+    ...d,...src,
     profile,
-    routines:Array.isArray(s?.routines)?s.routines:[],
-    activeWorkout:s?.activeWorkout||null,
-    achievements:{...d.achievements,...(s?.achievements||{})},
-    rewardBank:{...d.rewardBank,...(s?.rewardBank||{}),goal:(s?.rewardBank?.goal||null),history:Array.isArray(s?.rewardBank?.history)?s.rewardBank.history:[]}
+    days,
+    routines:Array.isArray(src.routines)?src.routines.filter(isPlainObject):[],
+    activeWorkout:isPlainObject(src.activeWorkout)?src.activeWorkout:null,
+    achievements:{...d.achievements,...(isPlainObject(src.achievements)?src.achievements:{})},
+    rewardBank:{
+      ...d.rewardBank,...(isPlainObject(src.rewardBank)?src.rewardBank:{}),
+      goal:isPlainObject(src.rewardBank?.goal)?src.rewardBank.goal:null,
+      history:Array.isArray(src.rewardBank?.history)?src.rewardBank.history.filter(isPlainObject):[]
+    },
+    vacationMode:{...d.vacationMode,...(isPlainObject(src.vacationMode)?src.vacationMode:{})},
+    vacationHistory:Array.isArray(src.vacationHistory)?src.vacationHistory.filter(isPlainObject):[],
+    premium
   };
 }
 function saveState(){
@@ -4153,11 +4196,19 @@ function processAndStorePhoto(file,onDone){
 }
 function renderAvatarInto(el,photo,name){
   if(!el)return;
-  if(photo){
-    el.innerHTML=`<img src="${photo}" alt="" />`;
+  el.replaceChildren();
+  const safePhoto=safeProfilePhoto(photo);
+  if(safePhoto){
+    const img=document.createElement("img");
+    img.src=safePhoto;
+    img.alt="";
+    el.appendChild(img);
   }else{
     const initial=(name||"?").trim().charAt(0).toUpperCase()||"?";
-    el.innerHTML=`<div class="avatar-initials">${esc(initial)}</div>`;
+    const fallback=document.createElement("div");
+    fallback.className="avatar-initials";
+    fallback.textContent=initial;
+    el.appendChild(fallback);
   }
 }
 function renderHeaderAvatar(){
@@ -4197,16 +4248,24 @@ $("vacationModeOffBtn").addEventListener("click",()=>{
    sync by syncEntitlementFromRevenueCat() below. Every call site that gates
    a feature elsewhere in the app is untouched. */
 
-// Flip to true only for local TestFlight/dev builds where you want the
-// manual override buttons back (e.g. to preview the unlocked UI without
-// completing a real sandbox purchase each time). Must be false for any
-// build heading to App Store review or real users.
-const DEBUG_PREMIUM_TOGGLE=true;
+// Production builds never expose a manual premium switch. GitHub Pages is
+// intentionally the tester build: it gets CholScore+ without StoreKit so
+// existing web testers can continue testing every feature for free. Native
+// App Store/TestFlight builds only trust a RevenueCat-confirmed entitlement.
+const DEBUG_PREMIUM_TOGGLE=false;
+function isGithubTesterBuild(){
+  if(window.Capacitor?.isNativePlatform())return false;
+  const host=String(location.hostname||"").toLowerCase();
+  return host==="lasagneking.github.io"||host==="localhost"||host==="127.0.0.1";
+}
 
 const REVENUECAT_API_KEY="appl_IBVqrKBPqMlHAwtIqIIcSsWeTHL";
 const REVENUECAT_ENTITLEMENT_ID="cholscore_pro";
 
-function isPremiumUnlocked(){return !!state.premium?.unlocked;}
+function isPremiumUnlocked(){
+  if(isGithubTesterBuild())return true;
+  return !!state.premium?.unlocked&&state.premium?.source==="revenuecat";
+}
 function showPaywall(){$("paywallDialog").showModal();}
 
 function getPurchasesPlugin(){return window.Capacitor?.Plugins?.Purchases||null;}
@@ -4240,7 +4299,7 @@ async function initPurchases(){
 
 function applyEntitlementFromCustomerInfo(customerInfo){
   const unlocked=!!customerInfo?.entitlements?.active?.[REVENUECAT_ENTITLEMENT_ID];
-  state.premium={unlocked};
+  state.premium={unlocked,source:"revenuecat"};
   saveState();
   renderPremiumTestingUI();
   renderAll();
@@ -4338,10 +4397,12 @@ function renderPremiumTestingUI(){
   $("premiumOnView").classList.toggle("hidden",!unlocked);
 }
 $("premiumTestUnlockBtn").addEventListener("click",()=>{
-  state.premium={unlocked:true};saveState();renderPremiumTestingUI();renderAll();
+  if(!DEBUG_PREMIUM_TOGGLE)return;
+  state.premium={unlocked:true,source:null};saveState();renderPremiumTestingUI();renderAll();
 });
 $("premiumTestLockBtn").addEventListener("click",()=>{
-  state.premium={unlocked:false};saveState();renderPremiumTestingUI();renderAll();
+  if(!DEBUG_PREMIUM_TOGGLE)return;
+  state.premium={unlocked:false,source:null};saveState();renderPremiumTestingUI();renderAll();
 });
 
 $("exportBackupBtn").addEventListener("click",async()=>{
@@ -4377,6 +4438,15 @@ $("exportBackupBtn").addEventListener("click",async()=>{
   alert("Saved to this device's Downloads/Files. For a real backup, please also move or share this file somewhere off the phone, email it to yourself, or save it to a cloud drive.");
 });
 
+function validateBackupPayload(incoming){
+  if(!isPlainObject(incoming))return false;
+  if("days" in incoming&&!isPlainObject(incoming.days))return false;
+  if("profile" in incoming&&incoming.profile!==null&&!isPlainObject(incoming.profile))return false;
+  if("routines" in incoming&&!Array.isArray(incoming.routines))return false;
+  if("rewardBank" in incoming&&!isPlainObject(incoming.rewardBank))return false;
+  return ("days" in incoming||"profile" in incoming);
+}
+
 $("importBackupBtn").addEventListener("click",()=>$("importBackupFile").click());
 $("importBackupFile").addEventListener("change",e=>{
   const file=e.target.files[0];
@@ -4387,14 +4457,23 @@ $("importBackupFile").addEventListener("change",e=>{
     try{parsed=JSON.parse(reader.result);}
     catch(err){alert("That file doesn't look like a valid CholScore backup, it couldn't be read as JSON.");e.target.value="";return;}
     const incoming=(parsed&&parsed.app==="CholScore"&&parsed.data)?parsed.data:parsed;
-    if(!incoming||typeof incoming!=="object"||!("days"in incoming||"profile"in incoming)){
-      alert("That file doesn't look like a valid CholScore backup.");e.target.value="";return;
+    if(!validateBackupPayload(incoming)){
+      alert("That file doesn't look like a valid CholScore backup, or its structure is damaged.");e.target.value="";return;
     }
     const when=parsed?.exportedAt?new Date(parsed.exportedAt).toLocaleString():"an unknown date";
     if(!confirm(`Restore this backup from ${when}?\n\nThis replaces everything currently on this device, routines, food and exercise history, achievements, all of it, and can't be undone.`)){
       e.target.value="";return;
     }
-    state=normaliseState(incoming);
+    try{
+      // A backup restores user data, not subscription authority. Preserve the
+      // entitlement already confirmed on this device; a JSON file must never
+      // be able to manufacture CholScore+ access.
+      state=normaliseState({...incoming,premium:state.premium});
+    }catch(err){
+      console.error("Backup normalisation failed:",err);
+      alert("That backup is damaged and couldn't be restored safely. Your current data has not been replaced.");
+      e.target.value="";return;
+    }
     saveState();
     markBackedUpNow();
     location.reload();
