@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "176"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "184"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -1493,15 +1493,16 @@ function renderPersonalRecords(){
     rows.push(`<div class="pr-row"><span class="pr-row-icon pr-row-icon-art"><img src="assets/pr/timed.webp" alt="" aria-hidden="true"></span><div class="pr-row-main"><strong>${esc(name)}</strong><small>Longest hold</small></div><div class="pr-row-value"><b>${formatExerciseSeconds(r.seconds)}</b><small>${fmtDate(r.date)}</small></div></div>`);
   });
   for(const type in CARDIO_TYPES){
-    const icon=CARDIO_TYPES[type].icon,label=CARDIO_TYPES[type].label;
+    const label=CARDIO_TYPES[type].label;
+    const icon=`<span class="pr-row-icon pr-row-icon-art"><img src="assets/pr/${type}.webp" alt="" aria-hidden="true"></span>`;
     const bucket=recs.cardio[type];
     if(bucket.longestKm>0){
-      rows.push(`<div class="pr-row"><span class="pr-row-icon">${icon}</span><div class="pr-row-main"><strong>${label}</strong><small>Longest distance</small></div><div class="pr-row-value"><b>${kmToDisplay(bucket.longestKm).toFixed(1)} ${unit}</b><small>${fmtDate(bucket.dateForDistance)}</small></div></div>`);
+      rows.push(`<div class="pr-row">${icon}<div class="pr-row-main"><strong>${label}</strong><small>Longest distance</small></div><div class="pr-row-value"><b>${kmToDisplay(bucket.longestKm).toFixed(1)} ${unit}</b><small>${fmtDate(bucket.dateForDistance)}</small></div></div>`);
     }
     if(bucket.bestPaceMinPerKm!=null){
       const reconstructedMinutes=bucket.bestPaceMinPerKm*bucket.paceDistanceKm;
       const paceDisplay=formatPace(reconstructedMinutes,kmToDisplay(bucket.paceDistanceKm));
-      if(paceDisplay)rows.push(`<div class="pr-row"><span class="pr-row-icon">${icon}</span><div class="pr-row-main"><strong>${label}</strong><small>Fastest pace</small></div><div class="pr-row-value"><b>${paceDisplay}/${unit}</b><small>${fmtDate(bucket.dateForPace)}</small></div></div>`);
+      if(paceDisplay)rows.push(`<div class="pr-row">${icon}<div class="pr-row-main"><strong>${label}</strong><small>Fastest pace</small></div><div class="pr-row-value"><b>${paceDisplay}/${unit}</b><small>${fmtDate(bucket.dateForPace)}</small></div></div>`);
     }
   }
 
