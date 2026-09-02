@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=194" />
+  <link rel="stylesheet" href="styles.css?v=195" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -1354,7 +1354,7 @@ body.rewards-active #rewardsView{
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=194"></script>
+  <script src="app.js?v=195"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
@@ -1368,7 +1368,7 @@ body.rewards-active #rewardsView{
 
 <style id="premium-achievement-overhaul">
 /* Premium achievement collection — larger, name-specific collectible crests */
-.achievement-card{position:relative;overflow:hidden;min-height:312px!important;padding:18px 16px 16px!important;background:linear-gradient(155deg,rgba(20,27,39,.98),rgba(10,14,23,.98))!important;border:1px solid rgba(255,255,255,.09)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 14px 34px rgba(0,0,0,.22)!important}
+.achievement-card{position:relative;overflow:hidden;min-height:328px!important;padding:18px 16px 48px!important;background:linear-gradient(155deg,rgba(20,27,39,.98),rgba(10,14,23,.98))!important;border:1px solid rgba(255,255,255,.09)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 14px 34px rgba(0,0,0,.22)!important}
 .achievement-card:before{content:"";position:absolute;inset:-45% -30% auto;height:70%;background:radial-gradient(circle,rgba(108,95,255,.12),transparent 62%);pointer-events:none}
 .achievement-card::after{content:none!important;display:none!important;border:0!important;background:none!important;box-shadow:none!important}
 .achievement-card.r-mythic::before{inset:-35% -20% auto!important;height:58%!important;background:radial-gradient(circle,rgba(255,95,209,.10),rgba(84,217,255,.045) 42%,transparent 70%)!important}
@@ -1379,7 +1379,7 @@ body.rewards-active #rewardsView{
 .achievement-card.locked .achievement-icon{filter:grayscale(.72) saturate(.45) brightness(.63);opacity:.68}
 .achievement-card h4{font-size:18px!important;line-height:1.12!important;margin:2px 0 7px!important;letter-spacing:-.025em;text-align:center}
 .achievement-card p{font-size:13px!important;line-height:1.35!important;min-height:36px;text-align:center;margin:0 0 13px!important}
-.achievement-rarity{position:absolute!important;top:10px!important;right:10px!important;left:auto!important;margin:0!important;z-index:5;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.achievement-rarity{position:absolute!important;top:auto!important;right:auto!important;bottom:10px!important;left:50%!important;transform:translateX(-50%)!important;margin:0!important;z-index:5;box-shadow:inset 0 1px 0 rgba(255,255,255,.08);white-space:nowrap}
 .achievement-mini-progress{height:7px!important;border-radius:99px!important;overflow:hidden;background:rgba(255,255,255,.055)!important}
 .achievement-mini-progress i{border-radius:99px;box-shadow:0 0 14px rgba(108,95,255,.45)}
 .achievement-state{font-size:12px!important;margin-top:10px!important}
@@ -1419,7 +1419,7 @@ body.rewards-active #rewardsView{
   50%{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 14px 36px rgba(0,0,0,.25),0 0 30px rgba(84,217,255,.15),0 0 54px rgba(168,121,255,.16),0 0 68px rgba(255,95,209,.10)}
 }
 @keyframes achFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
-@media(max-width:390px){.achievement-card{min-height:296px!important;padding:15px 12px!important}.achievement-icon,.achievement-icon svg{width:126px!important;height:126px!important}.achievement-icon .premium-ach-img{width:136px!important;height:136px!important}.achievement-card h4{font-size:16px!important}.achievement-card p{font-size:12px!important}}
+@media(max-width:390px){.achievement-card{min-height:312px!important;padding:15px 12px 46px!important}.achievement-icon,.achievement-icon svg{width:126px!important;height:126px!important}.achievement-icon .premium-ach-img{width:136px!important;height:136px!important}.achievement-card h4{font-size:16px!important}.achievement-card p{font-size:12px!important}}
 @media(prefers-reduced-motion:reduce){.achievement-card.unlocked .achievement-icon{animation:none}}
 </style>
 
