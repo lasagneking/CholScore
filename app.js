@@ -1236,7 +1236,22 @@ function renderSwimmingVectorBadge(def){
   </svg>`;
 }
 
+const FOOD_ACHIEVEMENT_ASSETS = Object.freeze({
+  food_first:"assets/achievements/food/food_first.webp", food_10:"assets/achievements/food/food_10.webp", food_50:"assets/achievements/food/food_50.webp",
+  food_scan_3:"assets/achievements/food/food_scan_3.webp", food_scan_10:"assets/achievements/food/food_scan_10.webp", food_ontarget_5:"assets/achievements/food/food_ontarget_5.webp",
+  food_ontarget_3:"assets/achievements/food/food_ontarget_3.webp", food_25:"assets/achievements/food/food_25.webp", food_scan_5:"assets/achievements/food/food_scan_5.webp",
+  food_ontarget_10:"assets/achievements/food/food_ontarget_10.webp", food_scan_50:"assets/achievements/food/food_scan_50.webp", food_100:"assets/achievements/food/food_100.webp",
+  food_ontarget_30:"assets/achievements/food/food_ontarget_30.webp", food_scan_100:"assets/achievements/food/food_scan_100.webp", food_500:"assets/achievements/food/food_500.webp",
+  food_ontarget_100:"assets/achievements/food/food_ontarget_100.webp", food_ontarget_250:"assets/achievements/food/food_ontarget_250.webp"
+});
+function renderFoodBadge(def){
+  const src=FOOD_ACHIEVEMENT_ASSETS[def.id]; if(!src)return null;
+  const alt=String(def.title||"Food achievement").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return `<img class="premium-ach-img food-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
+}
+
 function renderAchBadge(def){
+  if(def.cat==="food" && FOOD_ACHIEVEMENT_ASSETS[def.id]) return renderFoodBadge(def);
   if(def.cat==="score" && CHOLSCORE_ACHIEVEMENT_ASSETS[def.id]) return renderCholScoreBadge(def);
   if(def.cat==="workout" && WORKOUT_ACHIEVEMENT_ASSETS[def.id]) return renderWorkoutBadge(def);
   if(def.cat==="running" && RUNNING_ACHIEVEMENT_ASSETS[def.id]) return renderRunningBadge(def);
