@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "198"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "199"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -1349,8 +1349,9 @@ function buildAchievementConfetti(){
   for(let i=0;i<30;i++){
     const bit=document.createElement("i");
     bit.style.setProperty("--x",`${6+Math.random()*88}%`);
-    bit.style.setProperty("--delay",`${Math.random()*.65}s`);
+    bit.style.setProperty("--delay",`${Math.random()*.85}s`);
     bit.style.setProperty("--dur",`${1.7+Math.random()*1.35}s`);
+    bit.style.setProperty("--cycle",`${3.35+Math.random()*.9}s`);
     bit.style.setProperty("--rot",`${Math.round(Math.random()*420-210)}deg`);
     bit.style.setProperty("--drift",`${Math.round((Math.random()-.5)*170)}px`);
     bit.style.background=colors[i%colors.length];
