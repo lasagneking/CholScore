@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=191" />
+  <link rel="stylesheet" href="styles.css?v=192" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -240,6 +240,82 @@
 }
 /* Keep the three compact Rewards stats quiet; they are supporting data. */
 #rewardsView .stats-grid .stat-card{border:1px solid var(--cs-card-edge)!important}
+</style>
+
+
+<style id="rewards-cool-surface-refinement-v24">
+/* v24 — cooler Rewards atmosphere + unified graphite/navy surfaces.
+   Achievement artwork and rarity treatments remain the colour heroes. */
+:root{
+  --cs-surface-core:#101521;
+  --cs-surface-alt:#141a27;
+  --cs-surface-deep:#0b0e14;
+  --cs-surface-elevated:#171d2c;
+  --cs-surface-edge:rgba(137,151,181,.18);
+}
+
+/* Pull Rewards away from burgundy/brown into the app's blue-black family,
+   retaining only a restrained ambient plum identity. */
+#rewardsView{
+  position:relative;
+  isolation:isolate;
+}
+#rewardsView::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  pointer-events:none;
+  inset:-110px -28px auto;
+  height:620px;
+  background:
+    radial-gradient(ellipse at 78% 16%,rgba(120,66,153,.16),transparent 48%),
+    radial-gradient(ellipse at 16% 24%,rgba(53,68,116,.10),transparent 44%),
+    linear-gradient(180deg,rgba(11,14,22,.96),rgba(10,12,19,.55) 62%,transparent 100%);
+}
+
+/* Collection hero: same premium primary-card language, but with a cooler
+   blue-black interior so the plum reads as light rather than brown pigment. */
+#rewardsView > .rewards-hero{
+  background:
+    radial-gradient(circle at 84% 8%,rgba(150,77,185,.12),transparent 36%) padding-box,
+    radial-gradient(circle at 8% 80%,rgba(49,116,160,.055),transparent 36%) padding-box,
+    linear-gradient(145deg,rgba(17,21,33,.99),rgba(13,16,27,.99)) padding-box,
+    linear-gradient(105deg,#27dce9 0%,#6f67ff 54%,#ff6b72 100%) border-box!important;
+}
+
+/* Achievement cards share the same navy/graphite core surface as Exercise
+   and other content. Colour comes from the artwork + rarity state, not from
+   a coloured card fill. */
+#rewardsView .achievement-card{
+  background:linear-gradient(155deg,rgba(16,21,33,.99),rgba(10,14,22,.99))!important;
+}
+#rewardsView .achievement-card:before{
+  background:radial-gradient(circle,rgba(108,95,255,.075),transparent 64%)!important;
+}
+#rewardsView .achievement-card.r-mythic::before{
+  background:radial-gradient(circle,rgba(255,95,209,.09),rgba(84,217,255,.035) 42%,transparent 70%)!important;
+}
+#rewardsView .achievement-card.r-mythic{
+  background:linear-gradient(155deg,rgba(17,21,33,.995),rgba(10,13,21,.995))!important;
+}
+
+/* Supporting Rewards surfaces stay intentionally quiet. */
+#rewardsView .stats-grid .stat-card,
+#rewardsView .achievement-category-summary{
+  background:linear-gradient(150deg,rgba(16,21,33,.96),rgba(12,16,25,.96))!important;
+  border-color:var(--cs-surface-edge)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 8px 24px rgba(0,0,0,.14)!important;
+}
+
+/* Align ordinary Exercise surfaces with the exact same core family. */
+#exerciseView .routine-card,
+#exerciseView .activity-type-card:not(.premium-checkout-card),
+#exerciseView .protein-row,
+#exerciseView .pr-row,
+#exerciseView .log-item{
+  background-color:var(--cs-surface-core)!important;
+  border-color:var(--cs-surface-edge)!important;
+}
 </style>
 
 <style id="collapsible-summary-panels-v21">
@@ -1255,7 +1331,7 @@
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=191"></script>
+  <script src="app.js?v=192"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
