@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "209"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "210"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -2616,6 +2616,61 @@ $("dayReportDialog").addEventListener("close",()=>$("dayReportDialog").classList
  #dayReportDialog .rep-score-main{min-width:0!important;overflow:hidden!important;}
  `;
  document.head.appendChild(s);
+})();
+
+(function(){
+  if(document.getElementById("cholscoreReportScoreFitV43"))return;
+  const s=document.createElement("style");s.id="cholscoreReportScoreFitV43";
+  s.textContent=`
+    #dayReportDialog .rep-score-card .rep-score-value,
+    #dayReportDialog .rep-score-card .rep-score-num,
+    #dayReportDialog .rep-score-card .rep-score-big,
+    #dayReportDialog .rep-score-main .rep-score-value,
+    #dayReportDialog .rep-score-main .rep-score-num{
+      font-size:clamp(44px,10.8vw,64px)!important;
+      letter-spacing:-.07em!important;
+      line-height:.92!important;
+      white-space:nowrap!important;
+      max-width:88%!important;
+      margin-left:auto!important;
+      margin-right:auto!important;
+      text-align:center!important;
+    }
+  `;
+  document.head.appendChild(s);
+})();
+
+(function(){
+  if(document.getElementById("cholscoreProteinCardCleanupV43"))return;
+  const s=document.createElement("style");s.id="cholscoreProteinCardCleanupV43";
+  s.textContent=`
+    #proteinTodayCard .protein-icon,
+    #proteinTodayCard .protein-hero-icon,
+    #proteinTodayCard .protein-egg,
+    #proteinTodayCard .protein-card-icon,
+    #proteinTodayCard [class*="protein"][class*="icon"],
+    .protein-today-card .protein-icon,
+    .protein-today-card .protein-hero-icon,
+    .protein-today-card .protein-egg,
+    .protein-today-card .protein-card-icon{
+      display:none!important;
+    }
+    #proteinTodayCard .protein-header,
+    #proteinTodayCard .protein-top,
+    .protein-today-card .protein-header,
+    .protein-today-card .protein-top{
+      grid-template-columns:1fr auto!important;
+    }
+  `;
+  document.head.appendChild(s);
+
+  // Also remove any standalone emoji egg if the card was built directly in HTML.
+  const card=document.getElementById("proteinTodayCard")||document.querySelector(".protein-today-card");
+  if(card){
+    [...card.querySelectorAll("*")].forEach(el=>{
+      if(el.children.length===0 && el.textContent.trim()==="🥚") el.remove();
+    });
+  }
 })();
 /* Onboarding */
 qsa(".target-option").forEach(btn=>btn.addEventListener("click",()=>{
