@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "205"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "206"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -227,6 +227,60 @@ function achievementDistanceValue(km){
 function fmt(n){return Number(n||0).toLocaleString(undefined,{minimumFractionDigits:1,maximumFractionDigits:1});}
 function fmtInt(n){return Math.round(Number(n||0)).toLocaleString();}
 function feelEmoji(n){return ["","😣","😕","😐","🙂","😄"][Number(n)||3];}
+
+function timelineActivityGlyph(type){
+  const common='fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"';
+  const icons={
+    workout:`<svg viewBox="0 0 24 24" aria-hidden="true"><path ${common} d="M4 9v6M7 7v10M17 7v10M20 9v6M7 12h10"/></svg>`,
+    walk:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle ${common} cx="13" cy="4.5" r="2"/><path ${common} d="M12 7l-2.5 4.5 3 2.5-1.5 5M10 11.5l-3 2M12.5 14l4 1.5 2 3.5"/></svg>`,
+    run:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle ${common} cx="14.5" cy="4.5" r="2"/><path ${common} d="M13.5 7l-3 4 3 2 3-2M10.5 11l-4 1M13.5 13l-4 6M13.5 13l5 2 2 3"/></svg>`,
+    swim:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle ${common} cx="8" cy="7" r="1.8"/><path ${common} d="M9.5 8.5l4 2.5 3-3M3 14c2-1.8 4-1.8 6 0s4 1.8 6 0 4-1.8 6 0M3 18c2-1.8 4-1.8 6 0s4 1.8 6 0 4-1.8 6 0"/></svg>`,
+    cycle:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle ${common} cx="6" cy="16" r="3.5"/><circle ${common} cx="18" cy="16" r="3.5"/><path ${common} d="M6 16l4-7h3l5 7M10 9l3 7H6M10 9h4"/></svg>`,
+    hike:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle ${common} cx="13" cy="4.5" r="2"/><path ${common} d="M12 7l-2 5 3 2-1 5M10 11l-4 2M13 14l4 1 2 4M17 8v11M17 8l2 2"/></svg>`,
+    row:`<svg viewBox="0 0 24 24" aria-hidden="true"><path ${common} d="M5 17h14l-2 2H7zM7 15l5-6 5 6M4 7l6 10M20 7l-6 10"/><circle ${common} cx="12" cy="6" r="1.6"/></svg>`
+  };
+  return `<span class="timeline-activity-glyph timeline-activity-${esc(type||"activity")}">${icons[type]||icons.workout}</span>`;
+}
+function timelineFeelingIndicator(feel){
+  const value=Math.max(1,Math.min(5,Number(feel)||3));
+  const mouth={
+    1:'M7.5 16c2.8-3 6.2-3 9 0',
+    2:'M8 15.5c2.5-1.8 5.5-1.8 8 0',
+    3:'M8.5 15h7',
+    4:'M8 14.5c2.5 2 5.5 2 8 0',
+    5:'M7.5 14c2.8 3 6.2 3 9 0'
+  }[value];
+  return `<span class="timeline-feeling feeling-${value}" role="img" aria-label="Workout feeling ${value} of 5">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/>
+      <path d="${mouth}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+  </span>`;
+}
+(function injectTimelineActivityStyles(){
+  if(document.getElementById("cholscoreTimelineActivityStyles"))return;
+  const style=document.createElement("style");
+  style.id="cholscoreTimelineActivityStyles";
+  style.textContent=`
+    .timeline-activity-title{display:flex;align-items:center;gap:10px}
+    .timeline-activity-glyph{width:30px;height:30px;flex:0 0 30px;display:grid;place-items:center;border-radius:10px;
+      color:#7fdff1;background:linear-gradient(145deg,rgba(84,217,255,.10),rgba(168,121,255,.08));
+      border:1px solid rgba(127,223,241,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+    .timeline-activity-glyph svg{width:19px;height:19px;display:block}
+    .timeline-activity-workout{color:#8fe9d5}.timeline-activity-walk{color:#78d6ff}.timeline-activity-run{color:#ff8a72}
+    .timeline-activity-swim{color:#74cfff}.timeline-activity-cycle{color:#ffd06d}.timeline-activity-hike{color:#8ee1b0}.timeline-activity-row{color:#b494ff}
+    .timeline-feeling{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.035);color:#99a3b7;box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+    .timeline-feeling svg{width:22px;height:22px;display:block}
+    .timeline-feeling.feeling-1{color:#ff786f;border-color:rgba(255,120,111,.22);background:rgba(255,120,111,.06)}
+    .timeline-feeling.feeling-2{color:#f6a86d;border-color:rgba(246,168,109,.20);background:rgba(246,168,109,.055)}
+    .timeline-feeling.feeling-3{color:#a5adbf}
+    .timeline-feeling.feeling-4{color:#66d7cf;border-color:rgba(102,215,207,.20);background:rgba(102,215,207,.055)}
+    .timeline-feeling.feeling-5{color:#55e2b1;border-color:rgba(85,226,177,.22);background:rgba(85,226,177,.065)}
+  `;
+  document.head.appendChild(style);
+})();
 function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function greeting(){const h=new Date().getHours();return h<12?"Good morning":h<18?"Good afternoon":"Good evening";}
 function minutesBetween(start,finish){
@@ -453,7 +507,7 @@ function renderToday(){
         </div>
         <div class="log-value">${fmt(x.sat)}g<br><small>sat fat</small></div>
       </div>`
-    :`<div class="log-item"><div><strong>${x.type==="workout"?"🏋️":cardioIcon(x.type)} ${esc(x.name)}</strong><small>${x.minutes} min${x.distance?` · ${distanceText(x.distance)}`:""}${x.type==="workout"&&x.exerciseCount?` · ${x.exerciseCount} exercises`:""}</small></div><div class="log-value">${feelEmoji(x.feel)}</div></div>`
+    :`<div class="log-item"><div><strong class="timeline-activity-title">${timelineActivityGlyph(x.type)}<span>${esc(x.name)}</span></strong><small>${x.minutes} min${x.distance?` · ${distanceText(x.distance)}`:""}${x.type==="workout"&&x.exerciseCount?` · ${x.exerciseCount} exercises`:""}</small></div><div class="log-value">${timelineFeelingIndicator(x.feel)}</div></div>`
   ).join(""):"Nothing logged yet. Your first win starts here.";
   wireFoodCards();
   renderRewardBankCard();
