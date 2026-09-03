@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "214"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "215"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -2095,14 +2095,17 @@ function renderCalendar(){
   let legend=$("calendarStatusLegend");
   if(!legend){legend=document.createElement("div");legend.id="calendarStatusLegend";legend.className="calendar-status-legend";$("calendarGrid").insertAdjacentElement("afterend",legend);}
   legend.innerHTML=`<span><i class="complete"></i>Completed day</span><span><i class="missed"></i>Missed day</span>`;
-  qsa(".day-cell[data-date]").forEach(b=>b.addEventListener("click",()=>showHistoryDay(b.dataset.date,b)));
+  qsa(".day-cell[data-date]").forEach(b=>b.addEventListener("click",()=>{
+    const key=b.dataset.date;
+    showHistoryDay(key,b);
+    if(key<=todayKey)showDayReport(key);
+  }));
 }
 function showHistoryDay(key,btn){
   qsa(".day-cell").forEach(x=>x.classList.remove("selected"));btn.classList.add("selected");
   const day=getDay(key),t=totals(day),sc=day.finalScore??scoreDay(day),nice=new Date(key+"T12:00:00").toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long",year:"numeric"}),tone=calendarScoreTone(sc);
   $("historyDetail").classList.remove("empty-state");
-  $("historyDetail").innerHTML=`<div class="history-premium-score" style="--history-tone:${tone}"><div class="history-score-ring"><span>CHOLSCORE</span><strong>${sc}</strong><small>${sc>=90?"Outstanding":sc>=75?"Great":sc>=60?"Good progress":"Keep building"}</small></div><div class="history-day-copy"><h3>${nice}</h3><div class="history-grid"><div><span>Sat fat</span><strong>${fmt(t.sat)}g</strong></div><div><span>Movement</span><strong>${fmtInt(t.mins)} min</strong></div><div><span>Checked out</span><strong>${day.checkedOut?"Yes":"No"}</strong></div></div><div class="history-detail-footer"><span>${day.foods.length} food ${day.foods.length===1?"entry":"entries"} · ${day.activities.length} ${day.activities.length===1?"activity":"activities"}</span><button type="button" class="history-report-btn">View Daily Report <b>›</b></button></div></div></div>`;
-  $("historyDetail").querySelector(".history-report-btn").addEventListener("click",()=>showDayReport(key));
+  $("historyDetail").innerHTML=`<div class="history-premium-score" style="--history-tone:${tone}"><div class="history-score-ring"><span>CHOLSCORE</span><strong>${sc}</strong><small>${sc>=90?"Outstanding":sc>=75?"Great":sc>=60?"Good progress":"Keep building"}</small></div><div class="history-day-copy"><h3>${nice}</h3><div class="history-grid"><div><span>Sat fat</span><strong>${fmt(t.sat)}g</strong></div><div><span>Movement</span><strong>${fmtInt(t.mins)} min</strong></div><div><span>Checked out</span><strong>${day.checkedOut?"Yes":"No"}</strong></div></div><div class="history-detail-footer"><span>${day.foods.length} food ${day.foods.length===1?"entry":"entries"} · ${day.activities.length} ${day.activities.length===1?"activity":"activities"}</span><small class="history-date-hint">${key<=localDateKey(new Date())?"Daily Report opens when you tap the date.":"Future date"}</small></div></div></div>`;
 }
 
 /* v1.8.0 Trends — Calendar/Trends toggle on the History tab. Hand-rolled
@@ -2158,9 +2161,9 @@ function svgAreaChart(svgId,labelsId,data,dateKeys,opts){
       html+=`<text class="trend-scale-label" x="${PADX}" y="${Math.max(8,gy-2).toFixed(1)}">${opts.scaleFormatter?opts.scaleFormatter(val):Math.round(val)}</text>`;
     }
   });
+  const targetY=opts.target!=null?y(opts.target):null;
   if(opts.target!=null){
-    const ty=y(opts.target);
-    html+=`<line class="chart-target-line premium" x1="${PADX}" y1="${ty}" x2="${W-PADX}" y2="${ty}"/><text class="trend-target-label" x="${PADX+4}" y="${Math.max(9,ty-4)}">Target ${opts.target}${opts.targetSuffix||""}</text>`;
+    html+=`<line class="chart-target-line premium" x1="${PADX}" y1="${targetY}" x2="${W-PADX}" y2="${targetY}"/>`;
   }
   if(n>1){
     const areaPath=linePath+` L${pts[n-1][0].toFixed(1)},${H-PADY} L${pts[0][0].toFixed(1)},${H-PADY} Z`;
@@ -2173,7 +2176,11 @@ function svgAreaChart(svgId,labelsId,data,dateKeys,opts){
     html+=`<circle class="chart-dot premium${isLast?" last":""}" stroke="${opts.color}" cx="${pts[i][0].toFixed(1)}" cy="${pts[i][1].toFixed(1)}" r="${isLast?4.2:3.3}"/>`;
     if(n<=8 && opts.showValues){
       const label=opts.valueFormatter?opts.valueFormatter(data[i]):String(data[i]);
-      const ly=Math.max(10,pts[i][1]-8);
+      let ly=pts[i][1]-8;
+      const nearTarget=targetY!=null&&Math.abs(pts[i][1]-targetY)<14;
+      const nearPrev=i>0&&Math.abs(pts[i][1]-pts[i-1][1])<10;
+      if(nearTarget||(nearPrev&&i%2===1))ly=pts[i][1]+14;
+      ly=Math.max(9,Math.min(H-3,ly));
       html+=`<text class="trend-point-label" x="${pts[i][0].toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle">${label}</text>`;
     }
   });
@@ -2191,11 +2198,25 @@ function ensureTrendInsight(cardSvgId,id,html,kind=""){
   if(!el){el=document.createElement("div");el.id=id;el.className=`trend-insight ${kind}`;card.appendChild(el);}
   el.innerHTML=html;
 }
+function ensureTrendTargetPill(cardSvgId,id,text){
+  const svg=$(cardSvgId);if(!svg)return;
+  const card=svg.closest(".trend-card");if(!card)return;
+  let pill=$(id);
+  if(!pill){
+    pill=document.createElement("div");
+    pill.id=id;
+    pill.className="trend-target-pill";
+    const wrap=svg.closest(".chart-wrap")||svg;
+    wrap.parentNode.insertBefore(pill,wrap);
+  }
+  pill.innerHTML=`<span></span>${esc(text)}`;
+}
 function renderTrendsSatScore(){
   const dayKeys=lastNDaysKeys(trendsRange);
   const satSeries=dayKeys.map(k=>totals(getDay(k)).sat);
   const scoreSeries=dayKeys.map(k=>{const day=getDay(k);return day.finalScore??scoreDay(day);});
   const target=Number(state.profile?.target||30);
+  ensureTrendTargetPill("satChart","satTrendTargetPill",`Daily target ${fmt(target)}g`);
   svgAreaChart("satChart","satChartLabels",satSeries,dayKeys,{color:"#55f0a7",target,targetSuffix:"g",showValues:trendsRange===7,valueFormatter:v=>`${fmt(v)}g`});
   svgAreaChart("scoreChart","scoreChartLabels",scoreSeries,dayKeys,{color:"#a879ff",max:100,showScale:true,showValues:trendsRange===7,valueFormatter:v=>Math.round(v)});
   const satAvg=satSeries.reduce((a,b)=>a+b,0)/Math.max(1,satSeries.length);
@@ -2945,6 +2966,61 @@ $("dayReportDialog").addEventListener("close",()=>$("dayReportDialog").classList
       #historyTrendsView .trend-card{padding:15px!important}
       #historyTrendsView .trend-card .chart-wrap,#historyTrendsView .trend-card .chart-wrap svg{height:142px!important}
       #historyTrendsView .range-btn{min-height:46px!important}
+    }
+  `;
+  document.head.appendChild(s);
+})();
+
+(function(){
+  if(document.getElementById("cholscoreTrendCalendarFixV48"))return;
+  const s=document.createElement("style");
+  s.id="cholscoreTrendCalendarFixV48";
+  s.textContent=`
+    #historyTrendsView .trend-target-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+      width:max-content;
+      max-width:100%;
+      margin:9px 0 2px;
+      padding:6px 10px;
+      border:1px solid rgba(85,240,167,.20);
+      border-radius:999px;
+      background:rgba(85,240,167,.045);
+      color:#aeb9c8;
+      font-size:10px;
+      font-weight:700;
+      line-height:1;
+    }
+    #historyTrendsView .trend-target-pill span{
+      width:18px;
+      height:0;
+      border-top:1.5px dashed #69e99f;
+      flex:0 0 18px;
+    }
+    #historyTrendsView .trend-target-label{display:none!important}
+    #historyTrendsView .trend-point-label{
+      paint-order:stroke fill;
+      stroke:#0d1420;
+      stroke-width:2.4px;
+      stroke-linejoin:round;
+    }
+    #historyCalendarView .history-detail-footer{
+      align-items:center!important;
+    }
+    #historyCalendarView .history-date-hint{
+      color:#7f899c;
+      font-size:9px;
+      text-align:right;
+      line-height:1.3;
+    }
+    @media(max-width:430px){
+      #historyCalendarView .history-detail-footer{
+        align-items:flex-start!important;
+      }
+      #historyCalendarView .history-date-hint{
+        text-align:left;
+      }
     }
   `;
   document.head.appendChild(s);
