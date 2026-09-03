@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "207"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "208"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -2528,9 +2528,9 @@ function showDayReport(key){
       </div>
     </div>
 
-    <div class="rep-section reveal">
+    <div class="rep-section rep-premium-section reveal">
       <div class="rep-section-head"><div class="rep-section-bar"></div><h2>Today's Rings</h2></div>
-      <div class="rep-rings">
+      <div class="rep-rings rep-rings-premium">
         <div class="rep-ring-card"><div class="rep-ring-wrap"><svg viewBox="0 0 78 78"><circle class="rep-ring-track" cx="39" cy="39" r="32"/><circle class="rep-ring-fill" id="repRingFat" cx="39" cy="39" r="32" stroke="var(--rep-accent)" stroke-dasharray="201.06" stroke-dashoffset="201.06"/></svg><div class="rep-ring-num">${fmt(t.sat)}g</div></div><div class="rep-ring-label">Sat fat</div></div>
         <div class="rep-ring-card"><div class="rep-ring-wrap"><svg viewBox="0 0 78 78"><circle class="rep-ring-track" cx="39" cy="39" r="32"/><circle class="rep-ring-fill" id="repRingMins" cx="39" cy="39" r="32" stroke="var(--cyan)" stroke-dasharray="201.06" stroke-dashoffset="201.06"/></svg><div class="rep-ring-num">${fmtInt(t.mins)}</div></div><div class="rep-ring-label">Minutes</div></div>
         <div class="rep-ring-card"><div class="rep-ring-wrap"><svg viewBox="0 0 78 78"><circle class="rep-ring-track" cx="39" cy="39" r="32"/><circle class="rep-ring-fill" id="repRingScore" cx="39" cy="39" r="32" stroke="var(--violet)" stroke-dasharray="201.06" stroke-dashoffset="201.06"/></svg><div class="rep-ring-num">${score}</div></div><div class="rep-ring-label">Score</div></div>
@@ -2542,6 +2542,7 @@ function showDayReport(key){
     ${repCardioSectionHTML(cardio,key,records)}
     ${repNutritionSectionHTML(day,target)}
 
+    <div class="rep-review-card reveal"><span>Day in review</span><h3>${score>=90?"An outstanding day.":score>=70?"A strong day.":"A day to build on."}</h3><p>You finished with a CholScore of <b>${score}</b> and moved for <b>${fmtInt(t.mins)} minutes</b>. ${score>=90?"That is a performance worth celebrating.":"Keep building on the positive choices you made today."}</p></div>
     <div class="rep-footer reveal"><div class="rep-footer-mark">End of report</div></div>
   `;
 
@@ -2573,6 +2574,25 @@ function showDayReport(key){
 }
 $("dayReportClose").addEventListener("click",()=>$("dayReportDialog").close());
 $("dayReportDialog").addEventListener("close",()=>$("dayReportDialog").classList.remove("is-visible"));
+
+(function injectPremiumDayReportV41(){if(document.getElementById("premiumDayReportV41"))return;const s=document.createElement("style");s.id="premiumDayReportV41";s.textContent=`
+#dayReportDialog .rep-hero{padding-bottom:26px;background:radial-gradient(circle at 18% 55%,rgba(42,213,255,.09),transparent 32%),radial-gradient(circle at 82% 35%,rgba(118,72,255,.10),transparent 34%)}
+#dayReportDialog .rep-score-row{margin-top:24px;padding:22px;border:1px solid rgba(81,215,255,.20);border-radius:24px;background:linear-gradient(145deg,rgba(13,24,37,.98),rgba(6,10,18,.98));box-shadow:0 20px 55px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.04)}
+#dayReportDialog .rep-score-box{border-radius:22px!important;background:radial-gradient(circle at 50% 40%,rgba(41,213,255,.14),transparent 55%),rgba(7,18,27,.9)!important;border:1px solid rgba(57,215,240,.35)!important;box-shadow:0 0 30px rgba(45,211,242,.08)!important}
+#dayReportDialog .rep-score-num{font-size:76px!important;text-shadow:0 0 28px rgba(70,220,255,.28)}
+#dayReportDialog .rep-mini-stats{border-radius:18px;background:rgba(255,255,255,.018);padding:12px 18px}
+#dayReportDialog .rep-premium-section,#dayReportDialog .rep-section{border-radius:22px;background:linear-gradient(160deg,rgba(11,18,28,.95),rgba(4,8,14,.97));border-color:rgba(110,145,185,.18);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+#dayReportDialog .rep-rings-premium{padding:6px 0}.rep-rings-premium .rep-ring-card{border:0!important;background:transparent!important;box-shadow:none!important}.rep-rings-premium .rep-ring-card+.rep-ring-card{border-left:1px solid rgba(255,255,255,.08)!important}.rep-ring-wrap{filter:drop-shadow(0 0 13px rgba(78,210,255,.09))}
+#dayReportDialog .rep-section-head h2{letter-spacing:.14em!important;font-size:14px!important}.rep-section-bar{box-shadow:0 0 14px rgba(63,218,243,.28)}
+#dayReportDialog .rep-exercise-row{margin:7px 0;border:1px solid rgba(255,255,255,.075)!important;border-radius:14px!important;background:rgba(2,7,13,.74)!important;padding:14px 12px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.018)}
+#dayReportDialog .rep-exercise-row.is-pr{border-color:rgba(255,190,40,.48)!important;background:radial-gradient(circle at 15% 50%,rgba(255,185,25,.15),transparent 42%),rgba(17,13,4,.86)!important;box-shadow:0 0 24px rgba(255,178,18,.10),inset 3px 0 0 #ffc72c!important}
+#dayReportDialog .rep-exercise-num{border-radius:50%!important;border-color:#22b8d1!important;color:#4ae0f4!important;background:rgba(31,188,213,.06)}#dayReportDialog .is-pr .rep-exercise-num{border-color:#ffc72c!important;color:#ffc72c!important}
+#dayReportDialog .rep-pr-chip{background:rgba(255,193,42,.10)!important;border:1px solid rgba(255,193,42,.34)!important;color:#ffc94d!important;box-shadow:0 0 15px rgba(255,193,42,.10)}
+#dayReportDialog .rep-cardio-row,#dayReportDialog .rep-food-row,#dayReportDialog .rep-protein-hero{border-radius:14px!important;background:rgba(3,8,14,.68)!important;border-color:rgba(255,255,255,.07)!important}
+#dayReportDialog .rep-review-card{margin:22px 0 10px;padding:22px;border:1px solid rgba(36,217,238,.30);border-radius:22px;background:radial-gradient(circle at 8% 50%,rgba(20,196,223,.14),transparent 38%),linear-gradient(145deg,rgba(5,30,39,.95),rgba(4,12,20,.98));box-shadow:0 0 36px rgba(21,195,224,.07)}
+#dayReportDialog .rep-review-card span{font-size:10px;text-transform:uppercase;letter-spacing:.16em;color:#39dff3;font-weight:900}.rep-review-card h3{font-size:22px;margin:6px 0}.rep-review-card p{margin:0;color:#b4bdcd;line-height:1.5}.rep-review-card b{color:#43e2f3}
+#dayReportDialog .rep-footer{opacity:.55}
+`;document.head.appendChild(s);})();
 
 /* Onboarding */
 qsa(".target-option").forEach(btn=>btn.addEventListener("click",()=>{
