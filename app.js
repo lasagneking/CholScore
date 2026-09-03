@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "212"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "213"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -2559,6 +2559,8 @@ function showDayReport(key){
       </div>
     </div>
 
+    <div class="rep-review-card reveal"><span>Day in review</span><h3>${score>=90?"An outstanding day.":score>=70?"A strong day.":"A day to build on."}</h3><p>You finished with a CholScore of <b>${score}</b> and moved for <b>${fmtInt(t.mins)} minutes</b>. ${score>=90?"That is a performance worth celebrating.":"Keep building on the positive choices you made today."}</p></div>
+
     <div class="rep-section rep-premium-section reveal">
       <div class="rep-section-head"><div class="rep-section-bar"></div><h2>Today's Rings</h2></div>
       <div class="rep-rings rep-rings-premium">
@@ -2573,7 +2575,6 @@ function showDayReport(key){
     ${repCardioSectionHTML(cardio,key,records)}
     ${repNutritionSectionHTML(day,target)}
 
-    <div class="rep-review-card reveal"><span>Day in review</span><h3>${score>=90?"An outstanding day.":score>=70?"A strong day.":"A day to build on."}</h3><p>You finished with a CholScore of <b>${score}</b> and moved for <b>${fmtInt(t.mins)} minutes</b>. ${score>=90?"That is a performance worth celebrating.":"Keep building on the positive choices you made today."}</p></div>
     <div class="rep-footer reveal"><div class="rep-footer-mark">End of report</div></div>
   `;
 
@@ -2782,6 +2783,70 @@ $("dayReportDialog").addEventListener("close",()=>$("dayReportDialog").classList
       #historyCalendarView .cal-score-ring{width:25px!important;height:25px!important}
       #historyCalendarView>.calendar-month-summary>div{padding:12px 8px!important}
       #historyCalendarView>.calendar-month-summary strong{font-size:19px!important}
+    }
+  `;
+  document.head.appendChild(s);
+})();
+
+(function(){
+  if(document.getElementById("cholscoreReportHeroFixV46"))return;
+  const s=document.createElement("style");s.id="cholscoreReportHeroFixV46";
+  s.textContent=`
+    #dayReportDialog .rep-score-row{
+      display:grid!important;
+      grid-template-columns:minmax(0,1.18fr) minmax(0,.82fr)!important;
+      gap:18px!important;
+      align-items:stretch!important;
+    }
+    #dayReportDialog .rep-score-box{
+      min-width:0!important;
+      width:100%!important;
+      padding-left:18px!important;
+      padding-right:18px!important;
+      overflow:hidden!important;
+      box-sizing:border-box!important;
+    }
+    #dayReportDialog .rep-score-box .rep-score-num{
+      font-size:clamp(58px,12.5vw,70px)!important;
+      letter-spacing:-.055em!important;
+      line-height:.92!important;
+      max-width:100%!important;
+      width:100%!important;
+      text-align:center!important;
+      white-space:nowrap!important;
+      margin-left:auto!important;
+      margin-right:auto!important;
+    }
+    #dayReportDialog .rep-mini-stats{
+      min-width:0!important;
+      padding:12px 14px!important;
+    }
+    #dayReportDialog .rep-review-card{
+      margin:14px 0 18px!important;
+    }
+
+    @media(max-width:430px){
+      #dayReportDialog .rep-score-row{
+        grid-template-columns:minmax(0,1.22fr) minmax(0,.78fr)!important;
+        gap:12px!important;
+        padding:16px!important;
+      }
+      #dayReportDialog .rep-score-box{
+        padding-left:12px!important;
+        padding-right:12px!important;
+      }
+      #dayReportDialog .rep-score-box .rep-score-num{
+        font-size:clamp(54px,15vw,64px)!important;
+      }
+      #dayReportDialog .rep-mini-stats{
+        padding:10px 9px!important;
+      }
+      #dayReportDialog .rep-mini-stats span{
+        font-size:10px!important;
+      }
+      #dayReportDialog .rep-mini-stats strong{
+        font-size:12px!important;
+      }
     }
   `;
   document.head.appendChild(s);
