@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "213"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "214"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -2111,7 +2111,7 @@ function showHistoryDay(key,btn){
    are built. Every series is computed fresh from totals()/scoreDay()/the
    same exercise data used by Personal Records — never a separate cache
    that could drift out of sync. */
-let trendsRange=30,trendsExercise=null,trendsCardioType=null;
+let trendsRange=7,trendsExercise=null,trendsCardioType=null;
 
 function lastNDaysKeys(n){
   const out=[],today=new Date();
@@ -2140,55 +2140,106 @@ function buildExerciseSeries(){
 }
 function svgAreaChart(svgId,labelsId,data,dateKeys,opts){
   const svg=$(svgId);if(!svg)return;
-  const W=320,H=110,PAD=6,n=data.length;
-  const max=opts.max!=null?opts.max:Math.max(1,...data)*1.15;
-  const stepX=n>1?(W-PAD*2)/(n-1):0;
-  const y=v=>H-PAD-(v/(max||1))*(H-PAD*2);
-  const pts=data.map((v,i)=>[PAD+i*stepX,y(v)]);
+  const W=320,H=112,PADX=10,PADY=10,n=data.length;
+  const rawMax=Math.max(1,...data,opts.target||0);
+  const max=opts.max!=null?opts.max:rawMax*1.12;
+  const min=opts.min!=null?opts.min:0;
+  const span=Math.max(.0001,max-min);
+  const stepX=n>1?(W-PADX*2)/(n-1):0;
+  const y=v=>H-PADY-((v-min)/span)*(H-PADY*2);
+  const pts=data.map((v,i)=>[PADX+i*stepX,y(v)]);
   const linePath=pts.map((p,i)=>(i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
-  let html=`<defs><linearGradient id="grad-${svgId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${opts.color}" stop-opacity="0.55"/><stop offset="100%" stop-color="${opts.color}" stop-opacity="0"/></linearGradient></defs>`;
-  if(opts.target!=null){const ty=y(opts.target);html+=`<line class="chart-target-line" x1="${PAD}" y1="${ty}" x2="${W-PAD}" y2="${ty}"/>`;}
-  if(n>1){
-    const areaPath=linePath+` L${pts[n-1][0].toFixed(1)},${H-PAD} L${pts[0][0].toFixed(1)},${H-PAD} Z`;
-    html+=`<path class="chart-area" fill="url(#grad-${svgId})" d="${areaPath}"/><path class="chart-line" stroke="${opts.color}" d="${linePath}"/>`;
+  let html=`<defs><linearGradient id="grad-${svgId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${opts.color}" stop-opacity="0.22"/><stop offset="100%" stop-color="${opts.color}" stop-opacity="0"/></linearGradient><filter id="glow-${svgId}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  [0,.25,.5,.75,1].forEach((f,i)=>{
+    const gy=(H-PADY)-f*(H-PADY*2);
+    html+=`<line class="trend-grid-line" x1="${PADX}" y1="${gy.toFixed(1)}" x2="${W-PADX}" y2="${gy.toFixed(1)}"/>`;
+    if(opts.showScale){
+      const val=min+f*span;
+      html+=`<text class="trend-scale-label" x="${PADX}" y="${Math.max(8,gy-2).toFixed(1)}">${opts.scaleFormatter?opts.scaleFormatter(val):Math.round(val)}</text>`;
+    }
+  });
+  if(opts.target!=null){
+    const ty=y(opts.target);
+    html+=`<line class="chart-target-line premium" x1="${PADX}" y1="${ty}" x2="${W-PADX}" y2="${ty}"/><text class="trend-target-label" x="${PADX+4}" y="${Math.max(9,ty-4)}">Target ${opts.target}${opts.targetSuffix||""}</text>`;
   }
-  const dotIdxs=n<=8?pts.map((_,i)=>i):[0,Math.floor((n-1)*0.33),Math.floor((n-1)*0.66),n-1];
-  dotIdxs.forEach(i=>{if(pts[i])html+=`<circle class="chart-dot" stroke="${opts.color}" cx="${pts[i][0].toFixed(1)}" cy="${pts[i][1].toFixed(1)}" r="3.2"/>`;});
+  if(n>1){
+    const areaPath=linePath+` L${pts[n-1][0].toFixed(1)},${H-PADY} L${pts[0][0].toFixed(1)},${H-PADY} Z`;
+    html+=`<path class="chart-area premium" fill="url(#grad-${svgId})" d="${areaPath}"/><path class="chart-line premium" stroke="${opts.color}" filter="url(#glow-${svgId})" d="${linePath}"/>`;
+  }
+  const dotIdxs=n<=8?pts.map((_,i)=>i):[0,Math.floor((n-1)*.25),Math.floor((n-1)*.5),Math.floor((n-1)*.75),n-1];
+  dotIdxs.forEach(i=>{
+    if(!pts[i])return;
+    const isLast=i===n-1;
+    html+=`<circle class="chart-dot premium${isLast?" last":""}" stroke="${opts.color}" cx="${pts[i][0].toFixed(1)}" cy="${pts[i][1].toFixed(1)}" r="${isLast?4.2:3.3}"/>`;
+    if(n<=8 && opts.showValues){
+      const label=opts.valueFormatter?opts.valueFormatter(data[i]):String(data[i]);
+      const ly=Math.max(10,pts[i][1]-8);
+      html+=`<text class="trend-point-label" x="${pts[i][0].toFixed(1)}" y="${ly.toFixed(1)}" text-anchor="middle">${label}</text>`;
+    }
+  });
   svg.innerHTML=html;
   const labelsEl=$(labelsId);
   if(labelsEl){
-    const step=Math.max(1,Math.round(n/5));
-    labelsEl.innerHTML=dateKeys.filter((_,i)=>i%step===0||i===dateKeys.length-1)
-      .map(k=>`<span>${new Date(k+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"})}</span>`).join("");
+    const indexes=n<=8?dateKeys.map((_,i)=>i):[0,Math.floor((n-1)*.25),Math.floor((n-1)*.5),Math.floor((n-1)*.75),n-1];
+    labelsEl.innerHTML=[...new Set(indexes)].map(i=>`<span${i===n-1?' class="latest"':""}>${new Date(dateKeys[i]+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"})}</span>`).join("");
   }
+}
+function ensureTrendInsight(cardSvgId,id,html,kind=""){
+  const svg=$(cardSvgId);if(!svg)return;
+  const card=svg.closest(".trend-card");if(!card)return;
+  let el=$(id);
+  if(!el){el=document.createElement("div");el.id=id;el.className=`trend-insight ${kind}`;card.appendChild(el);}
+  el.innerHTML=html;
 }
 function renderTrendsSatScore(){
   const dayKeys=lastNDaysKeys(trendsRange);
   const satSeries=dayKeys.map(k=>totals(getDay(k)).sat);
   const scoreSeries=dayKeys.map(k=>{const day=getDay(k);return day.finalScore??scoreDay(day);});
   const target=Number(state.profile?.target||30);
-  svgAreaChart("satChart","satChartLabels",satSeries,dayKeys,{color:"#55f0a7",target});
-  svgAreaChart("scoreChart","scoreChartLabels",scoreSeries,dayKeys,{color:"#a879ff",max:100});
-  $("satTrendStat").querySelector("strong").textContent=`${fmt(satSeries.reduce((a,b)=>a+b,0)/satSeries.length)}g`;
-  $("scoreTrendStat").querySelector("strong").textContent=Math.round(scoreSeries.reduce((a,b)=>a+b,0)/scoreSeries.length);
+  svgAreaChart("satChart","satChartLabels",satSeries,dayKeys,{color:"#55f0a7",target,targetSuffix:"g",showValues:trendsRange===7,valueFormatter:v=>`${fmt(v)}g`});
+  svgAreaChart("scoreChart","scoreChartLabels",scoreSeries,dayKeys,{color:"#a879ff",max:100,showScale:true,showValues:trendsRange===7,valueFormatter:v=>Math.round(v)});
+  const satAvg=satSeries.reduce((a,b)=>a+b,0)/Math.max(1,satSeries.length);
+  const scoreAvg=scoreSeries.reduce((a,b)=>a+b,0)/Math.max(1,scoreSeries.length);
+  $("satTrendStat").querySelector("strong").textContent=`${fmt(satAvg)}g`;
+  $("scoreTrendStat").querySelector("strong").textContent=Math.round(scoreAvg);
+  const satHeadroom=Math.max(0,target-satAvg);
+  ensureTrendInsight("satChart","satTrendInsight",satAvg<=target
+    ? `<b>Great job.</b> Average is ${fmt(satHeadroom)}g below your daily target.`
+    : `<b>Worth watching.</b> Average is ${fmt(satAvg-target)}g above your daily target.`,"sat");
+  const latest=scoreSeries[scoreSeries.length-1]||0;
+  const first=scoreSeries[0]||0,diff=Math.round(latest-first);
+  ensureTrendInsight("scoreChart","scoreTrendInsight",
+    latest>=90?`<b>Outstanding.</b> Latest CholScore is ${Math.round(latest)}.`
+    : diff>0?`<b>Moving up.</b> CholScore is ${diff} points higher than the start of this view.`
+    : `<b>Keep building.</b> Latest CholScore is ${Math.round(latest)}.`,"score");
 }
 function renderStrengthTrend(){
-  const series=buildExerciseSeries();
-  const names=Object.keys(series).filter(n=>series[n].points.length>=2).sort((a,b)=>series[b].points.length-series[a].points.length);
+  const series=buildExerciseSeries(),allowed=new Set(lastNDaysKeys(trendsRange));
+  const filtered={};
+  for(const [name,s] of Object.entries(series)){
+    const pts=s.points.filter(p=>allowed.has(p.date));
+    if(pts.length>=2)filtered[name]={...s,points:pts};
+  }
+  const names=Object.keys(filtered).sort((a,b)=>filtered[b].points.length-filtered[a].points.length);
   const emptyEl=$("strengthEmptyState"),bodyEl=$("strengthTrendBody");
   if(!names.length){emptyEl.classList.remove("hidden");bodyEl.classList.add("hidden");return;}
   emptyEl.classList.add("hidden");bodyEl.classList.remove("hidden");
   if(!trendsExercise||!names.includes(trendsExercise))trendsExercise=names[0];
   $("exercisePicker").innerHTML=names.map(n=>`<button type="button" class="exercise-chip${n===trendsExercise?" active":""}" data-name="${esc(n)}">${esc(n)}</button>`).join("");
   qsa(".exercise-chip",$("exercisePicker")).forEach(chip=>chip.addEventListener("click",()=>{trendsExercise=chip.dataset.name;renderStrengthTrend();}));
-  const ex=series[trendsExercise],values=ex.points.map(p=>p.value),dateKeys=ex.points.map(p=>p.date);
-  svgAreaChart("strengthChart","strengthChartLabels",values,dateKeys,{color:"#54d9ff"});
-  const first=values[0],last=values[values.length-1],diff=last-first,isTimed=ex.type==="timed";
+  const ex=filtered[trendsExercise],values=ex.points.map(p=>p.value),dateKeys=ex.points.map(p=>p.date),isTimed=ex.type==="timed";
+  svgAreaChart("strengthChart","strengthChartLabels",values,dateKeys,{color:"#54d9ff",showValues:values.length<=8,valueFormatter:v=>isTimed?formatExerciseSeconds(v):fmt(v)});
+  const first=values[0],last=values[values.length-1],diff=last-first;
   const fmtVal=v=>isTimed?formatExerciseSeconds(v):`${fmt(v)}kg`;
   const firstDateNice=new Date(dateKeys[0]+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"});
   $("strengthCalloutText").innerHTML=diff>0
     ? `<b>+${isTimed?formatExerciseSeconds(diff):fmt(diff)+"kg"}</b> since ${firstDateNice}, up from ${fmtVal(first)} to ${fmtVal(last)}.`
-    : `Holding steady at ${fmtVal(last)} since ${firstDateNice}.`;
+    : diff<0
+      ? `${fmtVal(last)} latest, ${isTimed?formatExerciseSeconds(Math.abs(diff)):fmt(Math.abs(diff))+"kg"} below ${firstDateNice}.`
+      : `Holding steady at ${fmtVal(last)} since ${firstDateNice}.`;
+  ensureTrendInsight("strengthChart","strengthTrendPremiumInsight",diff>0
+    ? `<b>New progress.</b> ${esc(trendsExercise)} has improved to ${fmtVal(last)}.`
+    : `<b>Holding steady.</b> Latest ${esc(trendsExercise)} is ${fmtVal(last)}.`,"strength");
 }
 function buildCardioSeries(){
   const map={};
@@ -2204,7 +2255,8 @@ function buildCardioSeries(){
   return map;
 }
 function renderCardioTrend(){
-  const series=buildCardioSeries();
+  const series=buildCardioSeries(),allowed=new Set(lastNDaysKeys(trendsRange));
+  for(const t of Object.keys(series))series[t].points=series[t].points.filter(p=>allowed.has(p.date));
   const types=Object.keys(CARDIO_TYPES).filter(t=>series[t].points.length>=2);
   const emptyEl=$("cardioEmptyState"),bodyEl=$("cardioTrendBody");
   if(!types.length){emptyEl.classList.remove("hidden");bodyEl.classList.add("hidden");return;}
@@ -2419,6 +2471,7 @@ qsa("[data-report-range]").forEach(btn=>btn.addEventListener("click",()=>{
 }));
 
 function renderTrends(){
+  qsa(".range-btn[data-range]").forEach(b=>b.classList.toggle("active",Number(b.dataset.range)===trendsRange));
   const hasAnyData=Object.keys(state.days||{}).length>0;
   $("trendsEmptyState").classList.toggle("hidden",hasAnyData);
   $("trendsContent").classList.toggle("hidden",!hasAnyData);
@@ -2427,9 +2480,12 @@ function renderTrends(){
   renderStrengthTrend();
   renderCardioTrend();
 }
-qsa(".range-btn").forEach(btn=>btn.addEventListener("click",()=>{
-  qsa(".range-btn").forEach(b=>b.classList.remove("active"));btn.classList.add("active");
-  trendsRange=Number(btn.dataset.range);renderTrendsSatScore();
+qsa(".range-btn[data-range]").forEach(btn=>btn.addEventListener("click",()=>{
+  const next=Number(btn.dataset.range);
+  if(![7,30,90].includes(next))return;
+  trendsRange=next;
+  qsa(".range-btn[data-range]").forEach(b=>b.classList.toggle("active",Number(b.dataset.range)===trendsRange));
+  renderTrends();
 }));
 const historyTabs=[["historyTabCalendar","historyCalendarView"],["historyTabTrends","historyTrendsView"],["historyTabReports","historyReportsView"]];
 function switchHistoryTab(activeBtnId){
@@ -2847,6 +2903,48 @@ $("dayReportDialog").addEventListener("close",()=>$("dayReportDialog").classList
       #dayReportDialog .rep-mini-stats strong{
         font-size:12px!important;
       }
+    }
+  `;
+  document.head.appendChild(s);
+})();
+
+(function(){
+  if(document.getElementById("cholscorePremiumTrendsV47"))return;
+  const s=document.createElement("style");s.id="cholscorePremiumTrendsV47";
+  s.textContent=`
+    #historyTrendsView{padding-top:10px!important;padding-bottom:130px!important}
+    #historyTrendsView .range-switch{position:relative!important;z-index:2!important;margin:14px 0 18px!important;display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:9px!important}
+    #historyTrendsView .range-btn{min-height:48px!important;border-radius:15px!important;font-size:13px!important;font-weight:800!important}
+    #historyTrendsView .range-btn.active{background:linear-gradient(105deg,rgba(48,210,190,.88),rgba(255,103,81,.88))!important;color:#071116!important;border-color:transparent!important;box-shadow:0 8px 24px rgba(55,199,198,.12)!important}
+    #historyTrendsView .trend-card{padding:18px!important;margin-bottom:16px!important;border-radius:22px!important;background:radial-gradient(circle at 92% 8%,rgba(150,61,108,.08),transparent 34%),linear-gradient(145deg,rgba(12,22,34,.97),rgba(15,13,27,.97))!important;box-shadow:0 18px 42px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.025)!important}
+    #historyTrendsView .trend-card h3{font-size:18px!important;margin-bottom:3px!important}
+    #historyTrendsView .trend-card .chart-wrap{height:150px!important;margin-top:12px!important}
+    #historyTrendsView .trend-card .chart-wrap svg{height:150px!important;overflow:visible!important}
+    #historyTrendsView .chart-xlabels{margin-top:6px!important;color:#7f899c!important;font-size:10px!important}
+    #historyTrendsView .chart-xlabels .latest{color:#f5f7fb!important;font-weight:900!important}
+    #historyTrendsView .trend-grid-line{stroke:rgba(150,163,187,.11);stroke-width:.7;stroke-dasharray:2.2 2.4}
+    #historyTrendsView .trend-scale-label{fill:#758095;font-size:6.5px}
+    #historyTrendsView .chart-target-line.premium{stroke:#69e99f!important;stroke-width:1!important;stroke-dasharray:5 4!important;opacity:.70!important}
+    #historyTrendsView .trend-target-label{fill:#86eaaa;font-size:7px;font-weight:800}
+    #historyTrendsView .chart-line.premium{fill:none!important;stroke-width:2.4!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+    #historyTrendsView .chart-area.premium{opacity:.58!important}
+    #historyTrendsView .chart-dot.premium{fill:#101722!important;stroke-width:2.2!important}
+    #historyTrendsView .chart-dot.premium.last{stroke-width:3!important}
+    #historyTrendsView .trend-point-label{fill:#eef2f8;font-size:7px;font-weight:800}
+    #historyTrendsView .trend-insight{margin-top:13px;padding:10px 12px;border:1px solid rgba(120,138,168,.12);border-radius:12px;background:rgba(255,255,255,.025);color:#aeb7c8;font-size:11px;line-height:1.35}
+    #historyTrendsView .trend-insight b{color:#f6f8fb}
+    #historyTrendsView .trend-insight.sat{border-color:rgba(85,240,167,.16);background:rgba(85,240,167,.045)}
+    #historyTrendsView .trend-insight.score{border-color:rgba(168,121,255,.18);background:rgba(168,121,255,.05)}
+    #historyTrendsView .trend-insight.strength{border-color:rgba(84,217,255,.18);background:rgba(84,217,255,.05)}
+    #historyTrendsView .exercise-picker{display:flex!important;gap:8px!important;overflow-x:auto!important;padding-bottom:3px!important;scrollbar-width:none}
+    #historyTrendsView .exercise-picker::-webkit-scrollbar{display:none}
+    #historyTrendsView .exercise-chip{flex:0 0 auto!important;max-width:210px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+    @media(max-width:430px){
+      #historyTrendsView{padding-top:16px!important}
+      #historyTrendsView .range-switch{margin-top:16px!important}
+      #historyTrendsView .trend-card{padding:15px!important}
+      #historyTrendsView .trend-card .chart-wrap,#historyTrendsView .trend-card .chart-wrap svg{height:142px!important}
+      #historyTrendsView .range-btn{min-height:46px!important}
     }
   `;
   document.head.appendChild(s);
