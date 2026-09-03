@@ -3122,7 +3122,7 @@ function injectExerciseVictoryStyles(){
     #exerciseCompleteDialog #exerciseCompleteStats b{font:inherit;color:inherit;}
     #exerciseCompleteDialog .ecm-pr-zone:empty{display:none;}
     #exerciseCompleteDialog .ecm-pr-card{position:relative;overflow:hidden;display:grid;grid-template-columns:112px minmax(0,1fr);gap:17px;align-items:center;padding:17px 20px;border-radius:24px;background:radial-gradient(circle at 15% 50%,rgba(244,182,58,.13),transparent 35%),linear-gradient(180deg,rgba(21,22,20,.97),rgba(10,15,18,.98));border:1px solid rgba(245,190,70,.82);box-shadow:0 0 24px rgba(236,171,45,.17),inset 0 0 26px rgba(241,179,55,.04);}
-    #exerciseCompleteDialog .ecm-pr-card:after{content:"";position:absolute;left:44%;right:8%;bottom:40px;height:1px;background:linear-gradient(90deg,rgba(239,179,58,.16),#f2bd4a,rgba(239,179,58,.12));}
+    #exerciseCompleteDialog .ecm-pr-card:after{content:none;}
     #exerciseCompleteDialog .ecm-pr-ribbon{position:absolute;left:-39px;top:13px;width:130px;transform:rotate(-45deg);text-align:center;padding:5px 0;background:linear-gradient(90deg,#ffd872,#e6a92c);color:#17100a;font-size:10px;font-weight:900;letter-spacing:.08em;z-index:2;box-shadow:0 3px 8px rgba(0,0,0,.28);}
     #exerciseCompleteDialog .ecm-pr-medal{width:105px;height:105px;}
     #exerciseCompleteDialog .ecm-pr-medal svg{width:100%;height:100%;filter:drop-shadow(0 0 14px rgba(240,180,54,.24));}
@@ -3149,7 +3149,7 @@ function injectExerciseVictoryStyles(){
       #exerciseCompleteDialog .ecm-medallion{width:132px;}
       #exerciseCompleteDialog .ecm-pr-card{grid-template-columns:86px minmax(0,1fr);padding:14px 15px;gap:12px;}
       #exerciseCompleteDialog .ecm-pr-medal{width:82px;height:82px;}
-      #exerciseCompleteDialog .ecm-pr-card:after{left:40%;bottom:34px;}
+      
       #exerciseCompleteDialog .ecm-next-panel{grid-template-columns:66px minmax(0,1fr) 36px;padding:13px;gap:11px;}
       #exerciseCompleteDialog .ecm-next-icon{width:64px;height:58px;}.ecm-next-icon svg{max-width:60px;}
       #exerciseCompleteDialog .ecm-next-chevron{width:34px;height:34px;font-size:24px;}
