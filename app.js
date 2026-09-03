@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "208"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "209"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -2594,6 +2594,29 @@ $("dayReportDialog").addEventListener("close",()=>$("dayReportDialog").classList
 #dayReportDialog .rep-footer{opacity:.55}
 `;document.head.appendChild(s);})();
 
+
+(function(){
+ if(document.getElementById("cholscoreReportScoreContainment"))return;
+ const s=document.createElement("style");s.id="cholscoreReportScoreContainment";
+ s.textContent=`
+ #dayReportDialog .rep-score-card .rep-score-value,
+ #dayReportDialog .rep-score-card .rep-score-num,
+ #dayReportDialog .rep-score-card .rep-score-big,
+ #dayReportDialog .rep-score-card strong,
+ #dayReportDialog .rep-score-main .rep-score-value,
+ #dayReportDialog .rep-score-main .rep-score-num{
+   font-size:clamp(48px,12vw,72px)!important;
+   letter-spacing:-.06em!important;
+   line-height:.94!important;
+   white-space:nowrap!important;
+   max-width:100%!important;
+   text-align:center!important;
+ }
+ #dayReportDialog .rep-score-card,
+ #dayReportDialog .rep-score-main{min-width:0!important;overflow:hidden!important;}
+ `;
+ document.head.appendChild(s);
+})();
 /* Onboarding */
 qsa(".target-option").forEach(btn=>btn.addEventListener("click",()=>{
   qsa(".target-option").forEach(x=>x.classList.remove("selected"));btn.classList.add("selected");
