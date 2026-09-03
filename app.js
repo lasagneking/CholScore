@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "204"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "205"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -1341,12 +1341,92 @@ function achievementAssetSrc(def){
 }
 function achievementCelebrationMessage(def){
   const rarity={
-    COMMON:["Brilliant start — this is exactly how momentum begins.","Another positive step banked. Keep that momentum moving.","You earned this one. Small wins stack up fast."],
-    RARE:["You’re building real momentum now. That one was earned.","Excellent work — your consistency is starting to show.","That is a proper milestone. Keep pushing forward."],
-    EPIC:["Seriously impressive. The work you’re putting in is showing.","That is a huge achievement — be proud of this one.","Outstanding progress. You’re operating on another level."],
-    LEGEND:["Outstanding. This is the kind of milestone worth celebrating.","That took real commitment. An absolutely brilliant achievement.","Exceptional work — you’ve earned a place among the big milestones."],
-    MYTHIC:["Extraordinary. You’ve reached one of CholScore’s biggest milestones.","That is genuinely massive. Incredible commitment and consistency.","Mythic for a reason — an exceptional achievement. Be proud of it."]
-  }[def.rarity]||["Brilliant work — another milestone unlocked."];
+    COMMON:[
+      "Brilliant start. This is exactly how momentum begins.",
+      "Another positive step banked. Keep that momentum moving.",
+      "You earned this one. Small wins stack up fast.",
+      "Nice work. Another win added to the collection.",
+      "That is progress you can be proud of.",
+      "A strong step forward. Keep showing up.",
+      "One more milestone reached. Keep building from here.",
+      "Great work. The little wins are starting to add up.",
+      "You did the work and earned the reward. Keep going.",
+      "Another box ticked and another reason to keep moving.",
+      "Good things happen when you keep showing up.",
+      "That is another positive move in the right direction.",
+      "Well done. Momentum is built one win at a time.",
+      "A deserved achievement. Keep stacking those good days.",
+      "Great start. There is plenty more where that came from."
+    ],
+    RARE:[
+      "You’re building real momentum now. That one was earned.",
+      "Excellent work. Your consistency is starting to show.",
+      "That is a proper milestone. Keep pushing forward.",
+      "Strong work. You are turning good intentions into real progress.",
+      "That one took effort. Enjoy it and keep moving.",
+      "Excellent progress. The work is adding up now.",
+      "Another serious milestone reached. Keep the run going.",
+      "You are building something solid here. Great work.",
+      "That is a result worth noticing. Keep backing yourself.",
+      "Consistency is paying off. Another strong achievement earned.",
+      "You have put in the work for this one. Well deserved.",
+      "A great milestone and a clear sign of progress.",
+      "That is more than a small win now. Excellent work.",
+      "Another step up. You are making real headway.",
+      "Well earned. Keep this momentum working for you."
+    ],
+    EPIC:[
+      "Seriously impressive. The work you’re putting in is showing.",
+      "That is a huge achievement. Be proud of this one.",
+      "Outstanding progress. You’re operating on another level.",
+      "That took real effort. An epic result in every sense.",
+      "Huge milestone reached. You have earned every bit of this.",
+      "Excellent work. This is serious progress now.",
+      "That is a standout achievement. Keep raising the bar.",
+      "Big effort, big result. You should be proud of that.",
+      "You have pushed well beyond the ordinary with this one.",
+      "A major milestone and a brilliant piece of work.",
+      "That is the kind of progress that deserves a proper celebration.",
+      "Seriously strong performance. Another major goal completed.",
+      "You kept going and it paid off. Outstanding achievement.",
+      "That is impressive by any measure. Brilliant work.",
+      "A huge step forward. Keep proving what you can do."
+    ],
+    LEGEND:[
+      "Outstanding. This is the kind of milestone worth celebrating.",
+      "That took real commitment. An absolutely brilliant achievement.",
+      "Exceptional work, a real legendary performance.",
+      "That is a remarkable result. You have earned this one properly.",
+      "Serious commitment produced a serious achievement. Outstanding work.",
+      "This is one of the big ones. Enjoy every bit of it.",
+      "A brilliant performance and a milestone to remember.",
+      "You have put together something genuinely impressive here.",
+      "That took persistence, consistency and real determination.",
+      "Outstanding achievement. Very few milestones feel this satisfying.",
+      "You kept the standard high and delivered a huge result.",
+      "That is elite consistency turning into a legendary milestone.",
+      "A massive achievement built on a lot of hard work.",
+      "This one belongs in the highlight reel. Superb work.",
+      "Exceptional commitment. You have reached a truly major milestone."
+    ],
+    MYTHIC:[
+      "Extraordinary. You’ve reached one of CholScore’s biggest milestones.",
+      "That is genuinely massive. Incredible commitment and consistency.",
+      "Mythic for a reason. An exceptional achievement. Be proud of it.",
+      "This is an enormous accomplishment. You have done something special.",
+      "Incredible work. Very few milestones demand this level of commitment.",
+      "That is a truly exceptional result built over the long haul.",
+      "You have reached one of the highest levels CholScore can recognise.",
+      "A monumental achievement. Your consistency has been extraordinary.",
+      "This one represents serious dedication over a very long journey.",
+      "Absolutely immense. You have earned a place among the biggest milestones.",
+      "That is commitment on another scale. An incredible achievement.",
+      "Years of small choices can build something huge. This is proof.",
+      "A rare level of persistence has brought you to a massive milestone.",
+      "This is the kind of achievement that deserves to be remembered.",
+      "Exceptional does not quite cover it. This is a truly mythic performance."
+    ]
+  }[def.rarity]||["Brilliant work. Another milestone unlocked."];
   let h=0;for(const c of String(def.id||""))h=(h*31+c.charCodeAt(0))>>>0;
   return rarity[h%rarity.length];
 }
