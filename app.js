@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "206"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "207"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -3879,6 +3879,73 @@ function stopConfettiLoop(){
 // screen — stop it the instant the dialog closes, however it closes
 // (Done button, cancel workout, Esc key, etc.), so it never keeps
 // spawning in the background.
+
+function feelingChoiceFace(value){
+  const v=Math.max(1,Math.min(5,Number(value)||3));
+  const mouth={
+    1:'M7.3 16.2c2.9-3.2 6.5-3.2 9.4 0',
+    2:'M7.9 15.6c2.6-1.9 5.6-1.9 8.2 0',
+    3:'M8.4 15h7.2',
+    4:'M7.9 14.5c2.6 2 5.6 2 8.2 0',
+    5:'M7.3 13.9c2.9 3.2 6.5 3.2 9.4 0'
+  }[v];
+  return `<span class="feel-choice-icon feel-choice-${v}">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/>
+      <circle cx="9" cy="10" r="1" fill="currentColor"/>
+      <circle cx="15" cy="10" r="1" fill="currentColor"/>
+      <path d="${mouth}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+  </span>`;
+}
+function upgradeFeelingSelectors(){
+  const labels={1:"Bad",2:"Poor",3:"OK",4:"Good",5:"Great"};
+  qsa("[data-finish-feel]").forEach(btn=>{
+    const v=Number(btn.dataset.finishFeel)||3;
+    btn.innerHTML=`${feelingChoiceFace(v)}<span class="feel-choice-label">${labels[v]}</span>`;
+    btn.setAttribute("aria-label",`Workout felt ${labels[v]}`);
+  });
+  qsa("#quickFeelingRow button").forEach(btn=>{
+    const v=Number(btn.dataset.feel)||3;
+    btn.innerHTML=`${feelingChoiceFace(v)}<span class="feel-choice-label">${labels[v]}</span>`;
+    btn.setAttribute("aria-label",`Activity felt ${labels[v]}`);
+  });
+}
+(function injectFeelingChoiceStyles(){
+  if(document.getElementById("cholscoreFeelingChoiceStyles"))return;
+  const style=document.createElement("style");
+  style.id="cholscoreFeelingChoiceStyles";
+  style.textContent=`
+    [data-finish-feel],#quickFeelingRow button{
+      display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+      min-width:0;
+    }
+    .feel-choice-icon{
+      width:40px;height:40px;display:grid;place-items:center;border-radius:50%;
+      border:1px solid color-mix(in srgb,currentColor 38%, transparent);
+      background:color-mix(in srgb,currentColor 7%, transparent);
+      transition:transform .18s ease,box-shadow .18s ease,background .18s ease;
+    }
+    .feel-choice-icon svg{width:27px;height:27px;display:block}
+    .feel-choice-label{
+      display:block;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+      color:#9ba4b8;line-height:1;
+    }
+    .feel-choice-1{color:#ff6961}
+    .feel-choice-2{color:#f29a5b}
+    .feel-choice-3{color:#ffd166}
+    .feel-choice-4{color:#9bd05a}
+    .feel-choice-5{color:#45d6b0}
+    [data-finish-feel].selected .feel-choice-icon,#quickFeelingRow button.selected .feel-choice-icon{
+      transform:scale(1.06);
+      box-shadow:0 0 0 3px color-mix(in srgb,currentColor 18%, transparent),0 0 22px color-mix(in srgb,currentColor 22%, transparent);
+      background:color-mix(in srgb,currentColor 12%, transparent);
+    }
+    [data-finish-feel].selected .feel-choice-label,#quickFeelingRow button.selected .feel-choice-label{color:#f5f7fb}
+  `;
+  document.head.appendChild(style);
+  upgradeFeelingSelectors();
+})();
 $("finishFeelingDialog").addEventListener("close",stopConfettiLoop);
 function showWorkoutCelebration(){
   const w=state.activeWorkout;if(!w)return;clearInterval(workoutTimer);
