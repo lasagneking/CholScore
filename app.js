@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "202"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "203"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -1244,6 +1244,38 @@ function renderSwimmingVectorBadge(def){
   </svg>`;
 }
 
+
+const WEEKLY_ACHIEVEMENT_ASSETS = Object.freeze({
+  week_walk_5:"assets/achievements/weekly/week_walk_5.webp",
+  week_walk_10:"assets/achievements/weekly/week_walk_10.webp",
+  week_walk_20:"assets/achievements/weekly/week_walk_20.webp",
+  week_run_5:"assets/achievements/weekly/week_run_5.webp",
+  week_run_10:"assets/achievements/weekly/week_run_10.webp",
+  week_run_20:"assets/achievements/weekly/week_run_20.webp",
+  week_combo_15:"assets/achievements/weekly/week_combo_15.webp",
+  week_combo_30:"assets/achievements/weekly/week_combo_30.webp",
+  weekly_workouts_3:"assets/achievements/weekly/weekly_workouts_3.webp",
+  weekly_move_40:"assets/achievements/weekly/weekly_move_40.webp",
+  weekly_move_50:"assets/achievements/weekly/weekly_move_50.webp",
+  week_swim_1:"assets/achievements/weekly/week_swim_1.webp",
+  week_swim_3:"assets/achievements/weekly/week_swim_3.webp",
+  week_swim_6:"assets/achievements/weekly/week_swim_6.webp",
+  week_cycle_15:"assets/achievements/weekly/week_cycle_15.webp",
+  week_cycle_30:"assets/achievements/weekly/week_cycle_30.webp",
+  week_cycle_60:"assets/achievements/weekly/week_cycle_60.webp",
+  week_hike_5:"assets/achievements/weekly/week_hike_5.webp",
+  week_hike_10:"assets/achievements/weekly/week_hike_10.webp",
+  week_hike_15:"assets/achievements/weekly/week_hike_15.webp",
+  week_row_5:"assets/achievements/weekly/week_row_5.webp",
+  week_row_10:"assets/achievements/weekly/week_row_10.webp",
+  week_row_20:"assets/achievements/weekly/week_row_20.webp"
+});
+function renderWeeklyBadge(def){
+  const src=WEEKLY_ACHIEVEMENT_ASSETS[def.id]; if(!src)return null;
+  const alt=String(def.title||"This Week achievement").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return `<img class="premium-ach-img weekly-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
+}
+
 const FOOD_ACHIEVEMENT_ASSETS = Object.freeze({
   food_first:"assets/achievements/food/food_first.webp", food_10:"assets/achievements/food/food_10.webp", food_50:"assets/achievements/food/food_50.webp",
   food_scan_3:"assets/achievements/food/food_scan_3.webp", food_scan_10:"assets/achievements/food/food_scan_10.webp", food_ontarget_5:"assets/achievements/food/food_ontarget_5.webp",
@@ -1259,6 +1291,7 @@ function renderFoodBadge(def){
 }
 
 function renderAchBadge(def){
+  if(def.cat==="weekly" && WEEKLY_ACHIEVEMENT_ASSETS[def.id]) return renderWeeklyBadge(def);
   if(def.cat==="food" && FOOD_ACHIEVEMENT_ASSETS[def.id]) return renderFoodBadge(def);
   if(def.cat==="score" && CHOLSCORE_ACHIEVEMENT_ASSETS[def.id]) return renderCholScoreBadge(def);
   if(def.cat==="workout" && WORKOUT_ACHIEVEMENT_ASSETS[def.id]) return renderWorkoutBadge(def);
@@ -1297,6 +1330,7 @@ function renderAchBadge(def){
 
 function achievementAssetSrc(def){
   if(!def)return null;
+  if(def.cat==="weekly")return WEEKLY_ACHIEVEMENT_ASSETS[def.id]||null;
   if(def.cat==="food")return FOOD_ACHIEVEMENT_ASSETS[def.id]||null;
   if(def.cat==="score")return CHOLSCORE_ACHIEVEMENT_ASSETS[def.id]||null;
   if(def.cat==="workout")return WORKOUT_ACHIEVEMENT_ASSETS[def.id]||null;
