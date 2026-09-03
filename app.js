@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "215"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "216"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -2407,21 +2407,70 @@ function weeklyReportMessage(summary,name){
   if(ratio>=0.5)return `Solid week, ${n}. <strong>${summary.daysUnder} of ${summary.daysTotal} days</strong> under target and <strong>${mins} minutes</strong> on your feet${highlight}, the choices you're making are paying off.`;
   return `A quieter week, ${n}, <strong>${mins} minutes</strong> of movement still went in the bank${highlight}. Plenty of room to build from here.`;
 }
+function reportPeriodKicker(summary){
+  return summary.isCurrent?"THIS WEEK":"WEEK IN REVIEW";
+}
+function reportHeadline(summary,name){
+  const n=esc(name);
+  if(summary.isCurrent){
+    if(summary.prCount>=3)return `You're building momentum, <span>${n}.</span>`;
+    if(summary.daysTotal&&summary.daysUnder/summary.daysTotal>=.7)return `A strong week so far, <span>${n}.</span>`;
+    return `Your week is taking shape, <span>${n}.</span>`;
+  }
+  if(summary.prCount>=3)return `A breakthrough week, <span>${n}.</span>`;
+  if(summary.daysTotal&&summary.daysUnder/summary.daysTotal>=.7)return `A strong week, <span>${n}.</span>`;
+  if(summary.minutes>0)return `Progress banked, <span>${n}.</span>`;
+  return `A week to build from, <span>${n}.</span>`;
+}
+function reportHero(summary){
+  if(summary.weightLifted>0)return {value:fmt(summary.weightLifted),unit:"KG",label:"TOTAL WEIGHT LIFTED",note:summary.prCount?`${summary.prCount} personal record${summary.prCount===1?"":"s"} achieved`:`${summary.workouts} workout${summary.workouts===1?"":"s"} completed`,tone:"gold"};
+  if(summary.minutes>0)return {value:fmtInt(summary.minutes),unit:"MIN",label:"TOTAL MOVEMENT",note:summary.workouts?`${summary.workouts} workout${summary.workouts===1?"":"s"} completed`:"Movement banked this week",tone:"cyan"};
+  return {value:summary.daysUnder,unit:"DAYS",label:"ON TARGET",note:`${summary.daysTotal} tracked day${summary.daysTotal===1?"":"s"}`,tone:"green"};
+}
+function reportMetric(icon,label,value,sub,tone){
+  return `<div class="premium-report-metric ${tone}"><div class="premium-report-metric-top"><span class="premium-report-icon">${icon}</span><span>${label}</span></div><strong>${value}</strong><small>${sub}</small></div>`;
+}
+function reportStandouts(summary){
+  const items=[];
+  if(summary.daysUnder>0)items.push(`<div><b>ON TARGET</b><strong>${summary.daysUnder} day${summary.daysUnder===1?"":"s"}</strong><span>under your saturated fat limit</span></div>`);
+  if(summary.prCount>0)items.push(`<div><b>GETTING STRONGER</b><strong>${summary.prCount} PR${summary.prCount===1?"":"s"}</strong><span>personal records achieved</span></div>`);
+  if(summary.workouts>0)items.push(`<div><b>SHOWING UP</b><strong>${summary.workouts} workout${summary.workouts===1?"":"s"}</strong><span>completed this week</span></div>`);
+  if(summary.rewardPoints>0)items.push(`<div><b>REWARD BANK</b><strong>${fmtInt(summary.rewardPoints)} points</strong><span>banked from your progress</span></div>`);
+  if(!items.length)items.push(`<div><b>FRESH START</b><strong>Ready when you are</strong><span>Your next positive choice starts the story.</span></div>`);
+  return items.slice(0,3).join("");
+}
 function renderWeekReportCardHTML(summary,name){
   const unit=distanceUnit();
   const displayDistance=fmt(kmToDisplay(summary.distanceKm));
+  const hero=reportHero(summary);
   return `
-    <div class="report-card">
-      <div class="report-badge">🗓️</div>
-      <h2 class="report-title">${summary.isCurrent?"Your week so far":"Your week in review"}</h2>
-      <p class="report-sub">${esc(weekLabel(summary.mondayKey))}</p>
-      <p class="report-message">${weeklyReportMessage(summary,name)}</p>
-      <div class="report-stat-grid">
-        <div class="report-stat-card cyan"><span>Movement</span><strong>${fmtInt(summary.minutes)}</strong><small>minutes total</small></div>
-        <div class="report-stat-card green"><span>Weight lifted</span><strong>${fmt(summary.weightLifted)}</strong><small>kg total volume</small></div>
-        <div class="report-stat-card violet"><span>Workouts</span><strong>${summary.workouts}</strong><small>sessions completed</small></div>
-        <div class="report-stat-card"><span>On target</span><strong>${summary.daysUnder}/${summary.daysTotal}</strong><small>days under sat fat limit</small></div>
-        <div class="report-stat-card amber full-width"><span>Total distance</span><strong>${displayDistance} ${unit}</strong><small>across all activities</small></div>
+    <div class="report-card premium-report">
+      <div class="premium-report-hero">
+        <div class="premium-report-copy">
+          <div class="premium-report-kicker">${reportPeriodKicker(summary)}</div>
+          <div class="premium-report-date">${esc(weekLabel(summary.mondayKey))}</div>
+          <h2>${reportHeadline(summary,name)}</h2>
+          <p>${weeklyReportMessage(summary,name)}</p>
+        </div>
+        <div class="premium-report-emblem" aria-hidden="true"><span>◇</span><i>♥</i></div>
+      </div>
+      <div class="premium-report-headline ${hero.tone}">
+        <div class="premium-report-headline-label">HEADLINE PERFORMANCE</div>
+        <div class="premium-report-headline-value">${hero.value}<em>${hero.unit}</em></div>
+        <div class="premium-report-headline-name">${hero.label}</div>
+        <div class="premium-report-headline-note">${hero.note}</div>
+      </div>
+      <div class="premium-report-grid">
+        ${reportMetric("↗","MOVEMENT",fmtInt(summary.minutes),"minutes total","coral")}
+        ${reportMetric("◆","ON TARGET",`${summary.daysUnder}/${summary.daysTotal}`,"days under sat fat limit","green")}
+        ${reportMetric("★","PERSONAL RECORDS",summary.prCount,"new PRs set","violet")}
+        ${reportMetric("●","WORKOUTS",summary.workouts,"sessions completed","blue")}
+        ${reportMetric("⌁","DISTANCE",`${displayDistance} ${unit}`,"across cardio activities","amber")}
+        ${reportMetric("◎","CHOLPOINTS",fmtInt(summary.rewardPoints),"points banked","mint")}
+      </div>
+      <div class="premium-report-standout">
+        <div class="premium-report-section-title">WHAT STOOD OUT</div>
+        <div class="premium-report-standout-grid">${reportStandouts(summary)}</div>
       </div>
     </div>`;
 }
@@ -2438,36 +2487,53 @@ function renderMonthReportCardHTML(name,records){
   const totalDaysElapsed=weeks.reduce((a,w)=>a+w.daysTotal,0);
   const totalPRs=weeks.reduce((a,w)=>a+w.prCount,0);
   const totalPoints=weeks.reduce((a,w)=>a+w.rewardPoints,0);
+  const totalWorkouts=weeks.reduce((a,w)=>a+w.workouts,0);
   const totalDistanceKm=weeks.reduce((a,w)=>a+w.distanceKm,0);
-  const unit=distanceUnit();
-  const displayDistance=fmt(kmToDisplay(totalDistanceKm));
-  const maxMinutes=Math.max(1,...weeks.map(w=>w.minutes));
+  const unit=distanceUnit(),displayDistance=fmt(kmToDisplay(totalDistanceKm));
   const bestWeek=weeks.reduce((best,w)=>w.minutes>best.minutes?w:best,weeks[0]);
-  const weekRows=weeks.map(w=>`
-    <div class="report-week-row">
-      <div class="wk-label">${esc(weekLabel(w.mondayKey))}${w.isCurrent?" (so far)":""}</div>
-      <div class="wk-bar-track"><div class="wk-bar-fill" style="width:${Math.round(w.minutes/maxMinutes*100)}%"></div></div>
-      <div class="wk-value">${fmtInt(w.minutes)} min</div>
-    </div>`).join("");
-  const extras=[];
-  if(totalPRs>0)extras.push(`hit <strong>${totalPRs} personal record${totalPRs===1?"":"s"}</strong>`);
-  if(totalPoints>0)extras.push(`banked <strong>${fmtInt(totalPoints)} reward point${totalPoints===1?"":"s"}</strong>`);
-  const extraClause=extras.length?`, and you ${extras.slice(0,2).join(", plus ")}`:"";
-  const message=`Across the last 4 weeks you've moved for <strong>${fmtInt(totalMinutes)} minutes</strong> and stayed under target on <strong>${totalDaysUnder} of ${totalDaysElapsed} days</strong>${extraClause}. Consistency compounds, nice work showing up, ${esc(name)}.`;
+  const periodStart=weeks[0]?.mondayKey,periodEnd=weeks[weeks.length-1]?.endKey;
+  const periodLabel=periodStart&&periodEnd?`${new Date(periodStart+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"})} – ${new Date(periodEnd+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}`:"Last 4 weeks";
+  const headline=totalPRs>=8?`A breakthrough 4 weeks, <span>${esc(name)}.</span>`:totalMinutes>0?`A strong 4 weeks, <span>${esc(name)}.</span>`:`Your next 4 weeks start here, <span>${esc(name)}.</span>`;
+  const hero=totalWeight>0?{value:fmt(totalWeight),unit:"KG",label:"TOTAL WEIGHT LIFTED",note:`${totalPRs} personal record${totalPRs===1?"":"s"} achieved`,tone:"gold"}:{value:fmtInt(totalMinutes),unit:"MIN",label:"TOTAL MOVEMENT",note:`${totalWorkouts} workout${totalWorkouts===1?"":"s"} completed`,tone:"cyan"};
+  const bestPct=totalMinutes>0?Math.round(bestWeek.minutes/(totalMinutes/Math.max(1,weeks.length))*100-100):0;
+  const standouts=[];
+  if(totalDaysUnder>0)standouts.push(`<div><b>ON TARGET</b><strong>${totalDaysUnder} day${totalDaysUnder===1?"":"s"}</strong><span>under your saturated fat limit</span></div>`);
+  if(totalPRs>0)standouts.push(`<div><b>GETTING STRONGER</b><strong>${totalPRs} PR${totalPRs===1?"":"s"}</strong><span>personal records achieved</span></div>`);
+  if(totalWorkouts>0)standouts.push(`<div><b>BUILDING CONSISTENCY</b><strong>${totalWorkouts} workout${totalWorkouts===1?"":"s"}</strong><span>completed across the period</span></div>`);
+  if(!standouts.length)standouts.push(`<div><b>FRESH START</b><strong>Ready when you are</strong><span>Your next positive choice starts the story.</span></div>`);
   return `
-    <div class="report-card">
-      <div class="report-badge">📊</div>
-      <h2 class="report-title">Your month in review</h2>
-      <p class="report-sub">Last 4 weeks</p>
-      <p class="report-message">${message}</p>
-      <div class="report-stat-grid">
-        <div class="report-stat-card cyan"><span>Movement</span><strong>${fmtInt(totalMinutes)}</strong><small>minutes total</small></div>
-        <div class="report-stat-card green"><span>Weight lifted</span><strong>${fmt(totalWeight)}</strong><small>kg total volume</small></div>
-        <div class="report-stat-card"><span>On target</span><strong>${totalDaysUnder}/${totalDaysElapsed}</strong><small>days under sat fat limit</small></div>
-        <div class="report-stat-card violet"><span>Best week</span><strong>${fmtInt(bestWeek.minutes)}</strong><small>min, ${esc(weekLabel(bestWeek.mondayKey))}</small></div>
-        <div class="report-stat-card amber full-width"><span>Total distance</span><strong>${displayDistance} ${unit}</strong><small>across all activities</small></div>
+    <div class="report-card premium-report">
+      <div class="premium-report-hero">
+        <div class="premium-report-copy">
+          <div class="premium-report-kicker">YOUR LAST 4 WEEKS</div>
+          <div class="premium-report-date">${esc(periodLabel)}</div>
+          <h2>${headline}</h2>
+          <p>You've moved for <strong>${fmtInt(totalMinutes)} minutes</strong>, stayed under target on <strong>${totalDaysUnder} of ${totalDaysElapsed} tracked days</strong>${totalPRs?`, and set <strong>${totalPRs} personal records</strong>`:""}. This is the story behind the totals.</p>
+        </div>
+        <div class="premium-report-emblem" aria-hidden="true"><span>◇</span><i>♥</i></div>
       </div>
-      <div class="report-week-breakdown">${weekRows}</div>
+      <div class="premium-report-headline ${hero.tone}">
+        <div class="premium-report-headline-label">HEADLINE PERFORMANCE</div>
+        <div class="premium-report-headline-value">${hero.value}<em>${hero.unit}</em></div>
+        <div class="premium-report-headline-name">${hero.label}</div>
+        <div class="premium-report-headline-note">${hero.note}</div>
+      </div>
+      <div class="premium-report-grid">
+        ${reportMetric("↗","MOVEMENT",fmtInt(totalMinutes),"minutes total","coral")}
+        ${reportMetric("◆","ON TARGET",`${totalDaysUnder}/${totalDaysElapsed}`,"days under sat fat limit","green")}
+        ${reportMetric("★","PERSONAL RECORDS",totalPRs,"new PRs set","violet")}
+        ${reportMetric("●","WORKOUTS",totalWorkouts,"sessions completed","blue")}
+        ${reportMetric("⌁","DISTANCE",`${displayDistance} ${unit}`,"across cardio activities","amber")}
+        ${reportMetric("◎","CHOLPOINTS",fmtInt(totalPoints),"points banked","mint")}
+      </div>
+      <div class="premium-report-bestweek">
+        <div><span>★ BEST WEEK</span><strong>${fmtInt(bestWeek.minutes)} <em>minutes</em></strong><small>${esc(weekLabel(bestWeek.mondayKey))}</small></div>
+        ${bestPct>0?`<b>↑ ${bestPct}%<small>vs 4 week average</small></b>`:""}
+      </div>
+      <div class="premium-report-standout">
+        <div class="premium-report-section-title">WHAT STOOD OUT</div>
+        <div class="premium-report-standout-grid">${standouts.slice(0,3).join("")}</div>
+      </div>
     </div>`;
 }
 let reportsRange="lastweek";
@@ -2971,6 +3037,34 @@ $("dayReportDialog").addEventListener("close",()=>$("dayReportDialog").classList
   document.head.appendChild(s);
 })();
 
+(function(){
+  if(document.getElementById("cholscorePremiumReportsV49"))return;
+  const s=document.createElement("style");s.id="cholscorePremiumReportsV49";
+  s.textContent=`
+  #historyReportsView .premium-report{padding:0;overflow:hidden;background:linear-gradient(145deg,rgba(8,24,34,.96),rgba(24,17,36,.97));border:1px solid rgba(91,216,255,.45);box-shadow:0 22px 60px rgba(0,0,0,.34),inset 0 0 45px rgba(115,75,255,.035)}
+  .premium-report-hero{display:grid;grid-template-columns:minmax(0,1fr) 124px;gap:14px;padding:24px 22px 18px;align-items:center;background:radial-gradient(circle at 88% 32%,rgba(98,83,255,.14),transparent 34%)}
+  .premium-report-kicker,.premium-report-section-title{font-size:11px;font-weight:900;letter-spacing:.2em;color:#43e2c1}
+  .premium-report-date{margin-top:6px;color:#a9b3c6;font-size:12px}
+  .premium-report-copy h2{margin:12px 0 10px;font-size:27px;line-height:1.04;letter-spacing:-.03em}.premium-report-copy h2 span{background:linear-gradient(90deg,#55d8ff,#9b6cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .premium-report-copy p{margin:0;color:#b9c2d1;font-size:13px;line-height:1.55}.premium-report-copy p strong{color:#f5f7fb}
+  .premium-report-emblem{width:104px;height:104px;margin:auto;border-radius:30px;position:relative;display:grid;place-items:center;background:linear-gradient(145deg,rgba(52,227,199,.14),rgba(111,80,255,.14));border:1px solid rgba(103,223,235,.35);box-shadow:0 0 28px rgba(78,210,255,.10)}
+  .premium-report-emblem span{font-size:76px;line-height:1;color:#5bdcf4;text-shadow:0 0 18px rgba(79,213,255,.35)}.premium-report-emblem i{position:absolute;font-style:normal;font-size:25px;color:#f4c95d}
+  .premium-report-headline{margin:0 18px 16px;padding:18px;border-radius:18px;text-align:center;background:linear-gradient(180deg,rgba(8,14,24,.78),rgba(11,15,24,.95));border:1px solid rgba(242,193,76,.28)}
+  .premium-report-headline-label{font-size:10px;font-weight:900;letter-spacing:.19em;color:#e9bd50}.premium-report-headline-value{font-size:48px;line-height:1;font-weight:900;letter-spacing:-.04em;color:#f4c44f;text-shadow:0 0 22px rgba(244,196,79,.16)}
+  .premium-report-headline.cyan .premium-report-headline-value{color:#56d8ff}.premium-report-headline.green .premium-report-headline-value{color:#4ce0b1}
+  .premium-report-headline-value em{font-size:18px;font-style:normal;margin-left:6px}.premium-report-headline-name{margin-top:6px;font-size:12px;font-weight:900;letter-spacing:.13em}.premium-report-headline-note{margin-top:6px;color:#d6a943;font-size:11px}
+  .premium-report-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 18px 14px}.premium-report-metric{min-width:0;padding:14px 12px;border-radius:16px;background:rgba(8,15,25,.72);border:1px solid rgba(120,137,164,.18)}
+  .premium-report-metric-top{display:flex;align-items:center;gap:7px;color:#aeb8ca;font-size:9px;font-weight:900;letter-spacing:.09em}.premium-report-icon{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;border:1px solid currentColor;font-size:12px}
+  .premium-report-metric strong{display:block;margin-top:10px;font-size:25px;line-height:1;color:#f5f6fa;overflow-wrap:anywhere}.premium-report-metric small{display:block;margin-top:6px;color:#8f99aa;font-size:9px;line-height:1.25}
+  .premium-report-metric.coral strong{color:#ff6c62}.premium-report-metric.green strong{color:#43dcb1}.premium-report-metric.violet strong{color:#9a72ff}.premium-report-metric.blue strong{color:#59bfff}.premium-report-metric.amber strong{color:#f2bb4d}.premium-report-metric.mint strong{color:#55e09b}
+  .premium-report-bestweek{margin:0 18px 14px;padding:15px 17px;border-radius:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:linear-gradient(90deg,rgba(73,48,5,.55),rgba(21,17,16,.9));border:1px solid rgba(238,181,51,.45)}
+  .premium-report-bestweek span{display:block;color:#eebc45;font-size:10px;font-weight:900;letter-spacing:.15em}.premium-report-bestweek strong{display:block;color:#f5c654;font-size:29px}.premium-report-bestweek strong em{font-size:11px;font-style:normal;color:#d7d7d7}.premium-report-bestweek small{color:#a9a6a0;font-size:9px}.premium-report-bestweek>b{color:#f1bd45;font-size:17px;text-align:right}.premium-report-bestweek>b small{display:block;margin-top:3px}
+  .premium-report-standout{margin:0 18px 20px;padding:16px;border-radius:17px;background:rgba(19,21,52,.58);border:1px solid rgba(111,94,255,.35)}.premium-report-standout-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:13px}
+  .premium-report-standout-grid>div{padding:0 12px;border-right:1px solid rgba(130,142,170,.16)}.premium-report-standout-grid>div:first-child{padding-left:0}.premium-report-standout-grid>div:last-child{border-right:0;padding-right:0}.premium-report-standout-grid b{display:block;color:#64e3bd;font-size:9px}.premium-report-standout-grid strong{display:block;margin:5px 0;color:#f4f5f9;font-size:14px}.premium-report-standout-grid span{display:block;color:#9da7b8;font-size:9px;line-height:1.35}
+  @media(max-width:520px){.premium-report-hero{grid-template-columns:1fr 82px;padding:20px 16px 16px}.premium-report-emblem{width:74px;height:74px;border-radius:23px}.premium-report-emblem span{font-size:54px}.premium-report-emblem i{font-size:18px}.premium-report-copy h2{font-size:23px}.premium-report-grid{grid-template-columns:repeat(2,1fr);padding:0 14px 14px}.premium-report-headline{margin:0 14px 14px}.premium-report-headline-value{font-size:42px}.premium-report-standout{margin:0 14px 18px}.premium-report-bestweek{margin:0 14px 14px}.premium-report-standout-grid{grid-template-columns:1fr}.premium-report-standout-grid>div{border-right:0;border-bottom:1px solid rgba(130,142,170,.16);padding:9px 0}.premium-report-standout-grid>div:last-child{border-bottom:0}.premium-report-metric strong{font-size:23px}}
+  `;
+  document.head.appendChild(s);
+})();
 (function(){
   if(document.getElementById("cholscoreTrendCalendarFixV48"))return;
   const s=document.createElement("style");
