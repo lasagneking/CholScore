@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "211"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "212"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -2083,7 +2083,13 @@ function renderCalendar(){
   }
   $("calendarGrid").innerHTML=cells.join("");
   let summary=$("calendarMonthSummary");
-  if(!summary){summary=document.createElement("div");summary.id="calendarMonthSummary";summary.className="calendar-month-summary";const grid=$("calendarGrid");grid.parentNode.insertBefore(summary,grid);}
+  if(!summary){
+    summary=document.createElement("div");
+    summary.id="calendarMonthSummary";
+    summary.className="calendar-month-summary";
+    const calendarCard=document.querySelector("#historyCalendarView .calendar-card");
+    calendarCard.parentNode.insertBefore(summary,calendarCard);
+  }
   const avg=scoreCount?Math.round(scoreSum/scoreCount):0,hrs=Math.floor(movement/60),mins=Math.round(movement%60),hit=elapsedDays?Math.round(activeDays/elapsedDays*100):0;
   summary.innerHTML=`<div><span>ACTIVE DAYS</span><strong>${activeDays}</strong><small>This month</small></div><div><span>AVG CHOLSCORE</span><strong>${avg||"—"}</strong><small>${avg>=90?"Outstanding":avg>=75?"Great":avg>=60?"Building":"Keep going"}</small></div><div><span>TOTAL MOVEMENT</span><strong>${hrs?`${hrs}h ${mins}m`:`${mins}m`}</strong><small>This month</small></div><div><span>LOG RATE</span><strong>${hit}%</strong><small>${hit>=80?"Great consistency":"This month"}</small></div>`;
   let legend=$("calendarStatusLegend");
@@ -2707,6 +2713,79 @@ $("dayReportDialog").addEventListener("close",()=>$("dayReportDialog").classList
 #historyDetail:not(.empty-state){padding:18px!important;background:linear-gradient(135deg,rgba(12,23,34,.96),rgba(25,17,30,.96))!important}.history-premium-score{display:grid;grid-template-columns:112px minmax(0,1fr);gap:16px;align-items:center}.history-score-ring{width:108px;height:108px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at center,#111722 58%,transparent 60%),conic-gradient(var(--history-tone) 100%,rgba(100,110,130,.2) 0)}.history-score-ring span{font-size:8px;letter-spacing:.12em;color:#8e98ac;font-weight:800}.history-score-ring strong{font-size:36px;line-height:1;color:#fff;margin:3px 0}.history-score-ring small{font-size:9px;color:#d9deea;font-weight:700}.history-day-copy h3{font-size:16px!important;margin:0 0 10px!important}.history-day-copy .history-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.history-day-copy .history-grid>div{padding:8px!important;border-radius:11px}.history-day-copy .history-grid span{font-size:8px!important}.history-day-copy .history-grid strong{font-size:13px!important}.history-detail-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:11px;color:#929bad;font-size:9px}.history-report-btn{border:1px solid rgba(76,211,255,.55);border-radius:999px;padding:7px 10px;background:rgba(30,35,48,.75);color:#f7f8fb;font-weight:800;font-size:9px;white-space:nowrap}
 @media(max-width:430px){.calendar-month-summary span{font-size:7px}.calendar-month-summary strong{font-size:15px}.calendar-month-summary small{font-size:7px}#calendarGrid .day-cell{min-height:53px!important}.cal-score-ring{width:28px;height:28px}.history-premium-score{grid-template-columns:94px minmax(0,1fr);gap:10px}.history-score-ring{width:90px;height:90px}.history-score-ring strong{font-size:30px}.history-detail-footer{align-items:flex-start;flex-direction:column}}
 `;document.head.appendChild(s);})();
+
+(function(){
+  if(document.getElementById("cholscoreCalendarLayoutV45"))return;
+  const s=document.createElement("style");s.id="cholscoreCalendarLayoutV45";
+  s.textContent=`
+    #historyCalendarView{padding-bottom:120px}
+    #historyCalendarView>.calendar-month-summary{
+      margin:16px 0 18px!important;
+      display:grid!important;
+      grid-template-columns:repeat(2,minmax(0,1fr))!important;
+      gap:0!important;
+      padding:0!important;
+      overflow:hidden!important;
+    }
+    #historyCalendarView>.calendar-month-summary>div{
+      padding:14px 10px!important;
+      border-right:1px solid rgba(135,150,180,.12)!important;
+      border-bottom:1px solid rgba(135,150,180,.12)!important;
+    }
+    #historyCalendarView>.calendar-month-summary>div:nth-child(2n){border-right:0!important}
+    #historyCalendarView>.calendar-month-summary>div:nth-child(n+3){border-bottom:0!important}
+    #historyCalendarView>.calendar-month-summary span{font-size:9px!important}
+    #historyCalendarView>.calendar-month-summary strong{font-size:21px!important;margin:5px 0 3px!important}
+    #historyCalendarView>.calendar-month-summary small{font-size:9px!important}
+
+    #historyCalendarView .calendar-card{
+      overflow:hidden!important;
+      padding-left:14px!important;
+      padding-right:14px!important;
+    }
+    #historyCalendarView .weekday-row,
+    #historyCalendarView .calendar-grid{
+      width:100%!important;
+      max-width:100%!important;
+      box-sizing:border-box!important;
+      grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    }
+    #historyCalendarView .weekday-row{gap:4px!important}
+    #historyCalendarView .calendar-grid{
+      gap:5px!important;
+      overflow:hidden!important;
+    }
+    #historyCalendarView .day-cell{
+      width:100%!important;
+      min-width:0!important;
+      max-width:none!important;
+      min-height:54px!important;
+      padding:4px 1px 6px!important;
+      border-radius:12px!important;
+      box-sizing:border-box!important;
+    }
+    #historyCalendarView .cal-date{font-size:10px!important;margin-bottom:2px!important}
+    #historyCalendarView .cal-score-ring{width:27px!important;height:27px!important}
+    #historyCalendarView .cal-score-ring strong{font-size:9px!important}
+    #historyCalendarView .cal-score-ring:before{inset:3px!important}
+    #historyCalendarView .cal-status-dot{width:5px!important;height:5px!important;bottom:3px!important}
+    #historyCalendarView .calendar-status-legend{
+      margin:13px 0 2px!important;
+      gap:16px!important;
+      flex-wrap:wrap!important;
+    }
+
+    @media(max-width:390px){
+      #historyCalendarView .calendar-card{padding-left:10px!important;padding-right:10px!important}
+      #historyCalendarView .calendar-grid{gap:4px!important}
+      #historyCalendarView .day-cell{min-height:50px!important;border-radius:11px!important}
+      #historyCalendarView .cal-score-ring{width:25px!important;height:25px!important}
+      #historyCalendarView>.calendar-month-summary>div{padding:12px 8px!important}
+      #historyCalendarView>.calendar-month-summary strong{font-size:19px!important}
+    }
+  `;
+  document.head.appendChild(s);
+})();
 /* Onboarding */
 qsa(".target-option").forEach(btn=>btn.addEventListener("click",()=>{
   qsa(".target-option").forEach(x=>x.classList.remove("selected"));btn.classList.add("selected");
