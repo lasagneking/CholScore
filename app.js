@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "225"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "226"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -764,9 +764,8 @@ function setupPremiumFoodScreen(){
     if(valueWrap){
       valueWrap.classList.add("food-premium-value");
       // Preserve existing target element and only enhance surrounding copy.
-      if(!valueWrap.querySelector(".food-unit")) total.insertAdjacentHTML("afterend",`<span class="food-unit">g</span>`);
-      if(!valueWrap.querySelector(".food-of")) target.insertAdjacentHTML("beforebegin",`<span class="food-of">/ </span>`);
-      if(!target.nextElementSibling?.classList?.contains("food-unit")) target.insertAdjacentHTML("afterend",`<span class="food-unit">g</span>`);
+      // Existing Food markup already supplies the single g units and slash.
+      // Do not inject duplicate presentation characters here.
     }
     const barShell=bar.parentElement;
     if(barShell)barShell.classList.add("food-premium-progress");
