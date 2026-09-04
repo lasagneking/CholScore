@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "232"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "233"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -228,6 +228,15 @@ function fmt(n){return Number(n||0).toLocaleString(undefined,{minimumFractionDig
 function fmtInt(n){return Math.round(Number(n||0)).toLocaleString();}
 function feelEmoji(n){return ["","😣","😕","😐","🙂","😄"][Number(n)||3];}
 
+function premiumUiIcon(name,cls="premium-ui-icon"){
+  const paths={
+    food:'<circle cx="12" cy="12" r="7.2"/><path d="M3.4 4.2v6.1M5.2 4.2v6.1M4.3 10.3V20M19.1 4.2c-2 1.2-2.5 3.8-1.2 5.7.5.7 1.1 1.1 1.8 1.3V20"/>',
+    trophy:'<path d="M8 4h8v4.5a4 4 0 0 1-8 0V4Z"/><path d="M8 6H5.5v1.5A3.5 3.5 0 0 0 9 11M16 6h2.5v1.5A3.5 3.5 0 0 1 15 11M12 12.5V17M8.5 20h7M10 17h4"/>',
+    note:'<path d="M4 20h4l11-11-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4M4 20l4-1"/>',
+    activity:'<path d="M4 13h4l2-6 4 10 2-6h4"/>'
+  };
+  return `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]||paths.activity}</svg>`;
+}
 function timelineActivityGlyph(type){
   const common='fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"';
   const icons={
@@ -552,7 +561,7 @@ function renderToday(){
   $("timeline").innerHTML=items.length?items.map(x=>x.kind==="food"
     ?`<div class="log-item food-log-item" data-food-id="${x.id||""}">
         <div class="food-log-main">
-          ${x.image?`<img class="food-thumb" src="${esc(x.image)}" alt="${esc(x.name)}" loading="lazy">`:`<div class="food-thumb food-thumb-fallback">🍎</div>`}
+          ${x.image?`<img class="food-thumb" src="${esc(x.image)}" alt="${esc(x.name)}" loading="lazy">`:`<div class="food-thumb food-thumb-fallback">${premiumUiIcon("food","food-fallback-icon")}</div>`}
           <div><strong>${esc(x.name)}</strong><small>${esc(x.meal)}${x.brand?` · ${esc(x.brand)}`:""}</small></div>
         </div>
         <div class="log-value">${fmt(x.sat)}g<br><small>sat fat</small></div>
@@ -571,7 +580,7 @@ function renderRewardBankCard(){
   if(goal){
     const remaining=Math.max(0,goal.target-balance);
     const pct=Math.min(100,Math.round(balance/goal.target*100));
-    goalText.textContent=remaining>0?`${fmtInt(remaining)} points to go, ${goal.name} ${goal.icon}`:`Ready to cash out, ${goal.name} ${goal.icon}`;
+    goalText.textContent=remaining>0?`${fmtInt(remaining)} points to go, ${goal.name}`:`Ready to cash out, ${goal.name}`;
     goalBar.classList.remove("hidden");
     goalBarFill.style.width=`${pct}%`;
   }else{
@@ -667,7 +676,7 @@ function renderStaples(){
   section.classList.remove("hidden");
   $("staplesRow").innerHTML=staples.map((f,i)=>`
     <button type="button" class="staple-card" data-idx="${i}">
-      ${f.image?`<img class="staple-thumb" src="${esc(f.image)}" alt="" loading="lazy">`:`<div class="staple-thumb staple-thumb-fallback">🍽️</div>`}
+      ${f.image?`<img class="staple-thumb" src="${esc(f.image)}" alt="" loading="lazy">`:`<div class="staple-thumb staple-thumb-fallback">${premiumUiIcon("food","food-fallback-icon")}</div>`}
       <strong>${esc(f.name)}</strong>
       <small>${fmt(f.sat)}g sat fat</small>
     </button>`).join("");
@@ -854,7 +863,7 @@ function renderFood(){
   $("foodList").innerHTML=day.foods.length?day.foods.slice().reverse().map(x=>`
     <div class="log-item food-log-item" data-food-id="${x.id||""}">
       <div class="food-log-main">
-        ${x.image?`<img class="food-thumb food-thumb-large" src="${esc(x.image)}" alt="${esc(x.name)}" loading="lazy">`:`<div class="food-thumb food-thumb-large food-thumb-fallback">🍎</div>`}
+        ${x.image?`<img class="food-thumb food-thumb-large" src="${esc(x.image)}" alt="${esc(x.name)}" loading="lazy">`:`<div class="food-thumb food-thumb-large food-thumb-fallback">${premiumUiIcon("food","food-fallback-icon")}</div>`}
         <div>
           <strong>${esc(x.name)}</strong>
           <small>${esc(x.meal)}${x.brand?` · ${esc(x.brand)}`:""}</small>
@@ -886,7 +895,7 @@ function renderProteinToday(day=getDay()){
   $("proteinBreakdown").innerHTML=foods.slice().reverse().map(f=>`
     <div class="protein-row">
       <div class="protein-row-main">
-        ${f.image?`<img class="protein-thumb" src="${esc(f.image)}" alt="${esc(f.name)}" loading="lazy">`:`<div class="protein-thumb protein-thumb-fallback">🥚</div>`}
+        ${f.image?`<img class="protein-thumb" src="${esc(f.image)}" alt="${esc(f.name)}" loading="lazy">`:`<div class="protein-thumb protein-thumb-fallback">${premiumUiIcon("food","food-fallback-icon")}</div>`}
         <div>
           <strong>${esc(f.name)}</strong>
           <small>${esc(f.meal||"Food")}${f.brand?` · ${esc(f.brand)}`:""}</small>
@@ -971,7 +980,7 @@ function setupPremiumExerciseScreen(){
     .exercise-routines-premium .routine-card-edit-hint{color:#77849a!important;font-size:10px!important}
     .exercise-training-shell{margin-top:28px}
     .exercise-training-shell #exerciseList .empty-state{border:1px dashed #2b405c!important;border-radius:20px!important;background:rgba(13,23,36,.65)!important;padding:22px 16px!important;color:#8f9caf!important}
-    .exercise-training-shell #exerciseList .empty-state:before{content:"🏆";display:block;font-size:28px;filter:grayscale(1);opacity:.55;margin-bottom:8px}
+    .exercise-training-shell #exerciseList .empty-state:before{content:"";display:block;width:28px;height:28px;margin:0 auto 8px;border:1.8px solid #65dce8;border-radius:9px;opacity:.55}
     .exercise-training-shell .activity-log-item{border-radius:17px!important;background:#121d2b!important;border:1px solid #293a51!important}
     #proteinTodayCard.exercise-protein-secondary{margin-top:26px!important;border-radius:20px!important;background:#111a27!important;border:1px solid #29374d!important}
     @media(max-width:390px){.exercise-hero-value{font-size:42px}.exercise-goal-orb{grid-template-columns:28px auto}.exercise-goal-icon{width:28px;height:28px}.exercise-routines-premium .routine-preview{grid-template-columns:1fr!important}}
@@ -1084,7 +1093,7 @@ function renderRoutines(){
         <button class="start-routine-btn" data-start-routine="${r.id}">Start workout</button>
         <button class="delete-routine-btn" data-delete-routine="${r.id}" aria-label="Delete routine">•••</button>
       </div>
-      <div class="routine-card-edit-hint">✎ Tap the card to edit routine</div>
+      <div class="routine-card-edit-hint">${premiumUiIcon("note","note-inline-icon")} Tap the card to edit routine</div>
     </div>`;
   }).join("");
 
@@ -1111,14 +1120,14 @@ function showActiveWorkoutBanner(){
    own hardcoded walk/run-only list, which is what made adding new types
    safe to do in one pass rather than a dozen easy-to-miss edits. */
 const CARDIO_TYPES={
-  walk:{label:"Walk",verb:"walked",icon:"🚶",color:"#1CCFA9"},
-  run:{label:"Run",verb:"ran",icon:"🏃",color:"#FF6452"},
-  swim:{label:"Swim",verb:"swam",icon:"🏊",color:"#6C5FFF"},
-  cycle:{label:"Cycle",verb:"cycled",icon:"🚴",color:"#FFB454"},
-  hike:{label:"Hike",verb:"hiked",icon:"🥾",color:"#1CCFA9"},
-  row:{label:"Row",verb:"rowed",icon:"🚣",color:"#FF6452"},
+  walk:{label:"Walk",verb:"walked",icon:"",color:"#1CCFA9"},
+  run:{label:"Run",verb:"ran",icon:"",color:"#FF6452"},
+  swim:{label:"Swim",verb:"swam",icon:"",color:"#6C5FFF"},
+  cycle:{label:"Cycle",verb:"cycled",icon:"",color:"#FFB454"},
+  hike:{label:"Hike",verb:"hiked",icon:"",color:"#1CCFA9"},
+  row:{label:"Row",verb:"rowed",icon:"",color:"#FF6452"},
 };
-function cardioIcon(type){return CARDIO_TYPES[type]?.icon||"⚡";}
+function cardioIcon(type){return CARDIO_TYPES[type]?.icon||"";}
 function cardioLabel(type){return CARDIO_TYPES[type]?.label||"Activity";}
 /* Graphical achievement badges — replaces the old plain-emoji icons with
    dimensional gem/medal-style badges matching the celebration screen's
@@ -3180,7 +3189,7 @@ function repTrainingSectionHTML(workouts,dayKey,records){
         const rec=records?.strength?.[name];
         isPR=!!(rec&&rec.date===dayKey&&weight>0&&rec.weight===weight);
       }
-      return `<div class="rep-exercise-row${isPR?" is-pr":""}"><div class="rep-exercise-num">${i+1}</div><div><div class="rep-exercise-name">${esc(ex.name)}${isPR?'<span class="rep-pr-chip">🏆 PR</span>':""}</div><div class="rep-exercise-meta">${esc(meta)}</div></div><div class="rep-exercise-value">${value}<small>${unit}</small></div></div>`;
+      return `<div class="rep-exercise-row${isPR?" is-pr":""}"><div class="rep-exercise-num">${i+1}</div><div><div class="rep-exercise-name">${esc(ex.name)}${isPR?'<span class="rep-pr-chip">${premiumUiIcon("trophy","pr-inline-icon")} PR</span>':""}</div><div class="rep-exercise-meta">${esc(meta)}</div></div><div class="rep-exercise-value">${value}<small>${unit}</small></div></div>`;
     }).join("");
     return `<div class="rep-section reveal"><div class="rep-section-head"><div class="rep-section-bar"></div><h2>Strength Session · ${esc(w.name||"Workout")}</h2></div>${rows}</div>`;
   }).join("");
@@ -3201,10 +3210,10 @@ function repCardioSectionHTML(cardio,dayKey,records){
     const isPR=isDistPR||isPacePR;
     return `<div class="rep-cardio-row${isPR?" is-pr":""}">
       <div class="rep-cardio-icon">${icon}</div>
-      <div class="rep-cardio-name"><span class="rep-cardio-name-text">${esc(label)}</span>${isPR?'<span class="rep-pr-chip">🏆 PR</span>':""}</div>
+      <div class="rep-cardio-name"><span class="rep-cardio-name-text">${esc(label)}</span>${isPR?'<span class="rep-pr-chip">${premiumUiIcon("trophy","pr-inline-icon")} PR</span>':""}</div>
       <div class="rep-cardio-col"><strong>${formatActivityDuration(a.minutes)}</strong></div>
-      <div class="rep-cardio-col"><strong>${displayDist>0?`${displayDist} ${unit}`:"—"}</strong>${isDistPR?'<small class="rep-pr-trophy">🏆</small>':""}</div>
-      <div class="rep-cardio-col"><strong>${pace||"—"}</strong>${isPacePR?'<small class="rep-pr-trophy">🏆</small>':""}</div>
+      <div class="rep-cardio-col"><strong>${displayDist>0?`${displayDist} ${unit}`:"—"}</strong>${isDistPR?'<small class="rep-pr-trophy">${premiumUiIcon("trophy","pr-inline-icon")}</small>':""}</div>
+      <div class="rep-cardio-col"><strong>${pace||"—"}</strong>${isPacePR?'<small class="rep-pr-trophy">${premiumUiIcon("trophy","pr-inline-icon")}</small>':""}</div>
     </div>`;
   }).join("");
   return `<div class="rep-section reveal"><div class="rep-section-head"><div class="rep-section-bar"></div><h2>Cardio</h2></div><div class="rep-cardio-head"><span></span><span>Activity</span><span>Time</span><span>Dist</span><span>Pace (min/${unit})</span></div>${rows}</div>`;
@@ -3410,7 +3419,7 @@ $("dayReportDialog").addEventListener("close",()=>$("dayReportDialog").classList
   const card=document.getElementById("proteinTodayCard")||document.querySelector(".protein-today-card");
   if(card){
     [...card.querySelectorAll("*")].forEach(el=>{
-      if(el.children.length===0 && el.textContent.trim()==="🥚") el.remove();
+      
     });
   }
 })();
@@ -4181,7 +4190,7 @@ function addRoutineExerciseRow(data={name:"",sets:3,reps:10,weight:"",notes:"",i
         <strong class="exercise-row-title">${esc(data.name)||"New exercise"}</strong>
         <div class="exercise-row-summary">
           <span class="exercise-row-summary-text"></span>
-          <span class="notes-flag${data.notes?"":" hidden"}">📝</span>
+          <span class="notes-flag${data.notes?"":" hidden"}">${premiumUiIcon("note","note-inline-icon")}</span>
         </div>
       </div>
       <button type="button" class="exercise-row-expand" aria-label="Expand exercise">⌄</button>
@@ -4532,7 +4541,7 @@ function renderLiveExercises(){
       <div class="guided-set-list">${setMarkup}</div>
       <p class="enter-hint">${e.timed?"Tap Start for a 3–2–1 countdown. The stopwatch runs until you press Stop.":"Enter your reps, then press Enter / Done to tick off each set."}</p>
       <button id="completeCurrentExerciseBtn" class="complete-exercise-btn" ${allSetsComplete(e)?"":"disabled"}>Complete exercise</button>
-      <button type="button" id="editExerciseNoteBtn" class="exercise-note-btn">✎ ${e.notes?"Edit":"Add"} exercise note</button>
+      <button type="button" id="editExerciseNoteBtn" class="exercise-note-btn">${premiumUiIcon("note","note-inline-icon")} ${e.notes?"Edit":"Add"} exercise note</button>
     </div>`;
 
   $("editExerciseNoteBtn")?.addEventListener("click",promptExerciseNote);
@@ -4735,7 +4744,7 @@ function checkCardioPR(type,minutes,distanceKm){
 }
 function renderPrBadges(elId,badges){
   const el=$(elId);if(!el)return;
-  el.innerHTML=badges.length?badges.map(b=>`<div class="pr-badge">🏆 ${b}</div>`).join(""):"";
+  el.innerHTML=badges.length?badges.map(b=>`<div class="pr-badge">${premiumUiIcon("trophy","pr-inline-icon")} ${b}</div>`).join(""):"";
 }
 
 function exerciseVictoryMedallionSVG(){
@@ -5175,7 +5184,7 @@ const activityFeelWord={1:"rough",2:"a bit tough",3:"steady",4:"good",5:"great"}
 let lastActivityShareData=null;
 function showActivityCompleteCard(type,minutes,distanceKm,feel,prBadges=[]){
   lastActivityShareData={type,minutes,distanceKm,feel,prBadges};
-  const meta=CARDIO_TYPES[type]||{label:"Activity",verb:"trained",icon:"⚡"};
+  const meta=CARDIO_TYPES[type]||{label:"Activity",verb:"trained",icon:""};
   const unit=distanceUnit();
   const displayDistance=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
   const pace=formatPace(minutes,displayDistance);
@@ -5185,14 +5194,14 @@ function showActivityCompleteCard(type,minutes,distanceKm,feel,prBadges=[]){
   renderPrBadges("acmPrBadges",prBadges);
   const verb=meta.verb;
   $("acmMessage").innerHTML=displayDistance>0
-    ? `You ${verb} <strong>${displayDistance} ${unit}</strong> in <strong>${formatActivityDuration(minutes)}</strong>${pace?`, averaging a <strong>${pace}/${unit}</strong> pace`:""}. Feeling ${activityFeelWord[feel]||"steady"} ${feelEmoji(feel)}`
-    : `You ${verb} for <strong>${formatActivityDuration(minutes)}</strong> today. Nice work staying active. ${feelEmoji(feel)}`;
+    ? `You ${verb} <strong>${displayDistance} ${unit}</strong> in <strong>${formatActivityDuration(minutes)}</strong>${pace?`, averaging a <strong>${pace}/${unit}</strong> pace`:""}. Feeling ${activityFeelWord[feel]||"steady"}`
+    : `You ${verb} for <strong>${formatActivityDuration(minutes)}</strong> today. Nice work staying active.`;
   const stats=[`<div><span>DURATION</span><strong>${formatActivityDuration(minutes)}</strong></div>`];
   if(displayDistance>0){
     stats.push(`<div class="is-distance"><span>DISTANCE</span><strong>${displayDistance} ${unit}</strong></div>`);
     if(pace)stats.push(`<div><span>PACE</span><strong>${pace}</strong><small>min/${unit}</small></div>`);
   }else{
-    stats.push(`<div><span>FEELING</span><strong>${feelEmoji(feel)}</strong><small>${activityFeelWord[feel]||"steady"}</small></div>`);
+    stats.push(`<div><span>FEELING</span><strong>${timelineFeelingIndicator(feel)}</strong><small>${activityFeelWord[feel]||"steady"}</small></div>`);
   }
   $("acmStats").innerHTML=stats.join("");
   $("activityCompleteDialog").showModal();
@@ -5342,8 +5351,8 @@ $("checkoutBtn").addEventListener("click",()=>{
     noteEl.classList.toggle("reached",remaining<=0);
     const earnedClause=todayPoints>0?`<strong>+${fmtInt(todayPoints)} point${todayPoints===1?"":"s"}</strong> banked today`:"No points banked today";
     noteEl.innerHTML=remaining<=0
-      ?`🎉 <span>${earnedClause}, goal reached! <strong>${esc(goal.name)}</strong> is yours whenever you cash out.</span>`
-      :`${goal.icon} <span>${earnedClause}. ${fmtInt(remaining)} point${remaining===1?"":"s"} away from <strong>${esc(goal.name)}</strong>, keep going.</span>`;
+      ?`<span>${earnedClause}, goal reached! <strong>${esc(goal.name)}</strong> is yours whenever you cash out.</span>`
+      :`<span>${earnedClause}. ${fmtInt(remaining)} point${remaining===1?"":"s"} away from <strong>${esc(goal.name)}</strong>, keep going.</span>`;
   }else{
     noteEl.classList.add("hidden");
   }
@@ -5417,7 +5426,7 @@ function openRewardBankDialog(){
     $("rbGoalForm").classList.add("hidden");
     const pct=Math.min(100,Math.round(balance/goal.target*100));
     const remaining=Math.max(0,goal.target-balance);
-    $("rbGoalTitle").textContent=`${goal.icon} ${goal.name}`;
+    $("rbGoalTitle").textContent=goal.name;
     $("rbGoalFraction").textContent=`${fmtInt(Math.min(balance,goal.target))} / ${fmtInt(goal.target)}`;
     $("rbGoalBarFill").style.width=`${pct}%`;
     $("rbGoalNote").textContent=remaining>0?`${fmtInt(remaining)} point${remaining===1?"":"s"} to go, keep it up.`:"Goal reached! Cash out whenever you're ready.";
@@ -5812,7 +5821,7 @@ async function generatePhotoTemplateShareImageBlob(type,minutes,distanceKm,prBad
    on a first, fast share right after opening the app. */
 async function generateCanvasCardShareImageBlob(type,minutes,distanceKm,feel,prBadges){
   try{await document.fonts.ready;}catch(e){/* proceed with whatever's loaded */}
-  const meta=CARDIO_TYPES[type]||{label:"Activity",verb:"trained",icon:"⚡",color:"#1CCFA9"};
+  const meta=CARDIO_TYPES[type]||{label:"Activity",verb:"trained",icon:"",color:"#1CCFA9"};
   const name=state.profile?.name||"there";
   const unit=distanceUnit();
   const displayDistance=distanceKm>0?Number(kmToDisplay(distanceKm).toFixed(1)):0;
@@ -6337,3 +6346,8 @@ $("importBackupFile").addEventListener("change",e=>{
 });
 
 init();
+
+(function(){if(document.getElementById("cholscorePremiumFallback233"))return;const st=document.createElement("style");st.id="cholscorePremiumFallback233";st.textContent=`
+.food-thumb-fallback,.staple-thumb-fallback,.protein-thumb-fallback{display:grid!important;place-items:center!important;background:linear-gradient(145deg,rgba(24,43,58,.98),rgba(10,22,34,.98))!important;border:1px solid rgba(82,220,229,.28)!important;color:#59dce5!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 5px 18px rgba(0,0,0,.14)!important}
+.food-fallback-icon{width:55%!important;height:55%!important;display:block}.pr-inline-icon,.note-inline-icon{width:1em;height:1em;display:inline-block;vertical-align:-.14em;flex:0 0 auto}.rep-pr-chip,.pr-badge,.routine-card-edit-hint,.exercise-note-btn{gap:6px}.timeline-feeling{display:inline-grid;vertical-align:middle}
+`;document.head.appendChild(st)})();
