@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "224"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "225"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -365,6 +365,7 @@ function init(){
     $("onboarding").classList.add("hidden");$("mainApp").classList.remove("hidden");
     repairImpossibleLegacyFinalScores();
     setupPremiumFoodScreen();
+    startFoodQuickTips();
     ensureDay(); renderAll(); renderHeaderAvatar();
     if(state.activeWorkout) showActiveWorkoutBanner();
     syncLocalNotifications();
@@ -650,6 +651,45 @@ function renderStaples(){
 /* v1.57 Premium Food screen — visual hierarchy and feedback overhaul.
    This deliberately reuses the existing food controls and IDs, so barcode,
    manual add, staples, food detail and persistence behaviour remain intact. */
+
+const FOOD_QUICK_TIPS = Object.freeze(['Try to eat more oily fish, like mackerel and salmon', 'Try to eat more olive oil, rapeseed oil and spreads made from these oils', 'Try to eat more brown rice, wholegrain bread and wholewheat pasta', 'Try to eat more nuts and seeds', 'Try to eat more fruits and vegetables', 'Try to eat less meat pies, sausages and fatty meat', 'Try to eat less cream and cheese', 'Try to eat less cakes and biscuits', 'Try to eat less food that contains coconut oil or palm oil', 'Snack on plain, unsalted nuts and fresh fruit (ideally two servings of fruit every day)', 'Enjoy fish two to three times a week (150 grams fresh or 100g tinned).', 'Eating more soluble fibre is proven to have a positive impact on our cholesterol levels', 'Logging your meals or telling someone about each change you make can help you remain accountable.']);
+let foodQuickTipIndex = -1;
+let foodQuickTipTimer = null;
+
+function renderFoodQuickTip(animate=true){
+  const card=$("foodQuickTipCard"),copy=$("foodQuickTipCopy"),count=$("foodQuickTipCount"),bar=$("foodQuickTipProgress");
+  if(!card||!copy||!FOOD_QUICK_TIPS.length)return;
+  if(foodQuickTipIndex<0){
+    foodQuickTipIndex=Math.floor(Math.random()*FOOD_QUICK_TIPS.length);
+  } else {
+    foodQuickTipIndex=(foodQuickTipIndex+1)%FOOD_QUICK_TIPS.length;
+  }
+  const apply=()=>{
+    copy.textContent=FOOD_QUICK_TIPS[foodQuickTipIndex];
+    if(count)count.textContent=`${foodQuickTipIndex+1} of ${FOOD_QUICK_TIPS.length}`;
+    if(bar){
+      bar.style.transition="none";
+      bar.style.width="0%";
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        bar.style.transition="width 60s linear";
+        bar.style.width="100%";
+      }));
+    }
+  };
+  if(animate){
+    card.classList.add("tip-changing");
+    setTimeout(()=>{apply();card.classList.remove("tip-changing");},220);
+  } else apply();
+}
+
+function startFoodQuickTips(){
+  if(foodQuickTipTimer)clearInterval(foodQuickTipTimer);
+  renderFoodQuickTip(false);
+  foodQuickTipTimer=setInterval(()=>{
+    if(document.visibilityState==="visible")renderFoodQuickTip(true);
+  },60000);
+}
+
 function setupPremiumFoodScreen(){
   if(document.getElementById("foodPremiumV57"))return;
   const total=$("foodTotal"),target=$("foodTarget"),bar=$("foodBar"),list=$("foodList");
@@ -673,6 +713,19 @@ function setupPremiumFoodScreen(){
     .food-premium-progress #foodBar{height:100%!important;border-radius:inherit!important;background:linear-gradient(90deg,#31e6d0,#38cce8,#7b5cff)!important;box-shadow:0 0 18px rgba(49,230,208,.3)}
     .food-premium-foot{display:flex;justify-content:space-between;gap:16px;align-items:center;font-size:13px;color:#9ba6ba}
     .food-premium-remaining{font-size:17px;color:#48e4c2;font-weight:850}
+    .food-quick-tip{position:relative;overflow:hidden;margin:16px 0 14px;padding:17px 18px 15px;border-radius:21px;background:linear-gradient(145deg,rgba(19,31,49,.98),rgba(15,23,38,.98)) padding-box,linear-gradient(120deg,rgba(75,227,214,.34),rgba(111,87,255,.4),rgba(232,79,255,.28)) border-box;border:1px solid transparent;box-shadow:0 12px 28px rgba(0,0,0,.22);transition:opacity .22s ease,transform .22s ease}
+    .food-quick-tip:before{content:"";position:absolute;inset:-80% auto auto -10%;width:180px;height:180px;background:radial-gradient(circle,rgba(132,70,255,.16),transparent 67%);pointer-events:none}
+    .food-quick-tip:after{content:"";position:absolute;top:-70px;right:-35px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(49,226,208,.10),transparent 70%);pointer-events:none}
+    .food-quick-tip.tip-changing{opacity:.5;transform:translateY(3px)}
+    .food-tip-main{position:relative;z-index:1;display:grid;grid-template-columns:48px 1fr auto;gap:13px;align-items:center}
+    .food-tip-icon{width:48px;height:48px;border-radius:16px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(110,63,255,.28),rgba(209,64,255,.14));border:1px solid rgba(170,92,255,.42);box-shadow:inset 0 0 18px rgba(155,77,255,.10),0 0 22px rgba(119,64,255,.10)}
+    .food-tip-icon svg{width:27px;height:27px;filter:drop-shadow(0 0 7px rgba(197,91,255,.34))}
+    .food-tip-copy-wrap{min-width:0}
+    .food-tip-label{font-size:13px;font-weight:900;letter-spacing:.02em;background:linear-gradient(90deg,#b66cff,#ef74ff);-webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:3px}
+    .food-tip-copy{color:#d7deea;font-size:14px;line-height:1.42;font-weight:600;transition:opacity .2s ease}
+    .food-tip-count{align-self:start;color:#728097;font-size:10px;font-weight:800;white-space:nowrap;padding-top:2px}
+    .food-tip-progress-shell{position:relative;z-index:1;height:2px;margin-top:13px;border-radius:999px;background:rgba(121,136,161,.13);overflow:hidden}
+    .food-tip-progress{height:100%;width:0;background:linear-gradient(90deg,#42e2cd,#7367ff,#df63ff);border-radius:inherit;box-shadow:0 0 8px rgba(112,91,255,.25)}
     .food-premium-actions{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;margin:18px 0 28px}
     .food-premium-actions button{min-height:62px!important;border-radius:18px!important;font-weight:800!important;font-size:15px!important;margin:0!important;width:100%!important}
     .food-premium-actions #openFoodForm{background:linear-gradient(135deg,#53e6cf,#56b8ff)!important;color:#07151a!important;border:0!important;box-shadow:0 10px 24px rgba(48,212,206,.16)}
@@ -721,9 +774,23 @@ function setupPremiumFoodScreen(){
     if(!hero.querySelector("#foodPremiumFoot")) hero.insertAdjacentHTML("beforeend",`<div id="foodPremiumFoot" class="food-premium-foot"><span id="foodPremiumRemaining" class="food-premium-remaining"></span><span id="foodPremiumPercent"></span></div>`);
   }
 
+  if(hero&&!document.getElementById("foodQuickTipCard")){
+    hero.insertAdjacentHTML("afterend",`<div id="foodQuickTipCard" class="food-quick-tip" aria-live="polite">
+      <div class="food-tip-main">
+        <div class="food-tip-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none"><path d="M11.6 22.2h8.8M12.7 26h6.6M16 3.8a8.2 8.2 0 0 0-4.8 14.8c1 .8 1.5 1.6 1.6 2.4h6.4c.1-.8.6-1.6 1.6-2.4A8.2 8.2 0 0 0 16 3.8Z" stroke="#D96CFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 1v2M6.8 5.2l1.5 1.5M25.2 5.2l-1.5 1.5M3 14h2.2M26.8 14H29" stroke="#68E7D4" stroke-width="2" stroke-linecap="round"/></svg>
+        </div>
+        <div class="food-tip-copy-wrap"><div class="food-tip-label">Quick tip</div><div id="foodQuickTipCopy" class="food-tip-copy"></div></div>
+        <div id="foodQuickTipCount" class="food-tip-count"></div>
+      </div>
+      <div class="food-tip-progress-shell"><div id="foodQuickTipProgress" class="food-tip-progress"></div></div>
+    </div>`);
+  }
+
   if(add&&scan&&!document.querySelector(".food-premium-actions")){
     const actions=document.createElement("div");actions.className="food-premium-actions";
-    hero?.insertAdjacentElement("afterend",actions);
+    const tipCard=$("foodQuickTipCard");
+    (tipCard||hero)?.insertAdjacentElement("afterend",actions);
     actions.append(add,scan);
     add.textContent="+ Add food";scan.textContent="▥  Scan barcode";
   }
