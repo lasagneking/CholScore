@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "227"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "229"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -280,6 +280,30 @@ function timelineFeelingIndicator(feel){
     .timeline-feeling.feeling-5{color:#55e2b1;border-color:rgba(85,226,177,.22);background:rgba(85,226,177,.065)}
   `;
   document.head.appendChild(style);
+
+  const watermarkFix=document.createElement("style");
+  watermarkFix.id="exerciseLogoWatermarkV62";
+  watermarkFix.textContent=`
+    .exercise-premium-hero::after{
+      content:""!important;
+      position:absolute!important;
+      right:18px!important;
+      bottom:10px!important;
+      width:188px!important;
+      height:154px!important;
+      font-size:0!important;
+      line-height:0!important;
+      transform:none!important;
+      opacity:.13!important;
+      pointer-events:none!important;
+      background-color:transparent!important;
+      background-repeat:no-repeat!important;
+      background-position:center!important;
+      background-size:contain!important;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 190'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2327E8ED'/%3E%3Cstop offset='.55' stop-color='%236F65FF'/%3E%3Cstop offset='1' stop-color='%23FF6588'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M120 170C91 145 36 108 28 66C22 34 57 18 84 32C100 40 111 54 120 69C129 54 140 40 156 32C183 18 218 34 212 66C204 108 149 145 120 170Z' fill='none' stroke='url(%23g)' stroke-width='11' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M54 97H88L101 70L118 124L135 82L147 97H182' fill='none' stroke='url(%23g)' stroke-width='8.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M68 63C82 49 98 50 110 60C97 64 86 74 78 87C74 78 71 70 68 63Z' fill='url(%23g)' opacity='.82'/%3E%3C/svg%3E")!important;
+    }
+  `;
+  document.head.appendChild(watermarkFix);
 })();
 function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function greeting(){const h=new Date().getHours();return h<12?"Good morning":h<18?"Good afternoon":"Good evening";}
@@ -899,17 +923,19 @@ function bestEverScore(){
 /* v1.60 Premium Exercise home — hierarchy overhaul inspired by the approved
    concept, while preserving all existing routine/activity/workout behaviour. */
 function setupPremiumExerciseScreen(){
-  if(document.getElementById("exercisePremiumV60"))return;
+  const staleExerciseStyle=document.getElementById("exercisePremiumV60");
+  if(staleExerciseStyle)staleExerciseStyle.remove();
+  if(document.getElementById("exercisePremiumV62"))return;
   const mins=$("exerciseMinutes"),bar=$("exerciseBar"),routines=$("routineList"),
         list=$("exerciseList"),newRoutine=$("newRoutineBtn");
   if(!mins||!bar||!routines||!list)return;
 
   const style=document.createElement("style");
-  style.id="exercisePremiumV60";
+  style.id="exercisePremiumV62";
   style.textContent=`
     .exercise-premium-hero{position:relative;overflow:hidden;padding:22px!important;border-radius:24px!important;border:1.5px solid transparent!important;background:linear-gradient(145deg,#101a28,#121827) padding-box,linear-gradient(120deg,#29e3eb,#6170ff 55%,#f25b91) border-box!important;box-shadow:0 18px 38px rgba(0,0,0,.25);min-height:188px}
     .exercise-premium-hero:before{content:"";position:absolute;right:-30px;top:-48px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(63,100,255,.22),rgba(139,68,255,.08) 44%,transparent 70%);pointer-events:none}
-    .exercise-premium-hero:after{content:"↗";position:absolute;right:28px;bottom:18px;font-size:94px;line-height:1;font-weight:900;color:rgba(83,222,239,.055);transform:rotate(-8deg);pointer-events:none}
+    .exercise-premium-hero:after{content:"";position:absolute;right:25px;bottom:17px;width:178px;height:142px;opacity:.12;pointer-events:none;background-repeat:no-repeat;background-position:center;background-size:contain;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 220 180'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%2329e3eb'/%3E%3Cstop offset='.55' stop-color='%236170ff'/%3E%3Cstop offset='1' stop-color='%23f25b91'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M110 160C82 136 30 101 24 61C19 29 55 14 81 29C94 36 103 47 110 59C117 47 126 36 139 29C165 14 201 29 196 61C190 101 138 136 110 160Z' fill='none' stroke='url(%23g)' stroke-width='12' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M54 91H86L98 67L113 116L128 78L139 91H169' fill='none' stroke='url(%23g)' stroke-width='9' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M65 61C78 48 92 48 103 57C91 60 80 69 72 82C69 73 67 66 65 61Z' fill='url(%23g)' opacity='.85'/%3E%3C/svg%3E")}
     .exercise-hero-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;position:relative;z-index:1}
     .exercise-hero-kicker{font-size:14px;color:#9aa6b9;margin-bottom:5px}
     .exercise-hero-value{font-size:48px;font-weight:900;letter-spacing:-.045em;line-height:1}
