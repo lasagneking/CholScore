@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "239"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "240"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -317,13 +317,15 @@ function timelineFeelingIndicator(feel){
       width:188px!important;
       height:154px!important;
     }
-    /* v238: lift the Today's Progress info control clear of the intro copy */
-    #todayView .hero-card .info-btn,
-    #todayView .hero-card .score-info-btn,
-    #todayView .hero-card [data-score-info],
-    #todayView .hero-card [aria-label*="score" i][aria-label*="info" i]{
+    /* v240: exact Home score-info button positioning */
+    #todayView #scoreInfoBtn{
+      position:absolute!important;
       top:10px!important;
+      left:10px!important;
+      right:auto!important;
+      bottom:auto!important;
       transform:none!important;
+      z-index:4!important;
     }
     #todayView .hero-card > *, .food-premium-hero > *{position:relative;z-index:1}
     .exercise-premium-hero::after{
