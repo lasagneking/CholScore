@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "230"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "232"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -278,6 +278,8 @@ function timelineFeelingIndicator(feel){
     .timeline-feeling.feeling-3{color:#a5adbf}
     .timeline-feeling.feeling-4{color:#66d7cf;border-color:rgba(102,215,207,.20);background:rgba(102,215,207,.055)}
     .timeline-feeling.feeling-5{color:#55e2b1;border-color:rgba(85,226,177,.22);background:rgba(85,226,177,.065)}
+    .activity-delete-btn.modern-delete-btn{width:38px;height:38px;display:grid;place-items:center;padding:0!important;border-radius:12px!important;color:#d26b80!important;background:rgba(210,78,105,.075)!important;border:1px solid rgba(210,78,105,.28)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important}
+    .activity-delete-btn.modern-delete-btn svg{width:19px;height:19px;display:block}
   `;
   document.head.appendChild(style);
 
@@ -996,12 +998,19 @@ function setupPremiumExerciseScreen(){
   }
 
   // Turn the existing Quick activity controls into the approved horizontal Quick start rail.
+  const allQuickBtns=qsa(".quick-activity");
+  const obsoleteOneOff=allQuickBtns.find(btn=>{
+    const label=(btn.textContent||"").trim().toLowerCase();
+    const type=(btn.dataset.type||btn.dataset.activity||"").trim().toLowerCase();
+    return label.includes("one-off")||label.includes("one off")||type==="exercise"||type==="oneoff"||type==="one-off";
+  });
+  if(obsoleteOneOff)obsoleteOneOff.remove();
   const quickBtns=qsa(".quick-activity");
   if(quickBtns.length){
     const oldWrap=quickBtns[0].parentElement;
     if(oldWrap&&!oldWrap.closest(".exercise-section-premium")){
       const section=document.createElement("div");section.className="exercise-section-premium";
-      section.innerHTML=`<div class="exercise-section-head"><div><h3>Quick start</h3><p>Get moving with a quick activity</p></div><span class="exercise-section-link">6 activities</span></div><div class="exercise-quick-scroll"></div>`;
+      section.innerHTML=`<div class="exercise-section-head"><div><h3>Quick start</h3><p>Get moving with a quick activity</p></div><span class="exercise-section-link">${quickBtns.length} activities</span></div><div class="exercise-quick-scroll"></div>`;
       hero?.insertAdjacentElement("afterend",section);
       const rail=section.querySelector(".exercise-quick-scroll");
       quickBtns.forEach(btn=>rail.appendChild(btn));
@@ -1044,7 +1053,7 @@ function renderExercise(){
   renderProteinToday(day);
   renderRoutines();
   showActiveWorkoutBanner();
-  $("exerciseList").innerHTML=day.activities.length?day.activities.slice().reverse().map(x=>`<div class="log-item activity-log-item"><div><strong>${x.type==="workout"?"🏋️":cardioIcon(x.type)} ${esc(x.name)}</strong><small>${x.type==="workout"?`${x.exerciseCount||0} exercises · `:""}${x.minutes} min${x.distance?` · ${distanceText(x.distance)}`:""}</small></div><div class="activity-log-right"><div class="log-value">${feelEmoji(x.feel)}</div><button type="button" class="activity-delete-btn" data-activity-id="${esc(x.id||"")}" aria-label="Delete this activity">🗑</button></div></div>`).join(""):`<div class="empty-state">No completed activity today.</div>`;
+  $("exerciseList").innerHTML=day.activities.length?day.activities.slice().reverse().map(x=>`<div class="log-item activity-log-item"><div><strong class="timeline-activity-title">${timelineActivityGlyph(x.type)}<span>${esc(x.name)}</span></strong><small>${x.type==="workout"?`${x.exerciseCount||0} exercises · `:""}${x.minutes} min${x.distance?` · ${distanceText(x.distance)}`:""}</small></div><div class="activity-log-right"><div class="log-value">${timelineFeelingIndicator(x.feel)}</div><button type="button" class="activity-delete-btn modern-delete-btn" data-activity-id="${esc(x.id||"")}" aria-label="Delete this activity"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div></div>`).join(""):`<div class="empty-state">No completed activity today.</div>`;
   wireActivityCards();
   renderPersonalRecords();
 }
