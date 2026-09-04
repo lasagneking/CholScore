@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=234" />
+  <link rel="stylesheet" href="styles.css?v=235" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -672,7 +672,7 @@ body.rewards-active #rewardsView::before{
               <small id="proteinFoodCount">From 0 logged foods</small>
             </div>
             <div class="protein-card-actions">
-              <div class="protein-badge">🥚</div>
+              <div class="protein-badge" aria-hidden="true"><svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7.2"/><path d="M3.4 4.2v6.1M5.2 4.2v6.1M4.3 10.3V20M19.1 4.2c-2 1.2-2.5 3.8-1.2 5.7.5.7 1.1 1.1 1.8 1.3V20"/></svg></div>
               <button id="proteinToggle" class="collapse-toggle" type="button" aria-expanded="false" aria-controls="proteinBreakdown" aria-label="Expand protein entries">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
               </button>
@@ -1427,7 +1427,7 @@ body.rewards-active #rewardsView::before{
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=234"></script>
+  <script src="app.js?v=235"></script>
 
   <script>
     if ("serviceWorker" in navigator) {
