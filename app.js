@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "218"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "219"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -2183,27 +2183,29 @@ function buildExerciseSeries(){
 }
 function svgAreaChart(svgId,labelsId,data,dateKeys,opts){
   const svg=$(svgId);if(!svg)return;
-  const W=320,H=112,PADX=10,PADY=10,n=data.length;
+  const W=320,H=112,PADL=Number(opts.padLeft||10),PADR=Number(opts.padRight||10),PADY=10,n=data.length;
   const rawMax=Math.max(1,...data,opts.target||0);
   const max=opts.max!=null?opts.max:rawMax*1.12;
   const min=opts.min!=null?opts.min:0;
   const span=Math.max(.0001,max-min);
-  const stepX=n>1?(W-PADX*2)/(n-1):0;
+  const stepX=n>1?(W-PADL-PADR)/(n-1):0;
   const y=v=>H-PADY-((v-min)/span)*(H-PADY*2);
-  const pts=data.map((v,i)=>[PADX+i*stepX,y(v)]);
+  const pts=data.map((v,i)=>[PADL+i*stepX,y(v)]);
   const linePath=pts.map((p,i)=>(i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
   let html=`<defs><linearGradient id="grad-${svgId}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${opts.color}" stop-opacity="0.22"/><stop offset="100%" stop-color="${opts.color}" stop-opacity="0"/></linearGradient><filter id="glow-${svgId}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
   [0,.25,.5,.75,1].forEach((f,i)=>{
     const gy=(H-PADY)-f*(H-PADY*2);
-    html+=`<line class="trend-grid-line" x1="${PADX}" y1="${gy.toFixed(1)}" x2="${W-PADX}" y2="${gy.toFixed(1)}"/>`;
+    html+=`<line class="trend-grid-line" x1="${PADL}" y1="${gy.toFixed(1)}" x2="${W-PADR}" y2="${gy.toFixed(1)}"/>`;
     if(opts.showScale){
       const val=min+f*span;
-      html+=`<text class="trend-scale-label" x="${PADX}" y="${Math.max(8,gy-2).toFixed(1)}">${opts.scaleFormatter?opts.scaleFormatter(val):Math.round(val)}</text>`;
+      const sx=opts.scaleOutside?2:PADL;
+      const anchor=opts.scaleOutside?"start":"start";
+      html+=`<text class="trend-scale-label${opts.scaleOutside?" outside":""}" x="${sx}" y="${Math.max(8,gy+2).toFixed(1)}" text-anchor="${anchor}">${opts.scaleFormatter?opts.scaleFormatter(val):Math.round(val)}</text>`;
     }
   });
   const targetY=opts.target!=null?y(opts.target):null;
   if(opts.target!=null){
-    html+=`<line class="chart-target-line premium" x1="${PADX}" y1="${targetY}" x2="${W-PADX}" y2="${targetY}"/>`;
+    html+=`<line class="chart-target-line premium" x1="${PADL}" y1="${targetY}" x2="${W-PADR}" y2="${targetY}"/>`;
   }
   if(n>1){
     const areaPath=linePath+` L${pts[n-1][0].toFixed(1)},${H-PADY} L${pts[0][0].toFixed(1)},${H-PADY} Z`;
@@ -2228,7 +2230,13 @@ function svgAreaChart(svgId,labelsId,data,dateKeys,opts){
   const labelsEl=$(labelsId);
   if(labelsEl){
     const indexes=n<=8?dateKeys.map((_,i)=>i):[0,Math.floor((n-1)*.25),Math.floor((n-1)*.5),Math.floor((n-1)*.75),n-1];
-    labelsEl.innerHTML=[...new Set(indexes)].map(i=>`<span${i===n-1?' class="latest"':""}>${new Date(dateKeys[i]+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"})}</span>`).join("");
+    const seen=new Set(),items=[];
+    [...new Set(indexes)].forEach(i=>{
+      const label=new Date(dateKeys[i]+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"});
+      if(seen.has(label))return;
+      seen.add(label);items.push({i,label});
+    });
+    labelsEl.innerHTML=items.map(({i,label})=>`<span${i===n-1?' class="latest"':""}>${label}</span>`).join("");
   }
 }
 function ensureTrendInsight(cardSvgId,id,html,kind=""){
@@ -2327,14 +2335,32 @@ function renderCardioTrend(){
   qsa(".exercise-chip",$("cardioPicker")).forEach(chip=>chip.addEventListener("click",()=>{trendsCardioType=chip.dataset.type;renderCardioTrend();}));
 
   const pts=series[trendsCardioType].points,unit=distanceUnit(),dateKeys=pts.map(p=>p.date);
-  // Chart shows speed (units/hour), not raw pace — a rising line reads as
-  // "getting faster", same up-is-better visual language as Strength
-  // progress. The callout still talks in ordinary pace (min:sec/unit)
-  // since that's the familiar way to describe running/walking pace.
-  const speeds=pts.map(p=>p.paceDisplay>0?60/p.paceDisplay:0);
-  svgAreaChart("cardioChart","cardioChartLabels",speeds,dateKeys,{color:"#ffd166"});
-
-  const fmtPace=v=>{const m=Math.floor(v),s=Math.round((v-m)*60);return `${m}:${String(s).padStart(2,"0")}`;};
+  // Plot speed so rising still means improving, but label the Y axis in the
+  // user's familiar pace unit (min/mi or min/km).
+  const fmtPace=v=>{
+    if(!Number.isFinite(v)||v<=0)return "—";
+    let m=Math.floor(v),s=Math.round((v-m)*60);
+    if(s===60){m++;s=0;}
+    return `${m}:${String(s).padStart(2,"0")}`;
+  };
+  const speeds=pts.map(p=>p.paceDisplay>0?60/p.paceDisplay:0).filter(v=>v>0);
+  const minSpeed=Math.max(.1,Math.min(...speeds)*.84);
+  const maxSpeed=Math.max(minSpeed+.1,Math.max(...speeds)*1.10);
+  svgAreaChart("cardioChart","cardioChartLabels",speeds,dateKeys,{
+    color:"#ffd166",
+    min:minSpeed,
+    max:maxSpeed,
+    padLeft:42,
+    padRight:10,
+    showScale:true,
+    scaleOutside:true,
+    scaleFormatter:speed=>`${fmtPace(60/speed)}`,
+    showValues:trendsRange===7,
+    valueFormatter:speed=>fmtPace(60/speed)
+  });
+  const cardioCard=$("cardioTrendBody")?.closest(".trend-card");
+  const cardioSub=cardioCard?.querySelector("p");
+  if(cardioSub)cardioSub.textContent=`Pace per session · min/${unit}`;
   const firstPace=pts[0].paceDisplay,lastPace=pts[pts.length-1].paceDisplay,paceDiff=firstPace-lastPace;
   const firstDateNice=new Date(dateKeys[0]+"T12:00:00").toLocaleDateString(undefined,{day:"numeric",month:"short"});
   $("cardioCalloutText").innerHTML=paceDiff>0.01
@@ -3155,6 +3181,40 @@ $("dayReportDialog").addEventListener("close",()=>$("dayReportDialog").classList
       #historyCalendarView .history-date-hint{
         text-align:left;
       }
+    }
+  `;
+  document.head.appendChild(s);
+})();
+
+(function(){
+  if(document.getElementById("cholscoreCardioAxisV52"))return;
+  const s=document.createElement("style");
+  s.id="cholscoreCardioAxisV52";
+  s.textContent=`
+    #cardioTrendBody .trend-scale-label.outside{
+      fill:#8e98ab!important;
+      font-size:6.8px!important;
+      font-weight:700!important;
+    }
+    #cardioTrendBody .trend-point-label{
+      fill:#fff4cf!important;
+      stroke:#111521!important;
+      stroke-width:2.6px!important;
+    }
+    #cardioTrendBody .chart-wrap{
+      position:relative;
+    }
+    #cardioTrendBody .chart-wrap:before{
+      content:"PACE";
+      position:absolute;
+      left:2px;
+      top:0;
+      z-index:2;
+      color:#768196;
+      font-size:7px;
+      font-weight:900;
+      letter-spacing:.12em;
+      pointer-events:none;
     }
   `;
   document.head.appendChild(s);
