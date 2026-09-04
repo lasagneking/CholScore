@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "226"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "227"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -366,6 +366,7 @@ function init(){
     repairImpossibleLegacyFinalScores();
     setupPremiumFoodScreen();
     startFoodQuickTips();
+    setupPremiumExerciseScreen();
     ensureDay(); renderAll(); renderHeaderAvatar();
     if(state.activeWorkout) showActiveWorkoutBanner();
     syncLocalNotifications();
@@ -894,9 +895,125 @@ function bestEverScore(){
   const days=Object.entries(state.days).filter(([_,d])=>d.checkedOut);
   return days.length?Math.max(...days.map(([_,d])=>Number(d.finalScore??scoreDay(d)))):scoreDay();
 }
+
+/* v1.60 Premium Exercise home — hierarchy overhaul inspired by the approved
+   concept, while preserving all existing routine/activity/workout behaviour. */
+function setupPremiumExerciseScreen(){
+  if(document.getElementById("exercisePremiumV60"))return;
+  const mins=$("exerciseMinutes"),bar=$("exerciseBar"),routines=$("routineList"),
+        list=$("exerciseList"),newRoutine=$("newRoutineBtn");
+  if(!mins||!bar||!routines||!list)return;
+
+  const style=document.createElement("style");
+  style.id="exercisePremiumV60";
+  style.textContent=`
+    .exercise-premium-hero{position:relative;overflow:hidden;padding:22px!important;border-radius:24px!important;border:1.5px solid transparent!important;background:linear-gradient(145deg,#101a28,#121827) padding-box,linear-gradient(120deg,#29e3eb,#6170ff 55%,#f25b91) border-box!important;box-shadow:0 18px 38px rgba(0,0,0,.25);min-height:188px}
+    .exercise-premium-hero:before{content:"";position:absolute;right:-30px;top:-48px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(63,100,255,.22),rgba(139,68,255,.08) 44%,transparent 70%);pointer-events:none}
+    .exercise-premium-hero:after{content:"↗";position:absolute;right:28px;bottom:18px;font-size:94px;line-height:1;font-weight:900;color:rgba(83,222,239,.055);transform:rotate(-8deg);pointer-events:none}
+    .exercise-hero-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;position:relative;z-index:1}
+    .exercise-hero-kicker{font-size:14px;color:#9aa6b9;margin-bottom:5px}
+    .exercise-hero-value{font-size:48px;font-weight:900;letter-spacing:-.045em;line-height:1}
+    .exercise-hero-value span{font-size:24px;letter-spacing:-.02em}
+    .exercise-hero-status{margin-top:9px;color:#55e4d2;font-weight:800;font-size:15px}
+    .exercise-goal-orb{display:grid;grid-template-columns:34px auto;gap:9px;align-items:center;padding:9px 11px;border-radius:16px;background:rgba(14,25,41,.72);border:1px solid rgba(80,129,190,.32)}
+    .exercise-goal-icon{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:2px solid #f5b84d;color:#ffc55d;font-size:18px;box-shadow:0 0 16px rgba(255,184,73,.15)}
+    .exercise-goal-orb b{display:block;font-size:14px}.exercise-goal-orb small{color:#929eb2;font-size:10px}
+    .exercise-premium-progress{height:10px!important;margin:20px 0 13px!important;background:#243044!important;border-radius:999px!important;overflow:hidden}
+    .exercise-premium-progress #exerciseBar{height:100%!important;border-radius:inherit!important;background:linear-gradient(90deg,#31e4d1,#4ebff3,#7b62ff)!important;box-shadow:0 0 18px rgba(57,218,225,.25)}
+    .exercise-hero-stats{display:flex;gap:22px;position:relative;z-index:1}
+    .exercise-hero-stat{padding-right:22px;border-right:1px solid rgba(144,158,181,.2)}
+    .exercise-hero-stat:last-child{border-right:0}.exercise-hero-stat b{display:block;font-size:16px}.exercise-hero-stat small{color:#8f9aae;font-size:11px}
+    .exercise-section-premium{margin:27px 0 0}
+    .exercise-section-head{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:12px}
+    .exercise-section-head h3{font-size:22px!important;margin:0!important}.exercise-section-head p{font-size:13px;color:#8e9aaf;margin:3px 0 0}
+    .exercise-section-link{padding:9px 13px;border-radius:999px;background:#16243a;border:1px solid #2b4568;color:#e9eff9;font-weight:800;font-size:12px;white-space:nowrap}
+    .exercise-quick-scroll{display:flex!important;gap:10px!important;overflow-x:auto!important;padding:2px 1px 9px!important;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+    .exercise-quick-scroll::-webkit-scrollbar{display:none}
+    .exercise-quick-scroll .quick-activity{flex:0 0 104px!important;width:104px!important;min-height:132px!important;border-radius:19px!important;scroll-snap-align:start;background:linear-gradient(155deg,#142238,#0f1725)!important;border:1px solid #2d4565!important;box-shadow:0 9px 20px rgba(0,0,0,.17);padding:10px!important}
+    .exercise-quick-scroll .quick-activity img{width:76px!important;height:68px!important;object-fit:contain!important;margin:auto!important;display:block!important;filter:drop-shadow(0 8px 12px rgba(0,0,0,.28))}
+    .exercise-quick-scroll .quick-activity strong,.exercise-quick-scroll .quick-activity b{display:block!important;font-size:14px!important;margin-top:4px}
+    .exercise-quick-scroll .quick-activity small{font-size:10px!important;color:#93a0b5!important}
+    .exercise-routines-premium .routine-card{position:relative;border-radius:22px!important;padding:17px!important;background:linear-gradient(145deg,#121d2c,#101722)!important;border:1px solid #304158!important;box-shadow:0 13px 28px rgba(0,0,0,.2)}
+    .exercise-routines-premium .routine-card h4{font-size:20px!important;margin:0 0 3px!important}
+    .exercise-routines-premium .routine-card-top p{color:#929eb2!important}
+    .exercise-routines-premium .routine-preview{display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important;margin:14px 0!important}
+    .exercise-routines-premium .routine-chip{border-radius:12px!important;background:#182436!important;border:1px solid #2b3b52!important;padding:9px 10px!important;font-size:11px!important;white-space:normal!important}
+    .exercise-routines-premium .start-routine-btn{min-height:52px!important;border-radius:16px!important;background:linear-gradient(100deg,#2ce4cc,#53c4ee 52%,#bd55f4)!important;color:#07131a!important;font-size:16px!important;font-weight:900!important}
+    .exercise-routines-premium .delete-routine-btn{min-height:52px!important;border-radius:16px!important;background:#17202e!important;border:1px solid #344157!important}
+    .exercise-routines-premium .routine-card-edit-hint{color:#77849a!important;font-size:10px!important}
+    .exercise-training-shell{margin-top:28px}
+    .exercise-training-shell #exerciseList .empty-state{border:1px dashed #2b405c!important;border-radius:20px!important;background:rgba(13,23,36,.65)!important;padding:22px 16px!important;color:#8f9caf!important}
+    .exercise-training-shell #exerciseList .empty-state:before{content:"🏆";display:block;font-size:28px;filter:grayscale(1);opacity:.55;margin-bottom:8px}
+    .exercise-training-shell .activity-log-item{border-radius:17px!important;background:#121d2b!important;border:1px solid #293a51!important}
+    #proteinTodayCard.exercise-protein-secondary{margin-top:26px!important;border-radius:20px!important;background:#111a27!important;border:1px solid #29374d!important}
+    @media(max-width:390px){.exercise-hero-value{font-size:42px}.exercise-goal-orb{grid-template-columns:28px auto}.exercise-goal-icon{width:28px;height:28px}.exercise-routines-premium .routine-preview{grid-template-columns:1fr!important}}
+  `;
+  document.head.appendChild(style);
+
+  const hero=mins.closest(".card")||mins.parentElement?.parentElement;
+  if(hero){
+    hero.classList.add("exercise-premium-hero");
+    const existingLabel=[...hero.querySelectorAll("*")].find(el=>el.children.length===0&&/movement today/i.test(el.textContent||""));
+    if(existingLabel)existingLabel.style.display="none";
+    const existingValue=mins.parentElement;
+    if(existingValue)existingValue.style.display="none";
+    const progress=bar.parentElement;if(progress)progress.classList.add("exercise-premium-progress");
+    if(!hero.querySelector(".exercise-hero-top")){
+      hero.insertAdjacentHTML("afterbegin",`<div class="exercise-hero-top">
+        <div><div class="exercise-hero-kicker">Movement today</div><div class="exercise-hero-value"><span id="exercisePremiumMinutes">0</span> <span>min</span></div><div id="exercisePremiumStatus" class="exercise-hero-status">Ready when you are</div></div>
+        <div class="exercise-goal-orb"><div class="exercise-goal-icon">◎</div><div><b>45 min</b><small>daily goal</small></div></div>
+      </div>`);
+    }
+    if(!hero.querySelector(".exercise-hero-stats")){
+      hero.insertAdjacentHTML("beforeend",`<div class="exercise-hero-stats"><div class="exercise-hero-stat"><b id="exercisePremiumGoal">0 / 45 min</b><small>Daily goal</small></div><div class="exercise-hero-stat"><b id="exercisePremiumActivities">0</b><small>Activities today</small></div></div>`);
+    }
+  }
+
+  // Turn the existing Quick activity controls into the approved horizontal Quick start rail.
+  const quickBtns=qsa(".quick-activity");
+  if(quickBtns.length){
+    const oldWrap=quickBtns[0].parentElement;
+    if(oldWrap&&!oldWrap.closest(".exercise-section-premium")){
+      const section=document.createElement("div");section.className="exercise-section-premium";
+      section.innerHTML=`<div class="exercise-section-head"><div><h3>Quick start</h3><p>Get moving with a quick activity</p></div><span class="exercise-section-link">6 activities</span></div><div class="exercise-quick-scroll"></div>`;
+      hero?.insertAdjacentElement("afterend",section);
+      const rail=section.querySelector(".exercise-quick-scroll");
+      quickBtns.forEach(btn=>rail.appendChild(btn));
+      // Hide the now-empty old Quick activity heading/container where safe.
+      if(oldWrap&&!oldWrap.children.length)oldWrap.style.display="none";
+    }
+  }
+
+  // Give routines their own premium section header without changing routine controls.
+  const routineParent=routines.parentElement;
+  if(routineParent&&!routineParent.classList.contains("exercise-routines-premium")){
+    routineParent.classList.add("exercise-routines-premium","exercise-section-premium");
+    const existingHeading=[...routineParent.children].find(el=>/my routines/i.test(el.textContent||""));
+    if(existingHeading)existingHeading.style.display="none";
+    routineParent.insertAdjacentHTML("afterbegin",`<div class="exercise-section-head"><div><h3>Your routines</h3><p>Structured workouts for real progress</p></div><span class="exercise-section-link">Manage</span></div>`);
+  }
+
+  // Today's training is a clearer destination for completed activity.
+  const listParent=list.parentElement;
+  if(listParent&&!listParent.classList.contains("exercise-training-shell")){
+    listParent.classList.add("exercise-training-shell");
+    const existingHeading=[...listParent.children].find(el=>/today|completed activity/i.test(el.textContent||""));
+    if(existingHeading&&existingHeading!==list)existingHeading.style.display="none";
+    listParent.insertAdjacentHTML("afterbegin",`<div class="exercise-section-head"><div><h3>Today's training</h3><p>Your activity will appear here</p></div><span class="exercise-section-link">Today</span></div>`);
+  }
+
+  const protein=$("proteinTodayCard");
+  if(protein)protein.classList.add("exercise-protein-secondary");
+}
+
 function renderExercise(){
+  setupPremiumExerciseScreen();
   const day=getDay(),t=totals(day);
   $("exerciseMinutes").textContent=fmtInt(t.mins);$("exerciseBar").style.width=`${Math.min(100,t.mins/45*100)}%`;
+  if($("exercisePremiumMinutes"))$("exercisePremiumMinutes").textContent=fmtInt(t.mins);
+  if($("exercisePremiumGoal"))$("exercisePremiumGoal").textContent=`${fmtInt(t.mins)} / 45 min`;
+  if($("exercisePremiumActivities"))$("exercisePremiumActivities").textContent=day.activities.length;
+  if($("exercisePremiumStatus"))$("exercisePremiumStatus").textContent=t.mins>=45?"Daily movement goal complete ✓":t.mins>0?"Great start. Keep moving":"Ready when you are";
   if($("distanceUnitLabel")) $("distanceUnitLabel").textContent=distanceUnit();
   renderProteinToday(day);
   renderRoutines();
