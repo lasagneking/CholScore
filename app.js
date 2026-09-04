@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "219"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "220"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -1275,6 +1275,23 @@ function renderCyclingBadge(def){
   return `<img class="premium-ach-img cycling-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
 }
 
+const HIKING_ACHIEVEMENT_ASSETS = Object.freeze({
+  hike_1mi:"assets/achievements/hiking/hike_1mi.webp",
+  hike_5mi:"assets/achievements/hiking/hike_5mi.webp",
+  hike_20mi:"assets/achievements/hiking/hike_20mi.webp",
+  hike_50mi:"assets/achievements/hiking/hike_50mi.webp",
+  hike_100mi:"assets/achievements/hiking/hike_100mi.webp",
+  hike_200mi:"assets/achievements/hiking/hike_200mi.webp",
+  hike_400mi:"assets/achievements/hiking/hike_400mi.webp",
+  hike_750mi:"assets/achievements/hiking/hike_750mi.webp"
+});
+function renderHikingBadge(def){
+  const src=HIKING_ACHIEVEMENT_ASSETS[def.id];
+  if(!src) return null;
+  const alt=String(def.title||"Hiking achievement").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return `<img class="premium-ach-img hiking-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
+}
+
 const SWIMMING_ACHIEVEMENT_ASSETS = Object.freeze({
   swim_half:"assets/achievements/swimming/swim_half.webp",
   swim_1mi:"assets/achievements/swimming/swim_1mi.webp",
@@ -1390,6 +1407,7 @@ function renderAchBadge(def){
   if(def.cat==="running" && RUNNING_ACHIEVEMENT_ASSETS[def.id]) return renderRunningBadge(def);
   if(def.cat==="walking" && WALKING_ACHIEVEMENT_ASSETS[def.id]) return renderWalkingAssetBadge(def);
   if(def.cat==="cycling" && CYCLING_ACHIEVEMENT_ASSETS[def.id]) return renderCyclingBadge(def);
+  if(def.cat==="hiking" && HIKING_ACHIEVEMENT_ASSETS[def.id]) return renderHikingBadge(def);
   if(def.cat==="swimming" || def.metric==="weekSwimMiles") return renderSwimmingBadge(def);
   const rarity=def.rarity||"COMMON";
   const rs=RARITY_BADGE[rarity]||RARITY_BADGE.COMMON;
@@ -1430,6 +1448,7 @@ function achievementAssetSrc(def){
   if(def.cat==="running")return RUNNING_ACHIEVEMENT_ASSETS[def.id]||null;
   if(def.cat==="walking")return WALKING_ACHIEVEMENT_ASSETS[def.id]||null;
   if(def.cat==="cycling")return CYCLING_ACHIEVEMENT_ASSETS[def.id]||null;
+  if(def.cat==="hiking")return HIKING_ACHIEVEMENT_ASSETS[def.id]||null;
   if(def.cat==="swimming"||def.metric==="weekSwimMiles")return SWIMMING_ACHIEVEMENT_ASSETS[def.id]||null;
   return null;
 }
