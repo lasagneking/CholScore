@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "217"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "218"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -328,6 +328,26 @@ function scoreDay(day=getDay()){
   const longSessionBonus=day.activities.some(a=>Number(a.minutes||0)>60)?5:0;
   return Math.max(0,Math.min(100,Math.round(foodScore+moveBase+participation+consistency+longSessionBonus)));
 }
+
+/* v1.50.1 Legacy final-score sanity migration.
+   Some older/restored test data can contain checked-out days whose persisted
+   finalScore is exactly 0 even though the day's current logged data produces
+   a positive CholScore. A genuine zero remains valid when scoreDay(day) is
+   also zero; only impossible stale-zero snapshots are repaired. */
+function repairImpossibleLegacyFinalScores(){
+  if(!state?.profile||!state?.days)return 0;
+  let repaired=0;
+  for(const [key,day] of Object.entries(state.days)){
+    if(!day||!day.checkedOut||Number(day.finalScore)!==0)continue;
+    const recalculated=scoreDay(day);
+    if(recalculated<=0)continue;
+    day.finalScore=recalculated;
+    repaired++;
+    console.info(`Repaired legacy CholScore for ${key}: 0 -> ${recalculated}`);
+  }
+  if(repaired>0)saveState();
+  return repaired;
+}
 const SCORE_BANDS=[
   {min:90,label:"Outstanding"},
   {min:80,label:"Flying"},
@@ -343,6 +363,7 @@ function init(){
     $("onboarding").classList.remove("hidden");$("mainApp").classList.add("hidden");
   }else{
     $("onboarding").classList.add("hidden");$("mainApp").classList.remove("hidden");
+    repairImpossibleLegacyFinalScores();
     ensureDay(); renderAll(); renderHeaderAvatar();
     if(state.activeWorkout) showActiveWorkoutBanner();
     syncLocalNotifications();
