@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "223"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "224"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -364,6 +364,7 @@ function init(){
   }else{
     $("onboarding").classList.add("hidden");$("mainApp").classList.remove("hidden");
     repairImpossibleLegacyFinalScores();
+    setupPremiumFoodScreen();
     ensureDay(); renderAll(); renderHeaderAvatar();
     if(state.activeWorkout) showActiveWorkoutBanner();
     syncLocalNotifications();
@@ -645,10 +646,118 @@ function renderStaples(){
   qsa(".staple-card",$("staplesRow")).forEach(btn=>btn.addEventListener("click",()=>quickAddStaple(staples[Number(btn.dataset.idx)])));
 }
 
+
+/* v1.57 Premium Food screen — visual hierarchy and feedback overhaul.
+   This deliberately reuses the existing food controls and IDs, so barcode,
+   manual add, staples, food detail and persistence behaviour remain intact. */
+function setupPremiumFoodScreen(){
+  if(document.getElementById("foodPremiumV57"))return;
+  const total=$("foodTotal"),target=$("foodTarget"),bar=$("foodBar"),list=$("foodList");
+  const staples=$("staplesSection"),add=$("openFoodForm"),scan=$("scanBtn");
+  if(!total||!target||!bar||!list)return;
+  const view=total.closest("section")||total.closest(".view")||total.parentElement?.parentElement;
+  if(!view)return;
+
+  const style=document.createElement("style");
+  style.id="foodPremiumV57";
+  style.textContent=`
+    .food-premium-hero{position:relative;overflow:hidden;padding:24px 22px!important;border:1.5px solid transparent!important;background:linear-gradient(#111722,#111722) padding-box,linear-gradient(120deg,#27e8ed,#6f65ff 55%,#ff6588) border-box!important;border-radius:24px!important;box-shadow:0 18px 38px rgba(0,0,0,.24)}
+    .food-premium-hero:after{content:"";position:absolute;width:180px;height:180px;right:-54px;top:-52px;border-radius:50%;background:radial-gradient(circle,rgba(103,79,255,.16),transparent 68%);pointer-events:none}
+    .food-premium-kicker{font-size:14px;color:#9aa5b8;margin-bottom:7px}
+    .food-premium-value{display:flex;align-items:baseline;gap:8px;position:relative;z-index:1}
+    .food-premium-value #foodTotal{font-size:46px!important;line-height:1;font-weight:850!important;letter-spacing:-.04em}
+    .food-premium-value .food-unit{font-size:26px;font-weight:800}
+    .food-premium-value .food-of{font-size:26px;color:#aeb7c9;font-weight:700}
+    .food-premium-status{position:absolute;right:20px;top:20px;padding:8px 11px;border:1px solid rgba(75,232,195,.25);border-radius:999px;background:rgba(33,103,96,.22);color:#55e8c4;font-size:12px;font-weight:800;z-index:2}
+    .food-premium-progress{height:11px!important;margin:20px 0 10px!important;border-radius:999px!important;background:#222b3a!important;overflow:hidden}
+    .food-premium-progress #foodBar{height:100%!important;border-radius:inherit!important;background:linear-gradient(90deg,#31e6d0,#38cce8,#7b5cff)!important;box-shadow:0 0 18px rgba(49,230,208,.3)}
+    .food-premium-foot{display:flex;justify-content:space-between;gap:16px;align-items:center;font-size:13px;color:#9ba6ba}
+    .food-premium-remaining{font-size:17px;color:#48e4c2;font-weight:850}
+    .food-premium-actions{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;margin:18px 0 28px}
+    .food-premium-actions button{min-height:62px!important;border-radius:18px!important;font-weight:800!important;font-size:15px!important;margin:0!important;width:100%!important}
+    .food-premium-actions #openFoodForm{background:linear-gradient(135deg,#53e6cf,#56b8ff)!important;color:#07151a!important;border:0!important;box-shadow:0 10px 24px rgba(48,212,206,.16)}
+    .food-premium-actions #scanBtn{background:#172132!important;border:1px solid #31425d!important;color:#f3f6fb!important}
+    .food-premium-section-head{display:flex;align-items:end;justify-content:space-between;margin:5px 0 12px}
+    .food-premium-eyebrow{font-size:12px;letter-spacing:.18em;font-weight:850;color:#8995aa;text-transform:uppercase}
+    .food-premium-title{font-size:21px;font-weight:850;margin-top:4px}
+    #staplesSection{margin:0 0 30px!important}
+    #staplesRow{display:flex!important;gap:12px!important;overflow-x:auto!important;padding:2px 2px 8px!important;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+    #staplesRow::-webkit-scrollbar{display:none}
+    #staplesRow .staple-card{position:relative;flex:0 0 142px!important;width:142px!important;min-height:190px!important;padding:10px!important;border-radius:19px!important;background:linear-gradient(160deg,#172131,#101722)!important;border:1px solid #334057!important;text-align:left!important;scroll-snap-align:start}
+    #staplesRow .staple-thumb{width:100%!important;height:96px!important;border-radius:14px!important;object-fit:cover!important;margin:0 0 10px!important}
+    #staplesRow .staple-card strong{display:block;font-size:14px!important;line-height:1.15;min-height:32px}
+    #staplesRow .staple-card small{display:block;margin-top:7px;color:#99a5b9!important}
+    #staplesRow .staple-card:after{content:"+";position:absolute;right:9px;bottom:9px;width:27px;height:27px;display:grid;place-items:center;border-radius:50%;background:#29466e;color:white;font-size:20px;font-weight:700}
+    .food-meals-shell{margin-top:4px}
+    .food-meals-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:12px}
+    .food-meals-count{font-size:13px;color:#8995aa}
+    .food-empty-premium{border:1px solid #26344a;border-radius:23px;background:linear-gradient(145deg,#111b2a,#0d1420);padding:22px 18px;text-align:center}
+    .food-empty-art{width:68px;height:68px;margin:0 auto 12px;display:grid;place-items:center;border-radius:22px;background:radial-gradient(circle at 30% 30%,rgba(55,232,211,.18),rgba(105,77,255,.12));font-size:32px}
+    .food-empty-premium strong{display:block;font-size:21px;margin-bottom:7px}
+    .food-empty-premium p{margin:0 auto;color:#9ba6ba;max-width:330px;line-height:1.45;font-size:14px}
+    .food-meal-chips{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:16px}
+    .food-meal-chip{padding:10px 3px;border-radius:13px;background:#162237;border:1px solid #2c405f;color:#cbd4e4;font-size:11px;font-weight:750}
+    .food-log-item{border-radius:18px!important;background:#121b29!important;border:1px solid #29384e!important;margin-bottom:9px!important}
+    @media(max-width:380px){.food-premium-actions{grid-template-columns:1fr}.food-premium-status{position:static;display:inline-block;margin-bottom:12px}.food-premium-value #foodTotal{font-size:40px!important}}
+  `;
+  document.head.appendChild(style);
+
+  const hero=total.closest(".card")||total.parentElement?.parentElement;
+  if(hero){
+    hero.classList.add("food-premium-hero");
+    const oldLabel=hero.querySelector("small,.muted,.label");
+    if(oldLabel)oldLabel.classList.add("food-premium-kicker");
+    const valueWrap=total.parentElement;
+    if(valueWrap){
+      valueWrap.classList.add("food-premium-value");
+      // Preserve existing target element and only enhance surrounding copy.
+      if(!valueWrap.querySelector(".food-unit")) total.insertAdjacentHTML("afterend",`<span class="food-unit">g</span>`);
+      if(!valueWrap.querySelector(".food-of")) target.insertAdjacentHTML("beforebegin",`<span class="food-of">/ </span>`);
+      if(!target.nextElementSibling?.classList?.contains("food-unit")) target.insertAdjacentHTML("afterend",`<span class="food-unit">g</span>`);
+    }
+    const barShell=bar.parentElement;
+    if(barShell)barShell.classList.add("food-premium-progress");
+    if(!hero.querySelector("#foodPremiumStatus")) hero.insertAdjacentHTML("afterbegin",`<div id="foodPremiumStatus" class="food-premium-status">✓ Looking good</div>`);
+    if(!hero.querySelector("#foodPremiumFoot")) hero.insertAdjacentHTML("beforeend",`<div id="foodPremiumFoot" class="food-premium-foot"><span id="foodPremiumRemaining" class="food-premium-remaining"></span><span id="foodPremiumPercent"></span></div>`);
+  }
+
+  if(add&&scan&&!document.querySelector(".food-premium-actions")){
+    const actions=document.createElement("div");actions.className="food-premium-actions";
+    hero?.insertAdjacentElement("afterend",actions);
+    actions.append(add,scan);
+    add.textContent="+ Add food";scan.textContent="▥  Scan barcode";
+  }
+
+  if(staples&&!staples.querySelector(".food-premium-section-head")){
+    staples.insertAdjacentHTML("afterbegin",`<div class="food-premium-section-head"><div><div class="food-premium-eyebrow">Quick add</div><div class="food-premium-title">Your staples</div></div></div>`);
+    // Hide the old duplicate Staples/Quick add heading if it is a direct child.
+    [...staples.children].forEach(el=>{
+      if(el.classList.contains("food-premium-section-head")||el.id==="staplesRow")return;
+      if(/staples|quick add/i.test(el.textContent||""))el.style.display="none";
+    });
+  }
+
+  if(!document.querySelector(".food-meals-shell")){
+    const shell=document.createElement("div");shell.className="food-meals-shell";
+    shell.innerHTML=`<div class="food-meals-head"><div><div class="food-premium-eyebrow">Today's meals</div><div class="food-premium-title">What you've eaten</div></div><span id="foodMealsCount" class="food-meals-count"></span></div>`;
+    list.parentElement?.insertBefore(shell,list);shell.appendChild(list);
+  }
+}
+
 function renderFood(){
   renderStaples();
   const day=getDay(),t=totals(day),target=Number(state.profile.target);
+  setupPremiumFoodScreen();
   $("foodTotal").textContent=fmt(t.sat);$("foodTarget").textContent=fmt(target);$("foodBar").style.width=`${Math.min(100,t.sat/target*100)}%`;
+  const foodPct=target>0?Math.round((t.sat/target)*100):0;
+  const remaining=Math.max(0,target-t.sat);
+  if($("foodPremiumRemaining"))$("foodPremiumRemaining").textContent=t.sat<=target?`${fmt(remaining)}g remaining`:`${fmt(t.sat-target)}g over target`;
+  if($("foodPremiumPercent"))$("foodPremiumPercent").textContent=`${foodPct}% of daily target`;
+  if($("foodPremiumStatus")){
+    const s=$("foodPremiumStatus");
+    s.textContent=foodPct>100?"Target exceeded":foodPct>=80?"Getting close":foodPct>=50?"On track":"✓ Looking good";
+  }
+  if($("foodMealsCount"))$("foodMealsCount").textContent=`${day.foods.length} ${day.foods.length===1?"item":"items"}`;
   $("foodList").innerHTML=day.foods.length?day.foods.slice().reverse().map(x=>`
     <div class="log-item food-log-item" data-food-id="${x.id||""}">
       <div class="food-log-main">
@@ -659,7 +768,12 @@ function renderFood(){
         </div>
       </div>
       <div class="log-value">${fmt(x.sat)}g</div>
-    </div>`).join(""):`<div class="empty-state">No food logged today.</div>`;
+    </div>`).join(""):`<div class="food-empty-premium">
+      <div class="food-empty-art">◌</div>
+      <strong>Nothing logged yet</strong>
+      <p>Your meals will appear here as you add them. Start with a staple, add a food or scan a barcode.</p>
+      <div class="food-meal-chips"><div class="food-meal-chip">Breakfast</div><div class="food-meal-chip">Lunch</div><div class="food-meal-chip">Dinner</div><div class="food-meal-chip">Snacks</div></div>
+    </div>`;
   wireFoodCards();
 }
 
