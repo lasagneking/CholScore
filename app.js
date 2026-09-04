@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "222"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "223"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -1309,6 +1309,31 @@ function renderRowingBadge(def){
   return `<img class="premium-ach-img rowing-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
 }
 
+const CONSISTENCY_ACHIEVEMENT_ASSETS = Object.freeze({
+  streak_2:"assets/achievements/consistency/streak_2.webp",
+  streak_3:"assets/achievements/consistency/streak_3.webp",
+  streak_7:"assets/achievements/consistency/streak_7.webp",
+  streak_14:"assets/achievements/consistency/streak_14.webp",
+  streak_30:"assets/achievements/consistency/streak_30.webp",
+  streak_60:"assets/achievements/consistency/streak_60.webp",
+  streak_100:"assets/achievements/consistency/streak_100.webp",
+  streak_365:"assets/achievements/consistency/streak_365.webp",
+  tenure_90:"assets/achievements/consistency/tenure_90.webp",
+  tenure_180:"assets/achievements/consistency/tenure_180.webp",
+  tenure_365:"assets/achievements/consistency/tenure_365.webp",
+  checkout_25:"assets/achievements/consistency/checkout_25.webp",
+  checkout_100:"assets/achievements/consistency/checkout_100.webp",
+  consistency_checkouts_10:"assets/achievements/consistency/consistency_checkouts_10.webp",
+  consistency_52weeks:"assets/achievements/consistency/consistency_52weeks.webp",
+  consistency_move_2500:"assets/achievements/consistency/consistency_move_2500.webp"
+});
+function renderConsistencyBadge(def){
+  const src=CONSISTENCY_ACHIEVEMENT_ASSETS[def.id];
+  if(!src) return null;
+  const alt=String(def.title||"Consistency achievement").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return `<img class="premium-ach-img consistency-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
+}
+
 const SWIMMING_ACHIEVEMENT_ASSETS = Object.freeze({
   swim_half:"assets/achievements/swimming/swim_half.webp",
   swim_1mi:"assets/achievements/swimming/swim_1mi.webp",
@@ -1426,6 +1451,7 @@ function renderAchBadge(def){
   if(def.cat==="cycling" && CYCLING_ACHIEVEMENT_ASSETS[def.id]) return renderCyclingBadge(def);
   if(def.cat==="hiking" && HIKING_ACHIEVEMENT_ASSETS[def.id]) return renderHikingBadge(def);
   if(def.cat==="rowing" && ROWING_ACHIEVEMENT_ASSETS[def.id]) return renderRowingBadge(def);
+  if(def.cat==="consistency" && CONSISTENCY_ACHIEVEMENT_ASSETS[def.id]) return renderConsistencyBadge(def);
   if(def.cat==="swimming" || def.metric==="weekSwimMiles") return renderSwimmingBadge(def);
   const rarity=def.rarity||"COMMON";
   const rs=RARITY_BADGE[rarity]||RARITY_BADGE.COMMON;
@@ -1468,6 +1494,7 @@ function achievementAssetSrc(def){
   if(def.cat==="cycling")return CYCLING_ACHIEVEMENT_ASSETS[def.id]||null;
   if(def.cat==="hiking")return HIKING_ACHIEVEMENT_ASSETS[def.id]||null;
   if(def.cat==="rowing")return ROWING_ACHIEVEMENT_ASSETS[def.id]||null;
+  if(def.cat==="consistency")return CONSISTENCY_ACHIEVEMENT_ASSETS[def.id]||null;
   if(def.cat==="swimming"||def.metric==="weekSwimMiles")return SWIMMING_ACHIEVEMENT_ASSETS[def.id]||null;
   return null;
 }
