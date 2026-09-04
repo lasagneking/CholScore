@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "220"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "221"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -1292,6 +1292,23 @@ function renderHikingBadge(def){
   return `<img class="premium-ach-img hiking-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
 }
 
+const ROWING_ACHIEVEMENT_ASSETS = Object.freeze({
+  row_first:"assets/achievements/rowing/row_first.webp",
+  row_5mi:"assets/achievements/rowing/row_5mi.webp",
+  row_25mi:"assets/achievements/rowing/row_25mi.webp",
+  row_50mi:"assets/achievements/rowing/row_50mi.webp",
+  row_100mi:"assets/achievements/rowing/row_100mi.webp",
+  row_250mi:"assets/achievements/rowing/row_250mi.webp",
+  row_500mi:"assets/achievements/rowing/row_500mi.webp",
+  row_1000mi:"assets/achievements/rowing/row_1000mi.webp"
+});
+function renderRowingBadge(def){
+  const src=ROWING_ACHIEVEMENT_ASSETS[def.id];
+  if(!src) return null;
+  const alt=String(def.title||"Rowing achievement").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  return `<img class="premium-ach-img rowing-achievement-asset" src="${src}" alt="${alt}" loading="lazy" decoding="async">`;
+}
+
 const SWIMMING_ACHIEVEMENT_ASSETS = Object.freeze({
   swim_half:"assets/achievements/swimming/swim_half.webp",
   swim_1mi:"assets/achievements/swimming/swim_1mi.webp",
@@ -1408,6 +1425,7 @@ function renderAchBadge(def){
   if(def.cat==="walking" && WALKING_ACHIEVEMENT_ASSETS[def.id]) return renderWalkingAssetBadge(def);
   if(def.cat==="cycling" && CYCLING_ACHIEVEMENT_ASSETS[def.id]) return renderCyclingBadge(def);
   if(def.cat==="hiking" && HIKING_ACHIEVEMENT_ASSETS[def.id]) return renderHikingBadge(def);
+  if(def.cat==="rowing" && ROWING_ACHIEVEMENT_ASSETS[def.id]) return renderRowingBadge(def);
   if(def.cat==="swimming" || def.metric==="weekSwimMiles") return renderSwimmingBadge(def);
   const rarity=def.rarity||"COMMON";
   const rs=RARITY_BADGE[rarity]||RARITY_BADGE.COMMON;
@@ -1449,6 +1467,7 @@ function achievementAssetSrc(def){
   if(def.cat==="walking")return WALKING_ACHIEVEMENT_ASSETS[def.id]||null;
   if(def.cat==="cycling")return CYCLING_ACHIEVEMENT_ASSETS[def.id]||null;
   if(def.cat==="hiking")return HIKING_ACHIEVEMENT_ASSETS[def.id]||null;
+  if(def.cat==="rowing")return ROWING_ACHIEVEMENT_ASSETS[def.id]||null;
   if(def.cat==="swimming"||def.metric==="weekSwimMiles")return SWIMMING_ACHIEVEMENT_ASSETS[def.id]||null;
   return null;
 }
