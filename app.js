@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "235"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "236"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -295,6 +295,21 @@ function timelineFeelingIndicator(feel){
   const watermarkFix=document.createElement("style");
   watermarkFix.id="exerciseLogoWatermarkV62";
   watermarkFix.textContent=`
+    #todayView .hero-card::before,
+    .food-premium-hero::before{
+      content:""!important;position:absolute!important;pointer-events:none!important;z-index:0!important;
+      border-radius:50%!important;background:radial-gradient(circle,rgba(103,79,255,.14),transparent 68%)!important;
+    }
+    #todayView .hero-card::before{width:220px!important;height:220px!important;right:-72px!important;top:-74px!important}
+    .food-premium-hero::before{width:180px!important;height:180px!important;right:-54px!important;top:-52px!important}
+    #todayView .hero-card::after,
+    .food-premium-hero::after{
+      content:""!important;position:absolute!important;right:20px!important;bottom:12px!important;top:auto!important;
+      width:188px!important;height:154px!important;border-radius:0!important;opacity:.115!important;pointer-events:none!important;z-index:0!important;
+      background-color:transparent!important;background-repeat:no-repeat!important;background-position:center!important;background-size:contain!important;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 190'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2327E8ED'/%3E%3Cstop offset='.55' stop-color='%236F65FF'/%3E%3Cstop offset='1' stop-color='%23FF6588'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M120 170C91 145 36 108 28 66C22 34 57 18 84 32C100 40 111 54 120 69C129 54 140 40 156 32C183 18 218 34 212 66C204 108 149 145 120 170Z' fill='none' stroke='url(%23g)' stroke-width='11' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M54 97H88L101 70L118 124L135 82L147 97H182' fill='none' stroke='url(%23g)' stroke-width='8.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M68 63C82 49 98 50 110 60C97 64 86 74 78 87C74 78 71 70 68 63Z' fill='url(%23g)' opacity='.82'/%3E%3C/svg%3E")!important;
+    }
+    #todayView .hero-card > *, .food-premium-hero > *{position:relative;z-index:1}
     .exercise-premium-hero::after{
       content:""!important;
       position:absolute!important;
