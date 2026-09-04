@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "229"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "230"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -2396,7 +2396,98 @@ function renderPersonalRecords(){
 
   $("prList").innerHTML=rows.length?rows.join(""):`<p class="pr-empty">Complete a weighted or timed exercise, or log a walk/run, to start setting personal records.</p>`;
 }
+
+/* v1.63 Premium Rewards collection — turns the original stats dashboard into
+   a compact collectible showcase while preserving achievement calculations,
+   filters, unlock state, artwork and celebration behaviour. */
+function setupPremiumRewardsScreen(){
+  if(document.getElementById("rewardsPremiumV63"))return;
+  const unlocked=$("achievementUnlockedCount"),total=$("achievementTotalCount"),
+        progress=$("collectionProgressBar"),message=$("rewardMessage"),
+        streak=$("streakStat"),points=$("pointsStat"),best=$("bestStat"),
+        tabs=$("rewardCategoryTabs"),summary=$("achievementCategorySummary"),
+        collection=$("achievementCollection");
+  if(!unlocked||!total||!progress||!message||!streak||!points||!best||!tabs||!summary||!collection)return;
+
+  const style=document.createElement("style");
+  style.id="rewardsPremiumV63";
+  style.textContent=`
+    .rewards-premium-hero{position:relative;overflow:hidden;border:1.5px solid transparent!important;border-radius:24px!important;padding:20px 21px 18px!important;background:linear-gradient(145deg,#101b2a,#121526) padding-box,linear-gradient(120deg,#28e5ec,#6965ff 56%,#f35f96) border-box!important;box-shadow:0 18px 38px rgba(0,0,0,.25);min-height:190px}
+    .rewards-premium-hero:before{content:"";position:absolute;right:-30px;top:-55px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(88,69,255,.22),rgba(202,67,255,.07) 47%,transparent 70%);pointer-events:none}
+    .rewards-hero-watermark{position:absolute;right:22px;top:27px;width:150px;height:126px;opacity:.18;pointer-events:none;filter:drop-shadow(0 0 18px rgba(81,91,255,.22))}
+    .rewards-hero-watermark svg{width:100%;height:100%;display:block}
+    .rewards-hero-copy{position:relative;z-index:2;max-width:60%}
+    .rewards-hero-label{color:#9ba7ba;font-size:13px;margin-bottom:3px}
+    .rewards-hero-count{display:flex;align-items:baseline;gap:3px;font-size:48px;font-weight:900;letter-spacing:-.05em;line-height:1.02}
+    .rewards-hero-count .slash{color:#ff615e}.rewards-hero-count .total{color:#cbd3e2}
+    .rewards-premium-progress{position:relative;z-index:2;height:11px!important;margin:17px 0 9px!important;border-radius:999px!important;background:#253044!important;overflow:hidden}
+    .rewards-premium-progress #collectionProgressBar{height:100%!important;border-radius:inherit!important;background:linear-gradient(90deg,#2de2cc,#53c9f1,#7b62ff,#e85fda)!important;box-shadow:0 0 17px rgba(87,111,255,.3)}
+    .rewards-hero-foot{position:relative;z-index:2;display:flex;justify-content:space-between;gap:15px;color:#9aa6ba;font-size:12px}
+    .rewards-hero-foot strong{color:#e8edf6;font-size:13px}
+    .rewards-highlights{margin:14px 0 19px;padding:15px 16px 14px;border-radius:21px;background:linear-gradient(145deg,#111c2b,#0f1724);border:1px solid #2b3d57;box-shadow:0 11px 25px rgba(0,0,0,.18)}
+    .rewards-highlights-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.rewards-highlights-head b{font-size:15px}.rewards-highlights-head span{font-size:10px;color:#8491a7}
+    .rewards-highlights-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+    .reward-highlight{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center;min-width:0;padding-right:6px;border-right:1px solid rgba(122,139,165,.16)}
+    .reward-highlight:last-child{border-right:0}.reward-highlight img{width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 5px 9px rgba(0,0,0,.3))}
+    .reward-highlight strong{display:block;font-size:20px;line-height:1}.reward-highlight small{display:block;margin-top:3px;color:#98a4b8;font-size:9px;line-height:1.15}
+    .rewards-tabs-shell{position:relative;margin:2px -3px 17px}.rewards-tabs-shell:after{content:"";position:absolute;right:0;top:0;bottom:5px;width:36px;background:linear-gradient(90deg,transparent,#090e17);pointer-events:none}
+    .rewards-tabs-shell #rewardCategoryTabs{display:flex!important;gap:8px!important;overflow-x:auto!important;padding:3px 34px 8px 3px!important;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+    .rewards-tabs-shell #rewardCategoryTabs::-webkit-scrollbar{display:none}
+    .rewards-tabs-shell .reward-tab{flex:0 0 auto!important;min-width:auto!important;padding:10px 13px!important;border-radius:15px!important;background:#111a28!important;border:1px solid #2d3c54!important;color:#aeb9ca!important;font-size:12px!important;font-weight:800!important}
+    .rewards-tabs-shell .reward-tab.active{background:linear-gradient(125deg,#35dfcf,#68a7ee 52%,#db61e6)!important;color:#08131a!important;border-color:transparent!important;box-shadow:0 7px 19px rgba(78,128,222,.2)}
+    .rewards-collection-head{display:flex;justify-content:space-between;align-items:end;margin:0 1px 12px}.rewards-collection-head h3{font-size:20px;margin:0}.rewards-collection-head p{margin:3px 0 0;color:#8e9aaf;font-size:11px}.rewards-collection-head .cat-name{padding:8px 11px;border-radius:13px;background:#121c2b;border:1px solid #2b3b52;color:#cbd4e3;font-size:10px;font-weight:800}
+    #achievementCategorySummary.rewards-summary-hidden{display:none!important}
+    #achievementCollection .achievement-card.unlocked{box-shadow:0 10px 26px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.025)}
+    #achievementCollection .achievement-card.unlocked .premium-ach-img{filter:drop-shadow(0 7px 10px rgba(0,0,0,.34)) saturate(1.06)}
+    #achievementCollection .achievement-card.locked .premium-ach-img{filter:grayscale(.8) brightness(.42) contrast(1.08)!important;opacity:.72}
+    @media(max-width:390px){.rewards-hero-count{font-size:43px}.rewards-hero-watermark{width:125px;right:10px}.reward-highlight{grid-template-columns:38px 1fr}.reward-highlight img{width:38px;height:38px}.reward-highlight strong{font-size:18px}}
+  `;
+  document.head.appendChild(style);
+
+  const hero=unlocked.closest(".card")||unlocked.parentElement?.parentElement;
+  if(hero){
+    hero.classList.add("rewards-premium-hero");
+    // Hide original count/message presentation; keep IDs alive for existing renderer.
+    [...hero.children].forEach(el=>{if(el!==progress.parentElement)el.style.display="none";});
+    const progressShell=progress.parentElement; if(progressShell)progressShell.classList.add("rewards-premium-progress");
+    if(!hero.querySelector(".rewards-hero-copy")){
+      hero.insertAdjacentHTML("afterbegin",`<div class="rewards-hero-copy"><div class="rewards-hero-label">Your collection</div><div class="rewards-hero-count"><span id="rewardsHeroUnlocked">0</span><span class="slash">/</span><span id="rewardsHeroTotal" class="total">0</span></div></div>
+      <div class="rewards-hero-watermark" aria-hidden="true"><svg viewBox="0 0 220 180" fill="none"><defs><linearGradient id="rewardWM" x1="20" y1="20" x2="195" y2="160"><stop stop-color="#29E3EB"/><stop offset=".55" stop-color="#6B65FF"/><stop offset="1" stop-color="#F25B91"/></linearGradient></defs><path d="M110 160C82 136 30 101 24 61C19 29 55 14 81 29C94 36 103 47 110 59C117 47 126 36 139 29C165 14 201 29 196 61C190 101 138 136 110 160Z" stroke="url(#rewardWM)" stroke-width="11" stroke-linecap="round"/><path d="M50 91H84L98 66L113 116L128 78L140 91H171" stroke="url(#rewardWM)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/><path d="M65 61C78 48 92 48 103 57C91 60 80 69 72 82C69 73 67 66 65 61Z" fill="url(#rewardWM)"/></svg></div>
+      <div class="rewards-hero-foot"><strong id="rewardsHeroPct">0% complete</strong><span id="rewardsHeroRemaining"></span></div>`);
+    }
+  }
+
+  // Merge the original three separate stat cards into one compact highlights surface.
+  const statCards=[streak,points,best].map(el=>el.closest(".card")).filter(Boolean);
+  const statRegion=statCards[0]?.parentElement;
+  if(statRegion){
+    statCards.forEach(c=>c.style.display="none");
+    if(!document.querySelector(".rewards-highlights")){
+      const hi=document.createElement("div");hi.className="rewards-highlights";
+      hi.innerHTML=`<div class="rewards-highlights-head"><b>Collection highlights</b><span>Your progress at a glance</span></div>
+      <div class="rewards-highlights-grid">
+        <div class="reward-highlight"><img src="assets/ui/reward-flame.webp" onerror="this.style.display='none'" alt=""><div><strong id="rewardsHiStreak">0</strong><small>Day streak</small></div></div>
+        <div class="reward-highlight"><img src="assets/ui/reward-points.webp" onerror="this.style.display='none'" alt=""><div><strong id="rewardsHiPoints">0</strong><small>CholPoints</small></div></div>
+        <div class="reward-highlight"><img src="assets/ui/reward-pr.webp" onerror="this.style.display='none'" alt=""><div><strong id="rewardsHiBest">0</strong><small>Personal best</small></div></div>
+      </div>`;
+      statRegion.insertAdjacentElement("afterend",hi);
+    }
+  }
+
+  if(!tabs.closest(".rewards-tabs-shell")){
+    const shell=document.createElement("div");shell.className="rewards-tabs-shell";
+    tabs.parentNode.insertBefore(shell,tabs);shell.appendChild(tabs);
+  }
+  summary.classList.add("rewards-summary-hidden");
+  if(!document.querySelector(".rewards-collection-head")){
+    const head=document.createElement("div");head.className="rewards-collection-head";
+    head.innerHTML=`<div><h3>Your achievements</h3><p id="rewardsCollectionSub"></p></div><span id="rewardsCollectionCat" class="cat-name">All</span>`;
+    collection.parentNode.insertBefore(head,collection);
+  }
+}
+
 function renderRewards(){
+  setupPremiumRewardsScreen();
   const metrics=achievementMetrics();
   const unlocked=achievementDefs.filter(a=>Number(metrics[a.metric]||0)>=a.goal);
   const pct=achievementDefs.length?unlocked.length/achievementDefs.length*100:0;
@@ -2413,6 +2504,15 @@ function renderRewards(){
   $("bestStat").textContent=Math.round(bestEverScore());
   $("streakStat").textContent=calculateStreak();
 
+  const rewardStreak=calculateStreak(), rewardBest=Math.round(bestEverScore());
+  if($("rewardsHeroUnlocked"))$("rewardsHeroUnlocked").textContent=unlocked.length;
+  if($("rewardsHeroTotal"))$("rewardsHeroTotal").textContent=achievementDefs.length;
+  if($("rewardsHeroPct"))$("rewardsHeroPct").textContent=`${Math.round(pct)}% complete`;
+  if($("rewardsHeroRemaining"))$("rewardsHeroRemaining").textContent=unlocked.length===achievementDefs.length?"Collection complete":`${achievementDefs.length-unlocked.length} still waiting to be unlocked`;
+  if($("rewardsHiStreak"))$("rewardsHiStreak").textContent=rewardStreak;
+  if($("rewardsHiPoints"))$("rewardsHiPoints").textContent=fmtInt(totalPoints);
+  if($("rewardsHiBest"))$("rewardsHiBest").textContent=rewardBest;
+
   $("rewardCategoryTabs").innerHTML=rewardCategories.map(([id,label])=>
     `<button class="reward-tab ${activeRewardCategory===id?"active":""}" data-reward-cat="${id}">${label}</button>`
   ).join("");
@@ -2424,6 +2524,8 @@ function renderRewards(){
   const unlockedHere=defs.filter(a=>Number(metrics[a.metric]||0)>=a.goal).length;
   const catLabel=rewardCategories.find(x=>x[0]===activeRewardCategory)?.[1]||"All";
   $("achievementCategorySummary").innerHTML=`<strong>${catLabel}</strong><span>${unlockedHere} of ${defs.length} unlocked</span>`;
+  if($("rewardsCollectionSub"))$("rewardsCollectionSub").textContent=`${unlockedHere} unlocked · ${Math.max(0,defs.length-unlockedHere)} to discover`;
+  if($("rewardsCollectionCat"))$("rewardsCollectionCat").textContent=catLabel;
 
   $("achievementCollection").innerHTML=defs.map(a=>{
     const value=Number(metrics[a.metric]||0);
@@ -2445,6 +2547,8 @@ function renderRewards(){
     </div>`;
   }).join("");
 
+  const rewardsHero=document.querySelector(".rewards-premium-hero");
+  if(rewardsHero)rewardsHero.classList.toggle("collection-complete",unlocked.length===achievementDefs.length);
   checkForNewAchievementCelebrations(metrics);
 }
 /* Vacation Mode — pausing protects a streak from breaking while genuinely
