@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "233"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "234"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -772,10 +772,10 @@ function setupPremiumFoodScreen(){
     #staplesSection{margin:0 0 30px!important}
     #staplesRow{display:flex!important;gap:12px!important;overflow-x:auto!important;padding:2px 2px 8px!important;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
     #staplesRow::-webkit-scrollbar{display:none}
-    #staplesRow .staple-card{position:relative;flex:0 0 142px!important;width:142px!important;min-height:190px!important;padding:10px!important;border-radius:19px!important;background:linear-gradient(160deg,#172131,#101722)!important;border:1px solid #334057!important;text-align:left!important;scroll-snap-align:start}
+    #staplesRow .staple-card{position:relative;flex:0 0 142px!important;width:142px!important;height:214px!important;min-height:214px!important;box-sizing:border-box!important;overflow:hidden;padding:10px 10px 42px!important;border-radius:19px!important;background:linear-gradient(160deg,#172131,#101722)!important;border:1px solid #334057!important;text-align:left!important;scroll-snap-align:start}
     #staplesRow .staple-thumb{width:100%!important;height:96px!important;border-radius:14px!important;object-fit:cover!important;margin:0 0 10px!important}
-    #staplesRow .staple-card strong{display:block;font-size:14px!important;line-height:1.15;min-height:32px}
-    #staplesRow .staple-card small{display:block;margin-top:7px;color:#99a5b9!important}
+    #staplesRow .staple-card strong{display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14px!important;line-height:1.15;height:32px;min-height:32px}
+    #staplesRow .staple-card small{display:block;position:absolute;left:10px;bottom:15px;margin:0;color:#99a5b9!important;white-space:nowrap}
     #staplesRow .staple-card:after{content:"+";position:absolute;right:9px;bottom:9px;width:27px;height:27px;display:grid;place-items:center;border-radius:50%;background:#29466e;color:white;font-size:20px;font-weight:700}
     .food-meals-shell{margin-top:4px}
     .food-meals-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:12px}
