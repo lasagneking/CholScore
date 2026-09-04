@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "221"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "222"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -1293,7 +1293,7 @@ function renderHikingBadge(def){
 }
 
 const ROWING_ACHIEVEMENT_ASSETS = Object.freeze({
-  row_first:"assets/achievements/rowing/row_first.webp",
+  row_1mi:"assets/achievements/rowing/row_first.webp",
   row_5mi:"assets/achievements/rowing/row_5mi.webp",
   row_25mi:"assets/achievements/rowing/row_25mi.webp",
   row_50mi:"assets/achievements/rowing/row_50mi.webp",
