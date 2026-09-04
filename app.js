@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "238"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "239"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -3220,7 +3220,7 @@ function repTrainingSectionHTML(workouts,dayKey,records){
         const rec=records?.strength?.[name];
         isPR=!!(rec&&rec.date===dayKey&&weight>0&&rec.weight===weight);
       }
-      return `<div class="rep-exercise-row${isPR?" is-pr":""}"><div class="rep-exercise-num">${i+1}</div><div><div class="rep-exercise-name">${esc(ex.name)}${isPR?'<span class="rep-pr-chip">${premiumUiIcon("trophy","pr-inline-icon")} PR</span>':""}</div><div class="rep-exercise-meta">${esc(meta)}</div></div><div class="rep-exercise-value">${value}<small>${unit}</small></div></div>`;
+      return `<div class="rep-exercise-row${isPR?" is-pr":""}"><div class="rep-exercise-num">${i+1}</div><div><div class="rep-exercise-name">${esc(ex.name)}${isPR?`<span class="rep-pr-chip">${premiumUiIcon("trophy","pr-inline-icon")} PR</span>`:""}</div><div class="rep-exercise-meta">${esc(meta)}</div></div><div class="rep-exercise-value">${value}<small>${unit}</small></div></div>`;
     }).join("");
     return `<div class="rep-section reveal"><div class="rep-section-head"><div class="rep-section-bar"></div><h2>Strength Session · ${esc(w.name||"Workout")}</h2></div>${rows}</div>`;
   }).join("");
@@ -3241,10 +3241,10 @@ function repCardioSectionHTML(cardio,dayKey,records){
     const isPR=isDistPR||isPacePR;
     return `<div class="rep-cardio-row${isPR?" is-pr":""}">
       <div class="rep-cardio-icon">${icon}</div>
-      <div class="rep-cardio-name"><span class="rep-cardio-name-text">${esc(label)}</span>${isPR?'<span class="rep-pr-chip">${premiumUiIcon("trophy","pr-inline-icon")} PR</span>':""}</div>
+      <div class="rep-cardio-name"><span class="rep-cardio-name-text">${esc(label)}</span>${isPR?`<span class="rep-pr-chip">${premiumUiIcon("trophy","pr-inline-icon")} PR</span>`:""}</div>
       <div class="rep-cardio-col"><strong>${formatActivityDuration(a.minutes)}</strong></div>
-      <div class="rep-cardio-col"><strong>${displayDist>0?`${displayDist} ${unit}`:"—"}</strong>${isDistPR?'<small class="rep-pr-trophy">${premiumUiIcon("trophy","pr-inline-icon")}</small>':""}</div>
-      <div class="rep-cardio-col"><strong>${pace||"—"}</strong>${isPacePR?'<small class="rep-pr-trophy">${premiumUiIcon("trophy","pr-inline-icon")}</small>':""}</div>
+      <div class="rep-cardio-col"><strong>${displayDist>0?`${displayDist} ${unit}`:"—"}</strong>${isDistPR?`<small class="rep-pr-trophy">${premiumUiIcon("trophy","pr-inline-icon")}</small>`:""}</div>
+      <div class="rep-cardio-col"><strong>${pace||"—"}</strong>${isPacePR?`<small class="rep-pr-trophy">${premiumUiIcon("trophy","pr-inline-icon")}</small>`:""}</div>
     </div>`;
   }).join("");
   return `<div class="rep-section reveal"><div class="rep-section-head"><div class="rep-section-bar"></div><h2>Cardio</h2></div><div class="rep-cardio-head"><span></span><span>Activity</span><span>Time</span><span>Dist</span><span>Pace (min/${unit})</span></div>${rows}</div>`;
