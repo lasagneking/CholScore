@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=243" />
+  <link rel="stylesheet" href="styles.css?v=244" />
 
   <!-- v1.9.0 iOS splash screens. Unlike Android, iOS still doesn't generate
        one from the manifest — it needs an exact pixel-matched PNG per
@@ -480,52 +480,176 @@ body.rewards-active #rewardsView::before{
 </defs>
 </svg>
   <div id="app">
-    <section id="onboarding" class="screen onboarding hidden">
-      <div class="brand-orb">C</div>
-      <p class="eyebrow">WELCOME TO</p>
-      <h1>CholScore</h1>
-      <p class="lead">Small choices. Better days.</p>
+    <section id="onboarding" class="screen onboarding onboarding-v244 hidden" aria-label="Welcome to CholScore">
+      <div class="onboarding-shell">
+        <button type="button" id="onboardingSkipBtn" class="onboarding-skip" aria-label="Skip introduction">Skip</button>
 
-      <div class="glass-card setup-card">
-        <label for="nameInput">What should we call you?</label>
-        <input id="nameInput" type="text" maxlength="30" placeholder="Your name" autocomplete="given-name" />
+        <div class="onboarding-slides">
+          <article class="onboarding-slide active" data-onboarding-step="0">
+            <div class="onboarding-brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 120 104" fill="none">
+                <defs>
+                  <linearGradient id="onboardHeartGradient" x1="8" y1="18" x2="108" y2="92" gradientUnits="userSpaceOnUse">
+                    <stop stop-color="#32E5EA"/>
+                    <stop offset=".52" stop-color="#6C5FFF"/>
+                    <stop offset="1" stop-color="#FF6D92"/>
+                  </linearGradient>
+                </defs>
+                <path d="M60 94 17 52C-4 31 8 8 30 8c13 0 23 7 30 18C67 15 77 8 90 8c22 0 34 23 13 44L60 94Z" stroke="url(#onboardHeartGradient)" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M19 58h22l8-22 13 45 12-31 8 16h21" stroke="#48DCE6" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
 
-        <label class="top-gap">Choose your daily saturated-fat target</label>
-        <div class="target-grid">
-          <button class="target-option" data-target="20">
-            <strong>20g</strong><span>UK guideline for average women</span>
-          </button>
-          <button class="target-option" data-target="30">
-            <strong>30g</strong><span>UK guideline for average men</span>
-          </button>
-          <button class="target-option" data-target="custom">
-            <strong>Custom</strong><span>Use your own target</span>
-          </button>
+            <div class="onboarding-wordmark">Chol<span>Score</span></div>
+            <p class="onboarding-kicker">FOOD · MOVEMENT · BETTER DAYS</p>
+
+            <div class="onboarding-welcome-copy">
+              <h1>Small choices.<br><span>One clear score.</span></h1>
+              <p>CholScore brings food, movement and consistency together so you can see the bigger picture of your day.</p>
+            </div>
+
+            <button type="button" class="onboarding-primary onboarding-next">Let's go <span aria-hidden="true">→</span></button>
+          </article>
+
+          <article class="onboarding-slide" data-onboarding-step="1">
+            <div class="onboarding-heading">
+              <p class="eyebrow">THE BIG IDEA</p>
+              <h2>Your day.<br><span>At a glance.</span></h2>
+              <p>One simple 0–100 CholScore helps make sense of the choices that shape your day.</p>
+            </div>
+
+            <div class="onboarding-score-orbit" aria-label="Example CholScore 82">
+              <div class="onboarding-score-ring">
+                <div class="onboarding-score-inner">
+                  <strong>82</strong>
+                  <span>CholScore</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="onboarding-pillars">
+              <div class="onboarding-pillar">
+                <span class="pillar-icon pillar-food" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M4 4v6m2-6v6M5 10v10M19 4c-2 1.4-2.3 4-.9 5.8.5.7 1.1 1.1 1.8 1.3V20"/></svg>
+                </span>
+                <strong>Saturated fat</strong><small>Keep it in check</small>
+              </div>
+              <div class="onboarding-pillar">
+                <span class="pillar-icon pillar-move" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="m9 10 3-2 3 2 2 4m-6-4-2 4-3 2m6-2 3 6m-6-6-2 6"/></svg>
+                </span>
+                <strong>Movement</strong><small>Move more</small>
+              </div>
+              <div class="onboarding-pillar">
+                <span class="pillar-icon pillar-consistency" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4m8-4v4M4 10h16m-12 4h2m4 0h2"/></svg>
+                </span>
+                <strong>Consistency</strong><small>Build habits</small>
+              </div>
+            </div>
+
+            <button type="button" class="onboarding-primary onboarding-next">Next <span aria-hidden="true">→</span></button>
+          </article>
+
+          <article class="onboarding-slide" data-onboarding-step="2">
+            <div class="onboarding-heading">
+              <p class="eyebrow">WHY IT'S DIFFERENT</p>
+              <h2>Built for progress,<br><span>not perfection.</span></h2>
+              <p>Everything in CholScore is designed to make healthier habits feel achievable and rewarding.</p>
+            </div>
+
+            <div class="onboarding-feature-list">
+              <div class="onboarding-feature">
+                <span class="feature-glyph" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M4 4v6m2-6v6M5 10v10M19 4c-2 1.4-2.3 4-.9 5.8.5.7 1.1 1.1 1.8 1.3V20"/></svg>
+                </span>
+                <div><strong>Smarter food tracking</strong><span>Scan, search or log meals and keep saturated fat visible.</span></div>
+              </div>
+              <div class="onboarding-feature">
+                <span class="feature-glyph" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M5 17c3-1 4-4 5-7l3 2 4-1m-8 7 3-3 3 3m-5-10 2-2 3 1"/></svg>
+                </span>
+                <div><strong>Track your movement</strong><span>Walks, runs, workouts and more all contribute to your day.</span></div>
+              </div>
+              <div class="onboarding-feature">
+                <span class="feature-glyph" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 6H5v1a3 3 0 0 0 3 3m8-4h3v1a3 3 0 0 1-3 3m-4 3v4m-4 3h8"/></svg>
+                </span>
+                <div><strong>Unlock achievements</strong><span>Celebrate milestones and build a collection as you progress.</span></div>
+              </div>
+              <div class="onboarding-feature">
+                <span class="feature-glyph" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M5 19V9m5 10V5m5 14v-7m4 7V3"/></svg>
+                </span>
+                <div><strong>See the bigger picture</strong><span>History and trends help you see progress beyond a single day.</span></div>
+              </div>
+            </div>
+
+            <div class="onboarding-no-calories">
+              <span aria-hidden="true">✓</span>
+              <div><strong>No calorie counting.</strong><small>Just focused, meaningful tracking built around CholScore.</small></div>
+            </div>
+
+            <button type="button" class="onboarding-primary onboarding-next">Next <span aria-hidden="true">→</span></button>
+          </article>
+
+          <article class="onboarding-slide onboarding-setup-slide" data-onboarding-step="3">
+            <div class="onboarding-heading onboarding-setup-heading">
+              <p class="eyebrow">MAKE IT YOURS</p>
+              <h2>Make <span>CholScore yours.</span></h2>
+              <p>A few quick details and you're ready to start your first day.</p>
+            </div>
+
+            <div class="onboarding-setup-card">
+              <label for="nameInput">What should we call you?</label>
+              <input id="nameInput" type="text" maxlength="30" placeholder="Your name" autocomplete="given-name" />
+
+              <label class="top-gap">Your daily saturated-fat target</label>
+              <div class="target-grid onboarding-target-grid">
+                <button type="button" class="target-option" data-target="20">
+                  <strong>20g</strong><span>Women</span>
+                </button>
+                <button type="button" class="target-option" data-target="30">
+                  <strong>30g</strong><span>Men</span>
+                </button>
+                <button type="button" class="target-option" data-target="custom">
+                  <strong>Custom</strong><span>Your target</span>
+                </button>
+              </div>
+
+              <div id="customTargetWrap" class="hidden">
+                <label for="customTarget">Custom target (grams)</label>
+                <input id="customTarget" type="number" min="1" max="100" step="0.1" placeholder="e.g. 24" />
+              </div>
+
+              <label class="top-gap">Distance units</label>
+              <div class="unit-grid">
+                <button type="button" class="unit-option selected" data-unit="mi">
+                  <strong>Miles</strong><span>mi</span>
+                </button>
+                <button type="button" class="unit-option" data-unit="km">
+                  <strong>Kilometres</strong><span>km</span>
+                </button>
+              </div>
+
+              <label class="top-gap">Profile photo <span class="onboarding-optional">(optional)</span></label>
+              <div class="settings-photo-row onboarding-photo-row">
+                <button type="button" id="onboardingAvatarPreview" class="profile-avatar" aria-label="Add profile photo"></button>
+                <button type="button" id="onboardingAddPhotoBtn" class="secondary-btn">Choose photo</button>
+              </div>
+              <input id="onboardingPhotoFile" type="file" accept="image/*" class="hidden" />
+
+              <button id="finishSetup" class="onboarding-primary">Start my first day <span aria-hidden="true">→</span></button>
+            </div>
+          </article>
         </div>
 
-        <div id="customTargetWrap" class="hidden">
-          <label for="customTarget">Custom target (grams)</label>
-          <input id="customTarget" type="number" min="1" max="100" step="0.1" placeholder="e.g. 24" />
+        <div id="onboardingDots" class="onboarding-dots" aria-label="Onboarding progress">
+          <button type="button" class="active" data-onboarding-dot="0" aria-label="Welcome"></button>
+          <button type="button" data-onboarding-dot="1" aria-label="Your CholScore"></button>
+          <button type="button" data-onboarding-dot="2" aria-label="Features"></button>
+          <button type="button" data-onboarding-dot="3" aria-label="Setup"></button>
         </div>
-
-        <label class="top-gap">Choose your distance units</label>
-        <div class="unit-grid">
-          <button type="button" class="unit-option selected" data-unit="mi">
-            <strong>Miles</strong><span>mi</span>
-          </button>
-          <button type="button" class="unit-option" data-unit="km">
-            <strong>Kilometres</strong><span>km</span>
-          </button>
-        </div>
-
-        <label class="top-gap">Add a profile photo (optional)</label>
-        <div class="settings-photo-row">
-          <button type="button" id="onboardingAvatarPreview" class="profile-avatar" aria-label="Add photo"></button>
-          <button type="button" id="onboardingAddPhotoBtn" class="secondary-btn">Choose photo</button>
-        </div>
-        <input id="onboardingPhotoFile" type="file" accept="image/*" class="hidden" />
-
-        <button id="finishSetup" class="primary-btn">Start CholScore</button>
       </div>
     </section>
 
@@ -1427,7 +1551,7 @@ body.rewards-active #rewardsView::before{
   </dialog>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="app.js?v=243"></script>
+  <script src="app.js?v=244"></script>
 
   <script>
     if ("serviceWorker" in navigator) {

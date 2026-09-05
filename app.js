@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "243"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "244"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -3786,6 +3786,24 @@ $("dayReportDialog").addEventListener("close",()=>$("dayReportDialog").classList
   document.head.appendChild(s);
 })();
 /* Onboarding */
+let onboardingStep=0;
+function showOnboardingStep(step){
+  const slides=qsa("[data-onboarding-step]");
+  const dots=qsa("[data-onboarding-dot]");
+  if(!slides.length)return;
+  onboardingStep=Math.max(0,Math.min(slides.length-1,Number(step)||0));
+  slides.forEach((slide,i)=>slide.classList.toggle("active",i===onboardingStep));
+  dots.forEach((dot,i)=>dot.classList.toggle("active",i===onboardingStep));
+  const skip=$("onboardingSkipBtn");
+  if(skip)skip.classList.toggle("hidden",onboardingStep===slides.length-1);
+  const active=slides[onboardingStep];
+  if(active)active.scrollTop=0;
+}
+qsa(".onboarding-next").forEach(btn=>btn.addEventListener("click",()=>showOnboardingStep(onboardingStep+1)));
+qsa("[data-onboarding-dot]").forEach(btn=>btn.addEventListener("click",()=>showOnboardingStep(Number(btn.dataset.onboardingDot))));
+$("onboardingSkipBtn")?.addEventListener("click",()=>showOnboardingStep(3));
+showOnboardingStep(0);
+
 qsa(".target-option").forEach(btn=>btn.addEventListener("click",()=>{
   qsa(".target-option").forEach(x=>x.classList.remove("selected"));btn.classList.add("selected");
   selectedTarget=btn.dataset.target;$("customTargetWrap").classList.toggle("hidden",selectedTarget!=="custom");
@@ -3815,7 +3833,7 @@ renderAvatarInto($("onboardingAvatarPreview"),null,"");
 $("finishSetup").addEventListener("click",()=>{
   const name=$("nameInput").value.trim(),target=selectedTarget==="custom"?Number($("customTarget").value):Number(selectedTarget);
   if(!name||!target||target<=0)return alert("Please enter your name and choose a valid target.");
-  state.profile={name,target,distanceUnit:selectedDistanceUnit,photo:onboardingPhoto};saveState();init();
+  state.profile={name,target,distanceUnit:selectedDistanceUnit,photo:onboardingPhoto};saveState();window.scrollTo(0,0);init();
 });
 
 /* Navigation */
