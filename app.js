@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "242"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "243"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -6324,7 +6324,16 @@ $("premiumTestLockBtn").addEventListener("click",()=>{
 });
 
 $("exportBackupBtn").addEventListener("click",async()=>{
-  const payload={app:"CholScore",exportedAt:new Date().toISOString(),version:STORAGE_KEY,data:state};
+  // Keep the separate achievement-celebration ledger with the backup so a
+  // restored device knows which earned cards have already been acknowledged.
+  const seenAchievements=readSeenAchievementCelebrations();
+  const payload={
+    app:"CholScore",
+    exportedAt:new Date().toISOString(),
+    version:STORAGE_KEY,
+    data:state,
+    achievementCelebrationsSeen:seenAchievements===null?null:[...seenAchievements]
+  };
   const filename=`cholscore-backup-${localDateKey()}.json`;
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
 
@@ -6393,6 +6402,26 @@ $("importBackupFile").addEventListener("change",e=>{
       e.target.value="";return;
     }
     saveState();
+
+    // Restore the achievement-card acknowledgement ledger as well as progress.
+    // New v243+ backups carry the exact ledger. For older backups that predate
+    // this field, silently baseline everything currently earned so migration
+    // cannot replay the user's entire achievement history. Weekly tokens use
+    // the current Monday key, preserving their normal next-week repeatability.
+    if(parsed&&parsed.app==="CholScore"&&Object.prototype.hasOwnProperty.call(parsed,"achievementCelebrationsSeen")){
+      const rawSeen=parsed.achievementCelebrationsSeen;
+      const safeSeen=Array.isArray(rawSeen)
+        ? rawSeen.filter(v=>typeof v==="string"&&v.length<=200).slice(0,1000)
+        : [];
+      writeSeenAchievementCelebrations(new Set(safeSeen));
+    }else{
+      const restoredMetrics=achievementMetrics();
+      const restoredUnlocked=achievementDefs.filter(a=>Number(restoredMetrics[a.metric]||0)>=a.goal);
+      writeSeenAchievementCelebrations(new Set(restoredUnlocked.map(achievementCelebrationSeenToken)));
+    }
+    achievementCelebrationQueue=[];
+    activeAchievementCelebration=null;
+
     markBackedUpNow();
     location.reload();
   };
