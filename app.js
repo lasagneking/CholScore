@@ -1,7 +1,7 @@
 
 const STORAGE_KEY = "cholscore_v02";
 const LEGACY_KEY = "cholscore_v01";
-const APP_VERSION = "241"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
+const APP_VERSION = "242"; // bump alongside every other ?v= reference on each deploy — used to cache-bust dynamically-loaded assets like the share templates below, which don't go through index.html's own ?v= query strings
 /* Always use this instead of date.toISOString().slice(0,10) for turning a
    Date into a "YYYY-MM-DD" key. toISOString() converts to UTC first, which
    silently shifts the date by a day for anyone in a positive UTC offset
@@ -724,12 +724,34 @@ function renderStaples(){
    This deliberately reuses the existing food controls and IDs, so barcode,
    manual add, staples, food detail and persistence behaviour remain intact. */
 
-const FOOD_QUICK_TIPS = Object.freeze(['Try to eat more oily fish, like mackerel and salmon', 'Try to eat more olive oil, rapeseed oil and spreads made from these oils', 'Try to eat more brown rice, wholegrain bread and wholewheat pasta', 'Try to eat more nuts and seeds', 'Try to eat more fruits and vegetables', 'Try to eat less meat pies, sausages and fatty meat', 'Try to eat less cream and cheese', 'Try to eat less cakes and biscuits', 'Try to eat less food that contains coconut oil or palm oil', 'Snack on plain, unsalted nuts and fresh fruit (ideally two servings of fruit every day)', 'Enjoy fish two to three times a week (150 grams fresh or 100g tinned).', 'Eating more soluble fibre is proven to have a positive impact on our cholesterol levels', 'Logging your meals or telling someone about each change you make can help you remain accountable.']);
+const FOOD_QUICK_TIPS = Object.freeze([
+  'Try to eat more oily fish, like mackerel and salmon',
+  'Try to eat more olive oil, rapeseed oil and spreads made from these oils',
+  'Try to eat more brown rice, wholegrain bread and wholewheat pasta',
+  'Try to eat more nuts and seeds',
+  'Try to eat more fruits and vegetables',
+  'Try to eat less meat pies, sausages and fatty meat',
+  'Try to eat less cream and cheese',
+  'Try to eat less cakes and biscuits',
+  'Try to eat less food that contains coconut oil or palm oil',
+  'Snack on plain, unsalted nuts and fresh fruit (ideally two servings of fruit every day)',
+  'Enjoy fish two to three times a week (150 grams fresh or 100g tinned).',
+  'Eating more soluble fibre is proven to have a positive impact on our cholesterol levels',
+  'Logging your meals or telling someone about each change you make can help you remain accountable.',
+  'Start the day with oatmeal — A bowl of oatmeal or oat bran provides a solid soluble-fiber base; add fruit for more variety.',
+  'Load up on beans and legumes — Add lentils, chickpeas, black beans, or kidney beans to meals several times a week for fiber and plant protein.',
+  'Fill half your plate with vegetables — Emphasize a variety of colorful produce (including eggplant, okra, and leafy greens) for fiber and nutrients.',
+  'Include plant sterols/stanols — Look for fortified spreads, yogurts, or juices that provide about 2 grams daily (can lower LDL 5–15%).',
+  'Switch to low-fat or fat-free dairy — Choose skim/low-fat milk, yogurt, or cheese (or plant-based alternatives) instead of full-fat versions.',
+  'Cook smart — Bake, grill, steam, or roast instead of frying; use herbs, spices, lemon, or vinegar for flavor instead of butter or creamy sauces.',
+  'Include soy foods — Tofu, tempeh, edamame, or soy milk can contribute plant protein that supports cholesterol management.',
+  'Minimize added sugars and sugary drinks — Replace sodas and sweets with water, sparkling water, or unsweetened options to support weight control and overall heart health.'
+]);
 let foodQuickTipIndex = -1;
 let foodQuickTipTimer = null;
 
 function renderFoodQuickTip(animate=true){
-  const card=$("foodQuickTipCard"),copy=$("foodQuickTipCopy"),count=$("foodQuickTipCount"),bar=$("foodQuickTipProgress");
+  const card=$("foodQuickTipCard"),copy=$("foodQuickTipCopy"),bar=$("foodQuickTipProgress");
   if(!card||!copy||!FOOD_QUICK_TIPS.length)return;
   if(foodQuickTipIndex<0){
     foodQuickTipIndex=Math.floor(Math.random()*FOOD_QUICK_TIPS.length);
@@ -738,7 +760,6 @@ function renderFoodQuickTip(animate=true){
   }
   const apply=()=>{
     copy.textContent=FOOD_QUICK_TIPS[foodQuickTipIndex];
-    if(count)count.textContent=`${foodQuickTipIndex+1} of ${FOOD_QUICK_TIPS.length}`;
     if(bar){
       bar.style.transition="none";
       bar.style.width="0%";
@@ -852,7 +873,6 @@ function setupPremiumFoodScreen(){
           <svg viewBox="0 0 32 32" fill="none"><path d="M11.6 22.2h8.8M12.7 26h6.6M16 3.8a8.2 8.2 0 0 0-4.8 14.8c1 .8 1.5 1.6 1.6 2.4h6.4c.1-.8.6-1.6 1.6-2.4A8.2 8.2 0 0 0 16 3.8Z" stroke="#D96CFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 1v2M6.8 5.2l1.5 1.5M25.2 5.2l-1.5 1.5M3 14h2.2M26.8 14H29" stroke="#68E7D4" stroke-width="2" stroke-linecap="round"/></svg>
         </div>
         <div class="food-tip-copy-wrap"><div class="food-tip-label">Quick tip</div><div id="foodQuickTipCopy" class="food-tip-copy"></div></div>
-        <div id="foodQuickTipCount" class="food-tip-count"></div>
       </div>
       <div class="food-tip-progress-shell"><div id="foodQuickTipProgress" class="food-tip-progress"></div></div>
     </div>`);
